@@ -1,6 +1,6 @@
-import gui.SopraApplication
+import gui.CascadiaApplication
 
 fun main() {
-    SopraApplication().show()
+    CascadiaApplication().show()
     println("Application ended. Goodbye")
 }
