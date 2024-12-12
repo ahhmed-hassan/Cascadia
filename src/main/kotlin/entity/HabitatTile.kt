@@ -8,17 +8,17 @@ package entity
  * @property isKeystoneTile Indicates if the tile is a keystone tile (special tile in the game).
  * @property rotationOffset Rotation offset for the tile, represented as an integer between 0 and 5.
  *
- * @property wildlifeSymbols The type of wildlife symbol associated with this tile (e.g., Bear, Elk).
+ * @property wildlifeSymbols List of the type of wildlife symbols associated with this tile (e.g., Bear, Elk).
  * @property wildlifeToken The wildlife token currently placed on this tile. Nullable as not all tiles may have tokens.
- * @property terrains The terrain type(s) represented on the tile.
+ * @property terrains Mutable list of the terrain type(s) represented on the tile.
  */
 class HabitatTile(
     val id: Int,
-    var isKeystoneTile: Boolean,
+    val isKeystoneTile: Boolean,
     var rotationOffset: Int,
-    /****/
-    val wildlifeSymbols: Animal,
-    var wildlifeToken: WildlifeToken,
-    val terrains: Terrain
+
+    val wildlifeSymbols: List<Animal>,
+    var wildlifeToken: WildlifeToken?,
+    val terrains: MutableList<Terrain>
 ) {
 }
