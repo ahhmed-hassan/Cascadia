@@ -83,9 +83,10 @@ class GameService(private val rootService : RootService) : AbstractRefreshingSer
                     hasOverpopulation = false
                 }
             }
-            // resolve overpopulation
+            // resolve possible overpopulation
             if (hasOverpopulation) {
-                rootService.playerActionService.replaceWildlifeTokens(listOf(0, 1, 2, 3))
+                rootService.playerActionService.replaceWildlifeTokens(tokenIndices = listOf(0, 1, 2, 3),
+                                                                      playerAction = false)
             }
         }
 

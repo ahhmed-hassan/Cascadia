@@ -31,7 +31,7 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
     /**
      *
      */
-    fun replaceWildlifeTokens(tokenIndices : List<Int>) {
+    fun replaceWildlifeTokens(tokenIndices : List<Int>, playerAction : Boolean = true) {
         //ToDo
 
         onAllRefreshables { refreshAfterWildlifeTokenReplaced() }
