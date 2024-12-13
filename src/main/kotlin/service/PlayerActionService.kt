@@ -8,7 +8,7 @@ import entity.HabitatTile
  *
  *  @param [rootService] the games RootService for communication with entity layer
  */
-class PlayerActionService(private val rootSerivce : RootService) : AbstractRefreshingService() {
+class PlayerActionService(private val rootService : RootService) : AbstractRefreshingService() {
 
     /**
      *
