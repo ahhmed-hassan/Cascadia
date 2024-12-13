@@ -56,10 +56,23 @@ class PlayerActionService(private val rootSerivce : RootService) : AbstractRefre
     }
 
     /**
+     *Rotate the selected tile
+     * preconditions : There is already a selected tile that has not been placed yet!
+     * @throws IllegalArgumentException if there is no [HabitatTile] to place
+     * post :
+     * The [HabitatTile.rotationOffset] is incremented.
+     * the [HabitatTile.terrains] would have the right order as how it would be placed.
      *
      */
-    fun rotateTile(tile: HabitatTile) {
-        //ToDo
+    fun rotateTile() {
+        val game = rootSerivce.currentGame
+        requireNotNull(game){"No game started yet"}
+
+        requireNotNull(game.selectedTile){"Only the selected tile can be rotated!"}
+
+        game.selectedTile.rotationOffset = (game.selectedTile.rotationOffset+1).mod(game.selectedTile.terrains.size)
+        game.selectedTile.terrains.add(0,
+            game.selectedTile.terrains.removeAt(game.selectedTile.terrains.size-1))
 
         onAllRefreshables { refreshAfterTileRotation() }
     }
