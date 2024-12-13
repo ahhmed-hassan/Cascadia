@@ -70,6 +70,8 @@ class PlayerActionService(private val rootSerivce : RootService) : AbstractRefre
             if(tile.isKeystoneTile){
                 currentPlayer.natureToken += 1
             }
+            game.selectedToken = null
+            rootSerivce.gameService.nextTurn()
         }
         else{
             throw IllegalArgumentException("Wildlife token cannot be placed on this tile!")
