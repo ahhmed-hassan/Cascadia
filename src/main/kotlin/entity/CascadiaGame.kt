@@ -32,8 +32,8 @@ class CascadiaGame(
     var currentPlayer: Player,
     val playerList: List<Player>,
     val habitatTileList: MutableList<HabitatTile>,
-    var selectedTile: HabitatTile,
-    var selectedToken: WildlifeToken,
+    var selectedTile: HabitatTile?,
+    var selectedToken: WildlifeToken?,
     var wildlifeTokenList: MutableList<WildlifeToken>
     ) {
 
