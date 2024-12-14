@@ -1,5 +1,6 @@
 package service
 
+import entity.HabitatTile
 import entity.Terrain
 import entity.Player
 
@@ -62,11 +63,37 @@ class ScoringService(private val rootSerivce : RootService) : AbstractRefreshing
         onAllRefreshables { /*ToDo*/ }
     }
 
-    /**
-     *
+    /***
+     * Calculating the longest connected terrains of some type for some player
+     * @param type the wished [Terrain] type
+     * @param player The [Player] having this longest terrains
      */
-    private fun calculateLongestTerrain(type : Terrain, player : Player) {
-        //ToDo
+    private fun calculateLongestTerrain(searchedTerrain : Terrain, player : Player) : Int {
+
+        val hasAtLeastOneEdgeOfSearchedTerrain : (HabitatTile) -> Boolean = {it.terrains.any { it==searchedTerrain }}
+        val buildSearchedTerrainGraph : (Map<Pair<Int,Int>, HabitatTile>) -> Map<Pair<Int,Int>, List<Pair<Int,Int>>> ={
+                playerTiles ->
+            val searchedTerrainNodesCoordinates = playerTiles.
+            filterValues { hasAtLeastOneEdgeOfSearchedTerrain(it) }
+                .keys.toSet()
+
+            val graph = searchedTerrainNodesCoordinates.associateWith { coordinate ->
+                directionsPairsAndCorrespondingEdges.keys
+                    .map { addPairs(it,coordinate) }
+                    .filter { neighbour-> searchedTerrainNodesCoordinates.contains(neighbour) }
+            }
+            graph
+
+        }
+        val searchedTerrainGraph = buildSearchedTerrainGraph(player.habitat)
+        val visited : MutableSet<Pair<Int,Int>> = mutableSetOf()
+        var longestConnectedComponent = 0
+        for(terrainNode in searchedTerrainGraph.keys){
+            if(!visited.contains(terrainNode))
+                longestConnectedComponent = maxOf(
+                    longestConnectedComponent, depthFirstLongestPathAt(searchedTerrainGraph, visited, terrainNode))
+        }
+        return longestConnectedComponent
     }
 
     /**
