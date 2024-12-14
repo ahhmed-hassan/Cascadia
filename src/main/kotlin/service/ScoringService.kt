@@ -33,6 +33,12 @@ class ScoringService(private val rootSerivce : RootService) : AbstractRefreshing
         private val addPairs: (Pair<Int, Int>, Pair<Int, Int>) -> Pair<Int, Int> = { a, b ->
             a.first + b.first to a.second + b.second
         }
+        private val getNeighbours : (Pair<Int,Int>) -> List<Pair<Int,Int>> = {
+            pair -> directionsPairsAndCorrespondingEdges.keys.map { addPairs(pair, it) }
+        }
+        private fun Pair<Int,Int>.neighbours () : List<Pair<Int,Int>>{
+            return directionsPairsAndCorrespondingEdges.keys.map { addPairs(it,this) }
+        }
 
         /**
          * Calculating the longest path starting at some coordinates
