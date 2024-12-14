@@ -1,5 +1,7 @@
 package service
 
+import entity.Animal
+import entity.HabitatTile
 import entity.Terrain
 import entity.Player
 
@@ -91,10 +93,40 @@ class ScoringService(private val rootSerivce : RootService) : AbstractRefreshing
     }
 
     /**
-     *
+     * Calculating the scores for the salmon runs
+     * @param player the [Player] to calculate its runs.
      */
-    private fun calculateSalmonScore(player : Player) {
-        //ToDo
+    private fun calculateSalmonScore(player : Player) : Int  {
+        val hasSalmonToken : (HabitatTile) -> Boolean = {it.wildlifeToken?.animal == Animal.SALMON}
+        val makeSalmonGraph : (Map<Pair<Int,Int>, HabitatTile>) -> Map<Pair<Int,Int>, List<Pair<Int,Int>>> = {
+                habitatTile ->
+            val salmonCoordinates =habitatTile.filterValues { hasSalmonToken(it) }.keys.toSet()
+            val graph = salmonCoordinates.associateWith { coordinate ->
+                directionsPairsAndCorrespondingEdges.keys
+                    .map { addPairs(it, coordinate) } //Get all the neighbours
+                    .filter { neighbour -> salmonCoordinates.contains(neighbour) }//filter out non-salmons
+                /**At this point the nodes are of type salmons and edges are between two direct neighbours only if
+                both of them are salmon
+                Thus we still need to filter out every node that has more than two neighbours
+                Note that we already know at this point that each node would have at least one salmon neighbour,
+                so no need for checking the lower bound */
+
+            }.filterValues {  neighbours ->  neighbours.size <=2  }
+            graph
+
+        }
+        val salmonGraph = makeSalmonGraph(player.habitat)
+        val visited : MutableSet<Pair<Int, Int>> = mutableSetOf()
+        val isB = rootSerivce.currentGame!!.ruleSet[Animal.SALMON.ordinal]
+        val scoreMap = if (isB) mapOf(1 to 2, 2 to 4, 3 to 9, 4 to 11, 5 to 17)
+        else mapOf(1 to 2, 2 to 5, 3 to 8, 4 to 12, 5 to 16, 7 to 25)
+        val maxRuns = if (isB) 7 else 5
+        var salmonRuns = 0
+        for(salmonNode in salmonGraph.keys.filter { !visited.contains(it) }){
+            salmonRuns+= depthFirstLongestPathAt(salmonGraph, visited, salmonNode)
+
+        }
+        return scoreMap.getOrDefault(maxOf(salmonRuns, maxRuns) ,0)
     }
 
     /**
