@@ -1,5 +1,6 @@
 package service
 
+import entity.Animal
 import entity.Terrain
 import entity.Player
 
@@ -9,12 +10,12 @@ import entity.Player
  *
  *  @param [rootService] the games RootService for communication with entity layer
  */
-class ScoringService(private val rootSerivce : RootService) : AbstractRefreshingService() {
+class ScoringService(private val rootSerivce: RootService) : AbstractRefreshingService() {
 
     /**
      *
      */
-    fun calculateScore(player : Player) {
+    fun calculateScore(player: Player) {
         //ToDo
 
         onAllRefreshables { /*ToDo*/ }
@@ -23,43 +24,53 @@ class ScoringService(private val rootSerivce : RootService) : AbstractRefreshing
     /**
      *
      */
-    private fun calculateLongestTerrain(type : Terrain, player : Player) {
+    private fun calculateLongestTerrain(type: Terrain, player: Player) {
         //ToDo
     }
 
     /**
      *
      */
-    private fun calculateBearScore(player : Player) {
+    private fun calculateBearScore(player: Player) {
         //ToDo
     }
 
     /**
      *
      */
-    private fun calculateElkScore(player : Player) {
+    private fun calculateElkScore(player: Player) {
         //ToDo
     }
 
     /**
      *
      */
-    private fun calculateHawkScore(player : Player) {
+    private fun calculateHawkScore(player: Player) {
         //ToDo
     }
 
     /**
      *
      */
-    private fun calculateSalmonScore(player : Player) {
+    private fun calculateSalmonScore(player: Player) {
         //ToDo
     }
 
     /**
      *
      */
-    private fun calculateFoxScore(player : Player) {
-        //ToDo
+    private fun calculateFoxScore(player: Player) {
+        val foxes = mutableListOf<Pair<Int, Int>>()
+        val habitat = player.habitat
+        //gets all foxes
+        habitat.forEach {
+            if (it.value.wildlifeToken?.animal == Animal.FOX)
+                foxes.add(it.key)
+        }
+
+        foxes.forEach {
+            
+        }
     }
 
 }
