@@ -1,5 +1,7 @@
 package service
 
+import entity.Animal
+import entity.HabitatTile
 import entity.Terrain
 import entity.Player
 
@@ -70,10 +72,46 @@ class ScoringService(private val rootSerivce : RootService) : AbstractRefreshing
     }
 
     /**
-     *
+     *Calculates the Score resulted from the bear collection
+     * @param player the player whose score should be calculated
      */
-    private fun calculateBearScore(player : Player) {
-        //ToDo
+    private fun calculateBearScore(player : Player): Int  {
+        val makeBearGraph : (Map<Pair<Int,Int>, HabitatTile>) -> Map<Pair<Int,Int>, List<Pair<Int,Int>>> ={
+                habitatTiles ->
+            val bearNodesCoordinates=  habitatTiles.filterValues { it.wildlifeToken?.animal == Animal.BEAR }
+                .keys.toSet()
+
+            val graph = bearNodesCoordinates.associateWith { coordinate ->
+                directionsPairsAndCorrespondingEdges.keys
+                    .map { addPairs(it, coordinate) }
+                    .filter { neighbour -> bearNodesCoordinates.contains(neighbour) }
+
+            }
+            graph
+        }
+        val bearGraph = makeBearGraph(player.habitat)
+        val visited : MutableSet<Pair<Int,Int>> = mutableSetOf()
+        val isB = rootSerivce.currentGame!!.ruleSet[Animal.BEAR.ordinal]
+        val searchedLength = if (isB) 3 else 2
+        var connectedComponentsWithSearchedLength = 0
+
+        for(bearNode in bearGraph.keys){
+            if(!visited.contains(bearNode)) {
+                if (depthFirstLongestPathAt(bearGraph, visited, bearNode) == searchedLength) {
+                    connectedComponentsWithSearchedLength++
+                }
+            }
+        }
+        if(isB)
+            return 10 * connectedComponentsWithSearchedLength
+        else
+            return when (connectedComponentsWithSearchedLength){
+                1 -> 4
+                2 -> 11
+                3 -> 19
+                4 -> 27
+                else -> 0
+            }
     }
 
     /**
