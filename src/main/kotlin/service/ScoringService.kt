@@ -11,11 +11,26 @@ import entity.Player
  */
 class ScoringService(private val rootSerivce : RootService) : AbstractRefreshingService() {
 
-    /**
+    /** [calculateScore] is responsible for calculating the player scores.
+     *
+     * @param player The player whose score will get calculated.
      *
      */
     fun calculateScore(player : Player) {
-        //ToDo
+        //calculates the largest habitat of each terrain
+        for(terrain in Terrain.values()){
+            calculateLongestTerrain(terrain,player)
+        }
+
+        //calculates all the wildlife scoring card patterns
+        calculateBearScore(player)
+        calculateElkScore(player)
+        calculateHawkScore(player)
+        calculateSalmonScore(player)
+        calculateFoxScore(player)
+
+        //nature tokens are added to the score
+        player.score += player.natureToken
 
         onAllRefreshables { /*ToDo*/ }
     }
