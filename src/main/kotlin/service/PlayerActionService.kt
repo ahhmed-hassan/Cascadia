@@ -11,10 +11,16 @@ import entity.HabitatTile
 class PlayerActionService(private val rootSerivce : RootService) : AbstractRefreshingService() {
 
     /**
+     * [chooseTokenTilePair] is responsible for marking the chosen Token-Tile Pair as selected for further use.
      *
+     * @param choosenPair This the pair that the player chose from the shop.
      */
     fun chooseTokenTilePair(choosenPair : Int) {
-        //ToDo
+        val game = rootSerivce.currentGame
+        checkNotNull(game)
+
+        game.selectedTile = game.shop[choosenPair].first
+        game.selectedToken = game.shop[choosenPair].second
 
         onAllRefreshables { refreshAfterTokenTilePairChoosen() }
     }
