@@ -10,12 +10,12 @@ import entity.Player
  *
  *  @param [rootService] the games RootService for communication with entity layer
  */
-class ScoringService(private val rootSerivce: RootService) : AbstractRefreshingService() {
+class ScoringService(private val rootSerivce : RootService) : AbstractRefreshingService() {
 
     /**
      *
      */
-    fun calculateScore(player: Player) {
+    fun calculateScore(player : Player) {
         //ToDo
 
         onAllRefreshables { /*ToDo*/ }
@@ -24,35 +24,35 @@ class ScoringService(private val rootSerivce: RootService) : AbstractRefreshingS
     /**
      *
      */
-    private fun calculateLongestTerrain(type: Terrain, player: Player) {
+    private fun calculateLongestTerrain(type : Terrain, player : Player) {
         //ToDo
     }
 
     /**
      *
      */
-    private fun calculateBearScore(player: Player) {
+    private fun calculateBearScore(player : Player) {
         //ToDo
     }
 
     /**
      *
      */
-    private fun calculateElkScore(player: Player) {
+    private fun calculateElkScore(player : Player) {
         //ToDo
     }
 
     /**
      *
      */
-    private fun calculateHawkScore(player: Player) {
+    private fun calculateHawkScore(player : Player) {
         //ToDo
     }
 
     /**
      *
      */
-    private fun calculateSalmonScore(player: Player) {
+    private fun calculateSalmonScore(player : Player) {
         //ToDo
     }
 
