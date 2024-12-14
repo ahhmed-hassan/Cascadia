@@ -115,5 +115,4 @@ class ScoringService(private val rootSerivce: RootService) : AbstractRefreshingS
             }
         }
     }
-
 }
