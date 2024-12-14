@@ -84,8 +84,8 @@ class ScoringService(private val rootSerivce : RootService) : AbstractRefreshing
                 .keys.toSet()
 
             val graph = searchedTerrainNodesCoordinates.associateWith { coordinate ->
-                directionsPairsAndCorrespondingEdges.keys
-                    .map { addPairs(it,coordinate) }
+                coordinate
+                    .neighbours()
                     .filter { neighbour-> searchedTerrainNodesCoordinates.contains(neighbour) }
             }
             graph
