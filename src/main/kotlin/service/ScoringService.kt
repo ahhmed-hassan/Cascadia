@@ -107,7 +107,9 @@ class ScoringService(private val rootSerivce : RootService) : AbstractRefreshing
         val makeSalmonGraph : (Map<Pair<Int,Int>, HabitatTile>) -> Map<Pair<Int,Int>, List<Pair<Int,Int>>> = {
                 habitatTile ->
             val salmonCoordinates =habitatTile.filterValues { hasSalmonToken(it) }.keys.toSet()
-            val graph = salmonCoordinates.associateWith { coordinate -> getNeighbours(coordinate)
+            val graph = salmonCoordinates.associateWith { coordinate ->
+                coordinate
+                    .neighbours()
                     .filter { neighbour -> salmonCoordinates.contains(neighbour) }//filter out non-salmons
                 /**At this point the nodes are of type salmons and edges are between two direct neighbours only if
                 both of them are salmon
