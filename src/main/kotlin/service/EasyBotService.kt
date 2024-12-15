@@ -5,9 +5,9 @@ import entity.PlayerType
 /**
  * Service for an easy bot
  */
-class EasyBotService(private val rootSerivce: RootService) {
-    val playerActionService = PlayerActionService(rootSerivce)
-    val gameService = GameService(rootSerivce)
+class EasyBotService(private val rootService: RootService) {
+    val playerActionService = PlayerActionService(rootService)
+    val gameService = GameService(rootService)
 
     //Chances for moves
     val PLACEWILDLIFECHANCE = 70
@@ -18,22 +18,25 @@ class EasyBotService(private val rootSerivce: RootService) {
      * takes the Turn for am easy bot
      */
     fun takeTurn() {
-        val game = rootSerivce.currentGame
+        val game = rootService.currentGame
         checkNotNull(game)
         val player = game.currentPlayer
 
         var hasChosenCustomPair = false
-        var hasResolvedOverpoulation = false
+        var hasResolvedOverpopulation = false
 
         /**
          * Resolves the overpopulation of 3 if it is possible and if the chance allows it.
          */
-        fun resolveOverpoulation() {
+        fun resolveOverpopulation() {
             if (game.shop.groupBy { it.second }.values.any { it.size == 3 }
                 && RESOLVEOVERPOPULATIONCHANCE <= (1..100).random()
-                && !hasResolvedOverpoulation) {
+                && !hasResolvedOverpopulation) {
 
-                //playerActionService.resolveOverpopulation()
+                val animal = game.shop.groupBy { it.second }.values.first { it.size == 3 }[0].second
+                val indices = mutableListOf<Int>()
+                game.shop.forEachIndexed { index, it -> if (it.second == animal) indices.add(index) }
+                playerActionService.replaceWildlifeTokens(indices)
             }
         }
 
@@ -41,7 +44,7 @@ class EasyBotService(private val rootSerivce: RootService) {
             "PlayerType must be easy bot"
         }
 
-        resolveOverpoulation()
+        resolveOverpopulation()
 
         //Maybe uses wildlifetoken
         if (player.natureToken >= 1 && USENATURETOKENCHANCE <= (1..100).random()) {
@@ -71,7 +74,7 @@ class EasyBotService(private val rootSerivce: RootService) {
             }
         }
 
-        resolveOverpoulation()
+        resolveOverpopulation()
 
         //chooses a pair if it has not happened yet
         if (!hasChosenCustomPair) {
