@@ -6,7 +6,7 @@ class CascadiaApplication : BoardGameApplication("Cascadia Game") {
 
     private val gameScene = GameScene()
 
-    private val hotSeatConfigurationMenu = HotSeatConfigurationMenu().apply {
+    private val hotSeatConfigurationMenu = HotSeatConfigurationMenuScene().apply {
         startButton.onMouseClicked = {
             showGameScene(gameScene)
         }
