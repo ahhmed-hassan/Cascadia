@@ -1,11 +1,12 @@
 package gui
 
+import service.RootService
 import tools.aqua.bgw.components.uicomponents.Button
 import tools.aqua.bgw.components.uicomponents.Label
 import tools.aqua.bgw.core.BoardGameScene
 import tools.aqua.bgw.visual.ColorVisual
 
-class GameScene : BoardGameScene(1920, 1080) {
+class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Refreshables {
 
     private val currentPlayerLabel = Label(
         width = 200, height = 50,

@@ -1,5 +1,6 @@
 package gui
 
+import service.RootService
 import tools.aqua.bgw.components.uicomponents.Button
 import tools.aqua.bgw.components.uicomponents.Label
 import tools.aqua.bgw.components.uicomponents.TextField
@@ -7,7 +8,7 @@ import tools.aqua.bgw.core.MenuScene
 import tools.aqua.bgw.visual.ColorVisual
 import tools.aqua.bgw.visual.ImageVisual
 
-class NetworkJoinMenuScene : MenuScene(1920, 1080) {
+class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080), Refreshables {
     private val titleLabel = Label(
         width = 400,
         height = 50,

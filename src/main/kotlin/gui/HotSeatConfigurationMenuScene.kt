@@ -1,12 +1,13 @@
 package gui
 
+import service.RootService
 import tools.aqua.bgw.components.uicomponents.Button
 import tools.aqua.bgw.components.uicomponents.TextField
 import tools.aqua.bgw.core.MenuScene
 import tools.aqua.bgw.visual.ColorVisual
 import tools.aqua.bgw.visual.ImageVisual
 
-class HotSeatConfigurationMenuScene : MenuScene(1920, 1080) {
+class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1920, 1080), Refreshables {
 
     private val playerNameFields = mutableListOf<TextField>()
     private val playerButtons = mutableListOf<List<Button>>()

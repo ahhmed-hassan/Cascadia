@@ -1,11 +1,12 @@
 package gui
 
+import service.RootService
 import tools.aqua.bgw.components.uicomponents.Button
 import tools.aqua.bgw.core.MenuScene
 import tools.aqua.bgw.visual.ColorVisual
 import tools.aqua.bgw.visual.ImageVisual
 
-class MainMenuScene : MenuScene(1920, 1080) {
+class MainMenuScene (val rootService: RootService): MenuScene(1920, 1080) {
 
     val startHotSeatGameButton = Button(
         width = 200, height = 50,
