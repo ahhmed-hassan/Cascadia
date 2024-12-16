@@ -43,6 +43,14 @@ enum class ConnectionState {
      */
     PLAYING_MY_TURN,
     /**
+     * Represents the state where the player has an Overpopulation to resolve
+     */
+    SWAPPING_WILDLIFE_TOKENS,
+    /**
+     * Represents the State where the opponent hast an Overpopulation th resolve
+     */
+    OPPONENT_SWAPPING_WILDLIFE_TOKENS,
+    /**
      * Represents the state where the game is running, the player has completed their turn, and is
      * now waiting for the opponent to submit their turn.
      */
