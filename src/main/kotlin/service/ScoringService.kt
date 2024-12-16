@@ -119,7 +119,7 @@ class ScoringService(private val rootSerivce : RootService) : AbstractRefreshing
         //filters out all the elks on the map
         val elkCoordinate = player.habitat.filterValues { it.wildlifeToken?.animal == Animal.ELK }.keys.toMutableSet()
         //gets the ruleset
-        val isB = rootSerivce.currentGame!!.ruleSet[Animal.ELK.ordinal]
+        val isB = checkNotNull(rootSerivce.currentGame).ruleSet[Animal.ELK.ordinal]
 
         //ruleset A
         if(!isB) {
@@ -129,7 +129,7 @@ class ScoringService(private val rootSerivce : RootService) : AbstractRefreshing
                     val straightLine = (coordinate.second + 0..coordinate.second + i).all { y ->
                         elkCoordinate.contains(Pair(coordinate.first, y))
                     }
-                    //when a straight line has been fund it checks which length it has and removes it from the
+                    //when a straight line has been found it checks which length it has and removes it from the
                     //elkCoordinate pair
                     if (straightLine) {
                         if (i == 3) {
