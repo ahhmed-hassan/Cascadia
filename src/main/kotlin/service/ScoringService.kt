@@ -98,13 +98,14 @@ class ScoringService(private val rootSerivce : RootService) : AbstractRefreshing
         }
         val bearGraph = makeBearGraph(player.habitat)
         val visited : MutableSet<Pair<Int,Int>> = mutableSetOf()
-        val isB = rootSerivce.currentGame!!.ruleSet[Animal.BEAR.ordinal]
+        val game = checkNotNull(rootSerivce.currentGame){"No Game started yet!"}
+        val isB = game.ruleSet[Animal.BEAR.ordinal]
         val searchedLength = if (isB) 3 else 2
         var connectedComponentsWithSearchedLength = 0
 
         for(bearNode in bearGraph.keys){
             if(!visited.contains(bearNode)) {
-                if (depthFirstLongestPathAt(bearGraph, visited, bearNode) == searchedLength) {
+                if (depthFirstConnectedComponentLength(bearGraph, visited, bearNode) == searchedLength) {
                     connectedComponentsWithSearchedLength++
                 }
             }
