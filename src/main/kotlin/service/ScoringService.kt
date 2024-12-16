@@ -119,7 +119,7 @@ class ScoringService(private val rootSerivce : RootService) : AbstractRefreshing
         //filters out all the elks on the map
         val elkCoordinate = player.habitat.filterValues { it.wildlifeToken?.animal == Animal.ELK }.keys.toMutableSet()
         //gets the ruleset
-        val isB = rootSerivce.currentGame!!.ruleSet[Animal.ELK.ordinal]
+        val isB = checkNotNull(rootSerivce.currentGame).ruleSet[Animal.ELK.ordinal]
 
         //ruleset A
         if(!isB) {
