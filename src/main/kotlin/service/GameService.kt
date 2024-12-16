@@ -37,9 +37,6 @@ class GameService(private val rootService : RootService) : AbstractRefreshingSer
         val game = rootService.currentGame
         checkNotNull(game)
 
-        // check for current player
-        val currentPlayer = game.currentPlayer
-        checkNotNull(currentPlayer)
 
         // check if player performed action
         if (!game.hasPlayedTile) {
@@ -78,11 +75,8 @@ class GameService(private val rootService : RootService) : AbstractRefreshingSer
         var hasOverpopulation = true
         while (hasOverpopulation) {
             // check for overpopulation of four
-            for (i in 1 until 4) {
-                if(game.shop[i].second != game.shop[0].second) {
-                    hasOverpopulation = false
-                }
-            }
+            hasOverpopulation = game.shop.all{it.second == game.shop.first().second}
+
             // resolve possible overpopulation
             if (hasOverpopulation) {
                 rootService.playerActionService.replaceWildlifeTokens(tokenIndices = listOf(0, 1, 2, 3),
@@ -91,7 +85,7 @@ class GameService(private val rootService : RootService) : AbstractRefreshingSer
         }
 
         // switch current player
-        val nextPlayerIndex = game.playerList.indexOf(currentPlayer)+1 % game.playerList.size
+        val nextPlayerIndex = game.playerList.indexOf(game.currentPlayer)+1 % game.playerList.size
         game.currentPlayer = game.playerList[nextPlayerIndex]
 
         // refresh GUI
