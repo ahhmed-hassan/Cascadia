@@ -46,17 +46,18 @@ class ScoringService(private val rootSerivce : RootService) : AbstractRefreshing
          * @param graph the graph to search
          * @param visited the visited coordinates so far
          */
-        private fun depthFirstLongestPathAt(graph: Map<Pair<Int,Int>, List<Pair<Int,Int>>>,
+        private fun depthFirstConnectedComponentLength(graph: Map<Pair<Int,Int>, List<Pair<Int,Int>>>,
                                             visited : MutableSet<Pair<Int,Int>>,
                                             coordinate: Pair<Int, Int>) : Int {
-            var longestPath : Int = 1
+            var connectedComponentLength : Int = 1
             visited.add(coordinate)
-            val notVisitedNeighbours =  directionsPairsAndCorrespondingEdges.keys.map { addPairs(it,coordinate) }
-                .filter { neighbour -> !visited.contains(neighbour) }
-            for(notVisitedNeighbour in notVisitedNeighbours ){
-                longestPath+= depthFirstLongestPathAt(graph, visited, notVisitedNeighbour)
+            val neighbours = coordinate.neighbours()
+
+            for(neighbour in neighbours ){
+                if(!visited.contains(neighbour))
+                    connectedComponentLength+= depthFirstConnectedComponentLength(graph, visited, neighbour)
             }
-            return longestPath
+            return connectedComponentLength
 
         }
     }
