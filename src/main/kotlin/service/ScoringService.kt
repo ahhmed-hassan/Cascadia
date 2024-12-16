@@ -11,7 +11,7 @@ import entity.Player
  *
  *  @param [rootService] the games RootService for communication with entity layer
  */
-class ScoringService(private val rootSerivce : RootService) : AbstractRefreshingService() {
+class ScoringService(private val rootSerivce: RootService) : AbstractRefreshingService() {
 
 
     companion object {
@@ -34,11 +34,12 @@ class ScoringService(private val rootSerivce : RootService) : AbstractRefreshing
         private val addPairs: (Pair<Int, Int>, Pair<Int, Int>) -> Pair<Int, Int> = { a, b ->
             a.first + b.first to a.second + b.second
         }
-        private val getNeighbours : (Pair<Int,Int>) -> List<Pair<Int,Int>> = {
-            pair -> directionsPairsAndCorrespondingEdges.keys.map { addPairs(pair, it) }
+        private val getNeighbours: (Pair<Int, Int>) -> List<Pair<Int, Int>> = { pair ->
+            directionsPairsAndCorrespondingEdges.keys.map { addPairs(pair, it) }
         }
-        private fun Pair<Int,Int>.neighbours () : List<Pair<Int,Int>>{
-            return directionsPairsAndCorrespondingEdges.keys.map { addPairs(it,this) }
+
+        private fun Pair<Int, Int>.neighbours(): List<Pair<Int, Int>> {
+            return directionsPairsAndCorrespondingEdges.keys.map { addPairs(it, this) }
         }
 
         /**
@@ -47,25 +48,28 @@ class ScoringService(private val rootSerivce : RootService) : AbstractRefreshing
          * @param graph the graph to search
          * @param visited the visited coordinates so far
          */
-        private fun depthFirstConnectedComponentLength(graph: Map<Pair<Int,Int>, List<Pair<Int,Int>>>,
-                                            visited : MutableSet<Pair<Int,Int>>,
-                                            coordinate: Pair<Int, Int>) : Int {
-            var connectedComponentLength : Int = 1
+        private fun depthFirstConnectedComponentLength(
+            graph: Map<Pair<Int, Int>, List<Pair<Int, Int>>>,
+            visited: MutableSet<Pair<Int, Int>>,
+            coordinate: Pair<Int, Int>
+        ): Int {
+            var connectedComponentLength: Int = 1
             visited.add(coordinate)
             val neighbours = coordinate.neighbours()
 
-            for(neighbour in neighbours ){
-                if(!visited.contains(neighbour))
-                    connectedComponentLength+= depthFirstConnectedComponentLength(graph, visited, neighbour)
+            for (neighbour in neighbours) {
+                if (!visited.contains(neighbour))
+                    connectedComponentLength += depthFirstConnectedComponentLength(graph, visited, neighbour)
             }
             return connectedComponentLength
 
         }
     }
+
     /**
      *
      */
-    fun calculateScore(player : Player) {
+    fun calculateScore(player: Player) {
         //ToDo
 
         onAllRefreshables { /*ToDo*/ }
@@ -74,28 +78,28 @@ class ScoringService(private val rootSerivce : RootService) : AbstractRefreshing
     /**
      *
      */
-    private fun calculateLongestTerrain(type : Terrain, player : Player) {
+    private fun calculateLongestTerrain(type: Terrain, player: Player) {
         //ToDo
     }
 
     /**
      *
      */
-    private fun calculateBearScore(player : Player) {
+    private fun calculateBearScore(player: Player) {
         //ToDo
     }
 
     /**
      *
      */
-    private fun calculateElkScore(player : Player) {
+    private fun calculateElkScore(player: Player) {
         //ToDo
     }
 
     /**
      *
      */
-    private fun calculateHawkScore(player : Player) {
+    private fun calculateHawkScore(player: Player) {
         //ToDo
     }
 
@@ -103,43 +107,44 @@ class ScoringService(private val rootSerivce : RootService) : AbstractRefreshing
      * Calculating the scores for the salmon runs
      * @param player the [Player] to calculate its runs.
      */
-    private fun calculateSalmonScore(player : Player) : Int  {
-        val hasSalmonToken : (HabitatTile) -> Boolean = {it.wildlifeToken?.animal == Animal.SALMON}
-        val makeSalmonGraph : (Map<Pair<Int,Int>, HabitatTile>) -> Map<Pair<Int,Int>, List<Pair<Int,Int>>> = {
-                habitatTile ->
-            val salmonCoordinates =habitatTile.filterValues { hasSalmonToken(it) }.keys.toSet()
-            val graph = salmonCoordinates.associateWith { coordinate ->
-                coordinate
-                    .neighbours()
-                    .filter { neighbour -> salmonCoordinates.contains(neighbour) }//filter out non-salmons
-                /**At this point the nodes are of type salmons and edges are between two direct neighbours only if
-                both of them are salmon
-                Thus we still need to filter out every node that has more than two neighbours
-                Note that we already know at this point that each node would have at least one salmon neighbour,
-                so no need for checking the lower bound */
+    private fun calculateSalmonScore(player: Player): Int {
+        val hasSalmonToken: (HabitatTile) -> Boolean = { it.wildlifeToken?.animal == Animal.SALMON }
+        val makeSalmonGraph: (Map<Pair<Int, Int>, HabitatTile>) -> Map<Pair<Int, Int>, List<Pair<Int, Int>>> =
+            { habitatTile ->
+                val salmonCoordinates = habitatTile.filterValues { hasSalmonToken(it) }.keys.toSet()
+                val graph = salmonCoordinates.associateWith { coordinate ->
+                    coordinate
+                        .neighbours()
+                        .filter { neighbour -> salmonCoordinates.contains(neighbour) }//filter out non-salmons
+                    /**At this point the nodes are of type salmons and edges are between two direct neighbours only if
+                    both of them are salmon
+                    Thus we still need to filter out every node that has more than two neighbours
+                    Note that we already know at this point that each node would have at least one salmon neighbour,
+                    so no need for checking the lower bound */
 
-            }.filterValues {  neighbours ->  neighbours.size <=2  }
-            graph
+                }.filterValues { neighbours -> neighbours.size <= 2 }
+                graph
 
-        }
+            }
         val salmonGraph = makeSalmonGraph(player.habitat)
-        val visited : MutableSet<Pair<Int, Int>> = mutableSetOf()
-        val isB = rootSerivce.currentGame!!.ruleSet[Animal.SALMON.ordinal]
+        val visited: MutableSet<Pair<Int, Int>> = mutableSetOf()
+        val isB = checkNotNull(rootSerivce.currentGame) { "No game started yet" }.ruleSet[Animal.SALMON.ordinal]
         val scoreMap = if (isB) mapOf(1 to 2, 2 to 4, 3 to 9, 4 to 11, 5 to 17)
         else mapOf(1 to 2, 2 to 5, 3 to 8, 4 to 12, 5 to 16, 7 to 25)
         val maxRuns = if (isB) 7 else 5
         var salmonRuns = 0
-        for(salmonNode in salmonGraph.keys.filter { !visited.contains(it) }){
-            salmonRuns+= depthFirstLongestPathAt(salmonGraph, visited, salmonNode)
+        for (salmonCoordinate in salmonGraph.keys) {
+            if (!visited.contains(salmonCoordinate))
+                salmonRuns += depthFirstConnectedComponentLength(salmonGraph, visited, salmonCoordinate)
 
         }
-        return scoreMap.getOrDefault(maxOf(salmonRuns, maxRuns) ,0)
+        return scoreMap.getOrDefault(maxOf(salmonRuns, maxRuns), 0)
     }
 
     /**
      *
      */
-    private fun calculateFoxScore(player : Player) {
+    private fun calculateFoxScore(player: Player) {
         //ToDo
     }
 
