@@ -98,7 +98,9 @@ class ScoringService(private val rootSerivce : RootService) : AbstractRefreshing
         for(terrainNode in searchedTerrainGraph.keys){
             if(!visited.contains(terrainNode))
                 longestConnectedComponent = maxOf(
-                    longestConnectedComponent, depthFirstLongestPathAt(searchedTerrainGraph, visited, terrainNode))
+                    longestConnectedComponent,
+                    depthFirstConnectedComponentLength(searchedTerrainGraph, visited, terrainNode)
+                )
         }
         return longestConnectedComponent
     }
