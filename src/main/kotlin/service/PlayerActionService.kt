@@ -55,7 +55,7 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
      * @throws IllegalArgumentException If the wildlife token is not valid for the tile.
      */
     fun addToken(token: WildlifeToken, tile : HabitatTile) {
-        val game = rootSerivce.currentGame
+        val game = rootService.currentGame
         checkNotNull(game)
         val currentPlayer = game.currentPlayer
 
@@ -71,7 +71,7 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
                 currentPlayer.natureToken += 1
             }
             game.selectedToken = null
-            rootSerivce.gameService.nextTurn()
+            rootService.gameService.nextTurn()
         }
         else{
             throw IllegalArgumentException("Wildlife token cannot be placed on this tile!")
