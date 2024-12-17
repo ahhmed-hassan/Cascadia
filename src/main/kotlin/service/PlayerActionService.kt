@@ -46,14 +46,13 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
         val possibleNeighbours = offsets.map {
             habitatCoordinates.first+it.first to habitatCoordinates.second + it.second }
 
-        val game = rootSerivce.currentGame
-        requireNotNull(game)
+        val game = requireNotNull(rootService.currentGame) {"No game started"}
         requireNotNull(game.selectedTile){"No habitat tile has been chosen yet"}
         require(possibleNeighbours.any { game.currentPlayer.habitat.containsKey(it) }
         ){"A habitat tile shall only be placed to an already placed one"}
         //TODO : Remove the next comments
         //game.currentPlayer.habitat.put(habitatCoordinates, game.selectedTile)
-        //game.selectedTile = null
+        game.selectedTile = null
         onAllRefreshables { refreshAfterHabitatTileAdded() }
     }
 
