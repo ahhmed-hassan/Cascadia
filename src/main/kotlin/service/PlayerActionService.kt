@@ -93,7 +93,7 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
             if (playerAction && game.currentPlayer.natureToken <= 0) {
                 throw IllegalStateException("Current Player not allowed to perform replacement")
             }
-            else if (playerAction && game.currentPlayer.natureToken > 0) {
+            else if (game.currentPlayer.natureToken > 0) {
                 game.currentPlayer.natureToken--
             }
             // check if token at indices have same animal if used to resolve overpopulation of four in nextTurn
