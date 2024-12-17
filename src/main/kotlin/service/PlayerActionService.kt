@@ -8,7 +8,7 @@ import entity.HabitatTile
  *
  *  @param [rootService] the games RootService for communication with entity layer
  */
-class PlayerActionService(private val rootSerivce : RootService) : AbstractRefreshingService() {
+class PlayerActionService(private val rootService : RootService) : AbstractRefreshingService() {
 
     /**
      * [chooseTokenTilePair] is responsible for marking the chosen Token-Tile Pair as selected for further use.
@@ -30,7 +30,7 @@ class PlayerActionService(private val rootSerivce : RootService) : AbstractRefre
         //Delete pair out of shop by assigning a null pair
         game.shop[chosenPair] = Pair(null, null)
 
-        onAllRefreshables { refreshAfterTokenTilePairChoosen() }
+        onAllRefreshables { refreshAfterTokenTilePairChosen() }
     }
 
     /**
@@ -39,7 +39,7 @@ class PlayerActionService(private val rootSerivce : RootService) : AbstractRefre
     fun chooseCustomPair(titleIndex : Int, tokenIndex : Int) {
         //ToDo
 
-        onAllRefreshables { refreshAfterTokenTilePairChoosen() }
+        onAllRefreshables { refreshAfterTokenTilePairChosen() }
     }
 
     /**
@@ -84,7 +84,7 @@ class PlayerActionService(private val rootSerivce : RootService) : AbstractRefre
     fun discardToken() {
         //ToDo
 
-        onAllRefreshables { /*ToDo refreshAfterTokenDiscarded() */ }
+        onAllRefreshables { refreshAfterNextTurn() }
     }
 
 
