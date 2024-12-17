@@ -53,6 +53,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
             visited: MutableSet<Pair<Int, Int>>,
             coordinate: Pair<Int, Int>
         ): Int {
+            if(visited.contains(coordinate)) return 0
             var connectedComponentLength: Int = 1
             visited.add(coordinate)
             val neighbours = coordinate.neighbours()
