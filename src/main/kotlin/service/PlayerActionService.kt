@@ -13,14 +13,22 @@ class PlayerActionService(private val rootSerivce : RootService) : AbstractRefre
     /**
      * [chooseTokenTilePair] is responsible for marking the chosen Token-Tile Pair as selected for further use.
      *
-     * @param choosenPair This the pair that the player chose from the shop.
+     * @param chosenPair This the pair that the player chose from the shop.
      */
-    fun chooseTokenTilePair(choosenPair : Int) {
+    fun chooseTokenTilePair(chosenPair : Int) {
         val game = rootSerivce.currentGame
         checkNotNull(game)
+        val shopTile = game.shop[chosenPair].first
+        val shopToken = game.shop[chosenPair].second
+        checkNotNull(shopTile)
+        checkNotNull(shopToken)
 
-        game.selectedTile = game.shop[choosenPair].first
-        game.selectedToken = game.shop[choosenPair].second
+        //mark the chosen Token-Tile Pair as selected
+        game.selectedTile = shopTile
+        game.selectedToken = shopToken
+
+        //Delete pair out of shop by assigning a null pair
+        game.shop[chosenPair] = Pair(null, null)
 
         onAllRefreshables { refreshAfterTokenTilePairChoosen() }
     }
