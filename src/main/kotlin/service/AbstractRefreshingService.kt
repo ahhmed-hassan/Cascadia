@@ -12,7 +12,7 @@ abstract class AbstractRefreshingService {
     private val refreshables = mutableListOf<Refreshables>()
 
     /**
-     * adds a [Refreshable] to the list that gets called
+     * adds a [Refreshables] to the list that gets called
      * whenever [onAllRefreshables] is used.
      */
     fun addRefreshable(newRefreshable : Refreshables) {
@@ -21,7 +21,7 @@ abstract class AbstractRefreshingService {
 
     /**
      * Executes the passed method (usually a lambda) on all
-     * [Refreshable]s registered with the service class that
+     * [Refreshables] registered with the service class that
      * extends this [AbstractRefreshingService]
      *
      * Example usage (from any method within the service):
