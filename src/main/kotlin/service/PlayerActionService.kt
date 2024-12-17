@@ -73,7 +73,7 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
 
         game.selectedToken = null
         rootService.gameService.nextTurn()
-        onAllRefreshables { /*ToDo refreshAfterTokenDiscarded() */ }
+        onAllRefreshables { refreshAfterNextTurn() }
     }
 
 
