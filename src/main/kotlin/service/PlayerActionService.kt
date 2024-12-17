@@ -40,17 +40,14 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
         checkNotNull(game)
 
         // check if player allowed to choose tile
-        if (game.selectedTile != null || game.selectedToken != null || game.hasPlayedTile) {
-            throw IllegalStateException("Player already selected a pair")
+        check(game.selectedTile != null || game.selectedToken != null || game.hasPlayedTile, ) {
+            "Player already selected a pair"
         }
-        if (game.currentPlayer.natureToken < 1) {
-            throw IllegalStateException("Player has no nature token left to select custom pair")
-        }
+        check(game.currentPlayer.natureToken < 1) {"Player has no nature token left to select custom pair"}
 
         // check arguments
-        if (tileIndex < 0 || tileIndex > 3 || tokenIndex < 0 || tokenIndex > 3) {
-            throw IllegalArgumentException("Index for both tile and token must be between 0 and 3")
-        }
+        require(tileIndex < 0 || tileIndex > 3) {"Index for tile must be between 0 and 3"}
+        require(tokenIndex < 0 || tokenIndex > 3) {"Index for token must be between 0 and 3"}
 
         // select custom pair
         game.selectedTile = game.shop[tileIndex].first
