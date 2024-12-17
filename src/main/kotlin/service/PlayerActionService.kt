@@ -68,11 +68,11 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
      * [discardToken] discards the currently selected token.
      */
     fun discardToken() {
-        val game = rootSerivce.currentGame
+        val game = rootService.currentGame
         checkNotNull(game)
 
         game.selectedToken = null
-        rootSerivce.gameService.nextTurn()
+        rootService.gameService.nextTurn()
         onAllRefreshables { /*ToDo refreshAfterTokenDiscarded() */ }
     }
 
