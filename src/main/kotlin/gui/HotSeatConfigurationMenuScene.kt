@@ -1,5 +1,6 @@
 package gui
 
+import entity.PlayerType
 import service.RootService
 import tools.aqua.bgw.components.uicomponents.Button
 import tools.aqua.bgw.components.uicomponents.TextField
@@ -186,6 +187,7 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         visual = ColorVisual(255, 255, 255)
     ).apply {
         onMouseClicked = {
+            rootService.gameService.startNewGame(mapOf("a" to PlayerType.LOCAL), listOf(true))
         }
     }
 

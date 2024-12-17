@@ -3,18 +3,13 @@ package gui
 import service.RootService
 import tools.aqua.bgw.core.BoardGameApplication
 
-class CascadiaApplication : BoardGameApplication("Cascadia Game") {
+class CascadiaApplication : BoardGameApplication("Cascadia Game"), Refreshables {
 
     private val rootService = RootService()
 
     private val gameScene = GameScene(rootService)
 
-    private val hotSeatConfigurationMenu = HotSeatConfigurationMenuScene(rootService).apply {
-        startButton.onMouseClicked = {
-            hideMenuScene()
-            showGameScene(gameScene)
-        }
-    }
+    private val hotSeatConfigurationMenu = HotSeatConfigurationMenuScene(rootService)
 
     private val networkConfigurationMenuScene = NetworkConfigurationMenuScene(rootService).apply {
         startButton.onMouseClicked = {
@@ -51,15 +46,26 @@ class CascadiaApplication : BoardGameApplication("Cascadia Game") {
         }
     }
 
+
     init {
+        rootService.addRefreshables(
+            this,
+            gameScene,
+            hotSeatConfigurationMenu,
+            networkJoinMenuScene,
+            networkConfigurationMenuScene,
+            winningMenuScene,
+        )
         this.showMenuScene(mainMenuScene, 0)
     }
 
-    private fun showGameScene() {
-        this.showGameScene(gameScene)
+
+    override fun refreshAfterGameEnds() {
+        this.showMenuScene(winningMenuScene)
     }
 
-    private fun showWinningMenuScene() {
-        this.showMenuScene(winningMenuScene)
+    override fun refreshAfterGameStart() {
+        hideMenuScene()
+        this.showGameScene(gameScene)
     }
 }
