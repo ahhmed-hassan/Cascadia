@@ -39,9 +39,7 @@ class GameService(private val rootService : RootService) : AbstractRefreshingSer
 
 
         // check if player performed action
-        if (!game.hasPlayedTile) {
-            throw IllegalStateException("Player must at least add a habitat tile each turn")
-        }
+        check(!game.hasPlayedTile) { "Player must at least add a habitat tile each turn" }
 
         // check for game end and if so, update GUI
         if (game.habitatTileList.size == 0) {
@@ -52,36 +50,24 @@ class GameService(private val rootService : RootService) : AbstractRefreshingSer
         // refill shop
         val newHabitatTile = game.habitatTileList[game.habitatTileList.size-1]
         val newWildlifeToken = game.wildlifeTokenList[game.wildlifeTokenList.size-1]
-        // refill normal pair
-        if (game.shop.size != 4) {
-            val newPair = Pair(newHabitatTile, newWildlifeToken)
-            game.shop.add(newPair)
-        }
-        // refill custom pair
-        else {
-            for (i in 0 until game.shop.size) {
-                // refill missing habitatTile
-                if (game.shop[i].first == null) {
-                    game.shop[i] = Pair(newHabitatTile, game.shop[i].second)
-                }
-                // refill missing wildlifeToken
-                else if (game.shop[i].second == null) {
-                    game.shop[i] = Pair(game.shop[i].first, newWildlifeToken)
-                }
+        for (i in 0 until game.shop.size) {
+            // refill missing pair
+            if(game.shop[i].first == null && game.shop[i].second == null) {
+                game.shop[i] = Pair(newHabitatTile, newWildlifeToken)
+            }
+            // refill missing habitatTile from custom pair
+            else if (game.shop[i].first == null) {
+                game.shop[i] = Pair(newHabitatTile, game.shop[i].second)
+            }
+            // refill missing wildlifeToken from custom pair
+            else if (game.shop[i].second == null) {
+                game.shop[i] = Pair(game.shop[i].first, newWildlifeToken)
             }
         }
 
         // check for and resolve possible overpopulation of four
-        var hasOverpopulation = true
-        while (hasOverpopulation) {
-            // check for overpopulation of four
-            hasOverpopulation = game.shop.all{it.second == game.shop.first().second}
-
-            // resolve possible overpopulation
-            if (hasOverpopulation) {
-                rootService.playerActionService.replaceWildlifeTokens(tokenIndices = listOf(0, 1, 2, 3),
-                                                                      playerAction = false)
-            }
+        if(checkForSameAnimal()) {
+            resolveOverpopulation()
         }
 
         // switch current player
@@ -90,6 +76,20 @@ class GameService(private val rootService : RootService) : AbstractRefreshingSer
 
         // refresh GUI
         onAllRefreshables { refreshAfterNextTurn() }
+    }
+
+    /**
+     *
+     */
+    fun resolveOverpopulation() {
+
+    }
+
+    /**
+     *
+     */
+    internal fun checkForSameAnimal( tokenIndices : List<Int> = listOf(0,1,2,3) ): Boolean {
+        return true
     }
 
 }
