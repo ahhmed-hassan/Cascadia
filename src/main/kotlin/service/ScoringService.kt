@@ -11,7 +11,7 @@ import entity.Player
  *
  *  @param [rootService] the games RootService for communication with entity layer
  */
-class ScoringService(private val rootSerivce: RootService) : AbstractRefreshingService() {
+class ScoringService(private val rootService: RootService) : AbstractRefreshingService() {
 
 
     companion object {
@@ -128,7 +128,7 @@ class ScoringService(private val rootSerivce: RootService) : AbstractRefreshingS
             }
         val salmonGraph = makeSalmonGraph(player.habitat)
         val visited: MutableSet<Pair<Int, Int>> = mutableSetOf()
-        val isB = checkNotNull(rootSerivce.currentGame) { "No game started yet" }.ruleSet[Animal.SALMON.ordinal]
+        val isB = checkNotNull(rootService.currentGame) { "No game started yet" }.ruleSet[Animal.SALMON.ordinal]
         val scoreMap = if (isB) mapOf(1 to 2, 2 to 4, 3 to 9, 4 to 11, 5 to 17)
         else mapOf(1 to 2, 2 to 5, 3 to 8, 4 to 12, 5 to 16, 7 to 25)
         val maxRuns = if (isB) 7 else 5
