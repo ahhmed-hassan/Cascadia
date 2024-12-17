@@ -1,30 +1,36 @@
 package gui
 
+import service.RootService
 import tools.aqua.bgw.core.BoardGameApplication
 
 class CascadiaApplication : BoardGameApplication("Cascadia Game") {
 
-    private val gameScene = GameScene()
+    private val rootService = RootService()
 
-    private val hotSeatConfigurationMenu = HotSeatConfigurationMenuScene().apply {
+    private val gameScene = GameScene(rootService)
+
+    private val hotSeatConfigurationMenu = HotSeatConfigurationMenuScene(rootService).apply {
         startButton.onMouseClicked = {
+            hideMenuScene()
             showGameScene(gameScene)
         }
     }
 
-    private val networkConfigurationMenuScene = NetworkConfigurationMenuScene().apply {
+    private val networkConfigurationMenuScene = NetworkConfigurationMenuScene(rootService).apply {
         startButton.onMouseClicked = {
+            hideMenuScene()
             showGameScene(gameScene)
         }
     }
 
-    private val networkJoinMenuScene = NetworkJoinMenuScene().apply {
+    private val networkJoinMenuScene = NetworkJoinMenuScene(rootService).apply {
         joinButton.onMouseClicked = {
+            hideMenuScene()
             showMenuScene(winningMenuScene)
         }
     }
 
-    private val mainMenuScene = MainMenuScene().apply {
+    private val mainMenuScene = MainMenuScene(rootService).apply {
         startHotSeatGameButton.onMouseClicked = {
             showMenuScene(hotSeatConfigurationMenu)
         }
@@ -39,7 +45,7 @@ class CascadiaApplication : BoardGameApplication("Cascadia Game") {
         }
     }
 
-    private val winningMenuScene = WinningMenuScene().apply {
+    private val winningMenuScene = WinningMenuScene(rootService).apply {
         exitButton.onMouseClicked = {
             exit()
         }
