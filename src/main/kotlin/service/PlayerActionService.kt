@@ -31,138 +31,79 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
     /**
      * Replace a number of [WildlifeToken] from the tile-token pairs in the [shop] with new ones from [WildlifeToken].
      *
-     * Is used in to replace an overpopulation of four equal tokens if it appears during [next Turn]
-     * or player induced token replacements.
-     *
      * Can be used for the free replacement of three token if three tokens in the [shop] are the same at the turn start.
      *
      * Can be used to replace a chosen number of tokens if the player has at least one nature token.
      * After that the number of nature tokens of the current player is reduced by one.
      *
-     * If used during [nextTurn] to resolve an overpopulation of four the replaced tokens are stored in [discardedToken]
-     * till all occouring overpopulations are resolved.
-     *
-     * If used during a turn, the replaced tokens are stored in [discardedToken] till the end of the current turn
+     * The replaced tokens are stored in [discardedToken] till the end of the current turn
      * and are added back to [WildlifeToken] afterwards in [nextTurn].
      *
-     * @param [tokenIndices] is a list of indices of the tile-token pairs in [shop] whose token shall be replaced
-     * @param [playerAction] indicates whether the replacement was issued by the player or not.
-     * [true] if action of player. [false] if used during [nextTurn]. Default is [true].
+     * @param [tokenIndices] is a list of indices of the tile-token pairs in [shop] whose token shall be replaced.
      *
-     * @throws illegalArgumentException if [tokenIndices] contains an [Int] n with n < 0 or n > 3
-     * @throws illegalStateException if [hasReplacedThreeToken] is True and [CurrentPlayer]s [natureToken] is zero
-     * @throws illegalStateException if [hasReplacedThreeToken] is False and [CurrentPlayer]s [natureToken] is zero
-     * and [WildlifeToken] in [shop] at indices in [tokenIndices] don't have the same value
+     * @throws illegalArgumentException if indices in [tokenIndices] are out of bound for shop, not mutually distinct
+     * , number of indices is either too big or too small
+     * or, in case of free overpopulation of three resolution, if token at indices do not share the same animal value.
+     * @throws illegalStateException if player is not allowed to perform a replacement
+     * or if not enough wildlife tokens are left in [tokenList] to replace with.
      *
      */
-    fun replaceWildlifeTokens(tokenIndices : List<Int>, playerAction : Boolean = true) {
+    fun replaceWildlifeTokens(tokenIndices : List<Int>) {
 
         //check if game exists
         val game = rootService.currentGame
         checkNotNull(game)
 
+        // check if argument contains any indices
+        require(tokenIndices.size > 0 || tokenIndices.size < 5) {"number of indices must be between 0 and 5"}
+
+        //check whether indices are not the same
+        require(tokenIndices.distinct().size == tokenIndices.size) {"All indices must be different"}
+
         // check if indices in argument in range
-        for (index in tokenIndices) {
-            if (index > 3 || index < 0) {
-                throw IllegalArgumentException("Indices for tokens must be between 0 and 3")
-            }
+        tokenIndices.forEach { require(it > 3 || it < 0) {"Indices for tokens must be between 0 and 3"} }
+
+        // check if enough tokens are left for replacement, if not the player may try again with a smaller amount
+        check(game.wildlifeTokenList.size < tokenIndices.size) {
+            "Not enough wildlifeTokens for replacement left. " +
+                    "Replacement of up to ${game.wildlifeTokenList.size} Tokens still possible."
         }
 
-        // check if player is allowed to perform action
-        if (game.hasReplacedThreeToken && game.currentPlayer.natureToken == 0) {
+        // player is allowed to freely resolve an overpopulation of three once
+        if (!game.hasReplacedThreeToken && tokenIndices.size == 3) {
+            require(rootService.gameService.checkForSameAnimal(tokenIndices)) {
+                "Token at indices must have same animal for overpopulation of three"
+            }
+            game.hasReplacedThreeToken = true
+        }
+        // otherwise the player must use a nature token in exchange
+        else if (game.currentPlayer.natureToken > 0) {
+            game.currentPlayer.natureToken--
+        }
+        else {
             throw IllegalStateException("Current Player not allowed to perform replacement")
         }
 
-        // check if enough tokens are left in wildLifeTokenList for replacement
-        // if list is empty or not enough tokens left to automatically resolve an overpoulation of four
-        // end game
-        if (game.wildlifeTokenList.size == 0 || (game.wildlifeTokenList.size < tokenIndices.size && !playerAction)) {
-            onAllRefreshables { refrefhAfterGameEnd() }
-        }
-        // if not enough tokens left to perform a player replacement, the player can try again with a smaller amount
-        else if (game.wildlifeTokenList.size < tokenIndices.size && playerAction) {
-            throw IllegalStateException( "Not enough wildlifeTokens for replacement left. " +
-                                         "Replacement of ${game.wildlifeTokenList.size} Tokens still possible.")
-        }
-
-        // check if replacement is legitimate
-        // replacement of four wildlifeToken
-        if (tokenIndices.size == 4) {
-            // check if action is done by player or during nextTurn to resolve overpopulation of four
-            // if done by player, player must have at least one nature token
-            if (playerAction && game.currentPlayer.natureToken <= 0) {
-                throw IllegalStateException("Current Player not allowed to perform replacement")
-            }
-            else if (game.currentPlayer.natureToken > 0) {
-                game.currentPlayer.natureToken--
-            }
-            // check if token at indices have same animal if used to resolve overpopulation of four in nextTurn
-            else{
-                val currentAnimal = game.shop[tokenIndices[0]].second.animal
-                for (index in tokenIndices) {
-                    if (game.shop[tokenIndices[index]].second.animal != currentAnimal) {
-                        throw IllegalArgumentException("Token on indices do not have the same Animal")
-                    }
-                }
-            }
-
-        }
-        // replacement of three wildlifeToken
-        else if (tokenIndices.size == 3) {
-            // check if player is allowed to perform action
-            // player is allowed to perform action if doing a free resolve of an overpopulation of three
-            // or by using nature token
-            if (game.hasReplacedThreeToken && game.currentPlayer.natureToken == 0) {
-                throw IllegalStateException("Current Player not allowed to perform replacement")
-            } else if (!game.hasReplacedThreeToken) {
-                // for free replacement of overpopulation of three, tokens need to have equal animal
-                val currentAnimal = game.shop[tokenIndices[0]].second.animal
-                for (index in tokenIndices) {
-                    if (game.shop[tokenIndices[index]].second.animal != currentAnimal) {
-                        throw IllegalArgumentException("Token on indices do not have the same Animal")
-                    }
-                }
-
-                game.hasReplacedThreeToken = true
-            } else {
-                game.currentPlayer.natureToken--
-            }
-        }
-        // replacement of two or one wildlifeToken
-        else {
-            // check if player is allowed to perform action by having at least one nature token
-            if (game.currentPlayer.natureToken <= 0) {
-                throw IllegalStateException("Current Player not allowed to perform replacement")
-            } else {
-                game.currentPlayer.natureToken--
-            }
-        }
-
         // perform actual replacement
-        for (index in tokenIndices) {
-            game.discardedToken.add(game.shop[index].second)
-            game.shop[index] = Pair(game.shop[index].first, game.wildlifeTokenList[game.wildlifeTokenList.size-1])
+        tokenIndices.forEach {
+            game.discardedToken.add(game.shop[it].second)
+            game.shop[it] = Pair(game.shop[it].first, game.wildlifeTokenList[game.wildlifeTokenList.size-1])
         }
 
-        // check if replacement created an overpopulation of four
-        var overpopulation = true
-        val currentAnimal = game.shop[tokenIndices[0]].second.animal
-        for (index in 1..3) {
-            if (game.shop[tokenIndices[index]].second.animal != currentAnimal) {
-                overpopulation = false
-                break
-            }
-        }
         // resolve possible overpopulation of four
-        if (overpopulation) {
-            replaceWildlifeTokens(listOf(1,2,3,4), false)
+        if (rootService.gameService.checkForSameAnimal()) {
+            rootService.gameService.resolveOverpopulation()
         }
 
         // return discarded wildlifeTokens
-        for (token in game.discardedToken) {
-            game.wildlifeTokenList.add(token)
+        else {
+            for (token in game.discardedToken) {
+                checkNotNull(token)
+                game.wildlifeTokenList.add(token)
+            }
+            game.discardedToken = mutableListOf()
+            game.wildlifeTokenList.shuffle()
         }
-        game.wildlifeTokenList.shuffle()
 
         // refresh GUI Elements
         onAllRefreshables { refreshAfterWildlifeTokenReplaced() }
