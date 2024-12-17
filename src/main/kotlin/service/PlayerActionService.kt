@@ -16,7 +16,7 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
      * @param chosenPair This the pair that the player chose from the shop.
      */
     fun chooseTokenTilePair(chosenPair : Int) {
-        val game = rootSerivce.currentGame
+        val game = rootService.currentGame
         checkNotNull(game)
         val shopTile = game.shop[chosenPair].first
         val shopToken = game.shop[chosenPair].second
