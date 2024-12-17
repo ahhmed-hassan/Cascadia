@@ -48,6 +48,7 @@ class ScoringService(private val rootSerivce : RootService) : AbstractRefreshing
         private fun depthFirstConnectedComponentLength(graph: Map<Pair<Int,Int>, List<Pair<Int,Int>>>,
                                             visited : MutableSet<Pair<Int,Int>>,
                                             coordinate: Pair<Int, Int>) : Int {
+            if(visited.contains(coordinate)) return 0
             var connectedComponentLength : Int = 1
             visited.add(coordinate)
             val neighbours = coordinate.neighbours()
