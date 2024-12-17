@@ -16,7 +16,7 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
     fun chooseTokenTilePair(choosenPair : Int) {
         //ToDo
 
-        onAllRefreshables { refreshAfterTokenTilePairChoosen() }
+        onAllRefreshables { refreshAfterTokenTilePairChosen() }
     }
 
     /**
@@ -61,7 +61,7 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
         game.currentPlayer.natureToken--
 
         // refresh GUI
-        onAllRefreshables { refreshAfterTokenTilePairChoosen() }
+        onAllRefreshables { refreshAfterTokenTilePairChosen() }
     }
 
     /**
@@ -106,7 +106,7 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
     fun discardToken() {
         //ToDo
 
-        onAllRefreshables { /*ToDo refreshAfterTokenDiscarded() */ }
+        onAllRefreshables { refreshAfterNextTurn() }
     }
 
 
