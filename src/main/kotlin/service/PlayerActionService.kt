@@ -8,7 +8,7 @@ import entity.HabitatTile
  *
  *  @param [rootService] the games RootService for communication with entity layer
  */
-class PlayerActionService(private val rootSerivce : RootService) : AbstractRefreshingService() {
+class PlayerActionService(private val rootService : RootService) : AbstractRefreshingService() {
 
     /**
      *
@@ -16,7 +16,7 @@ class PlayerActionService(private val rootSerivce : RootService) : AbstractRefre
     fun chooseTokenTilePair(choosenPair : Int) {
         //ToDo
 
-        onAllRefreshables { refreshAfterTokenTilePairChoosen() }
+        onAllRefreshables { refreshAfterTokenTilePairChosen() }
     }
 
     /**
@@ -25,7 +25,7 @@ class PlayerActionService(private val rootSerivce : RootService) : AbstractRefre
     fun chooseCustomPair(titleIndex : Int, tokenIndex : Int) {
         //ToDo
 
-        onAllRefreshables { refreshAfterTokenTilePairChoosen() }
+        onAllRefreshables { refreshAfterTokenTilePairChosen() }
     }
 
     /**
@@ -81,7 +81,7 @@ class PlayerActionService(private val rootSerivce : RootService) : AbstractRefre
     fun discardToken() {
         //ToDo
 
-        onAllRefreshables { /*ToDo refreshAfterTokenDiscarded() */ }
+        onAllRefreshables { refreshAfterNextTurn() }
     }
 
 
