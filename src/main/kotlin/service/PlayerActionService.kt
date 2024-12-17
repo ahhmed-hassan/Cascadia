@@ -65,14 +65,14 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
      *
      */
     fun rotateTile() {
-        val game = rootSerivce.currentGame
+        val game = rootService.currentGame
         requireNotNull(game){"No game started yet"}
 
-        requireNotNull(game.selectedTile){"Only the selected tile can be rotated!"}
+        val selectedTile = requireNotNull(game.selectedTile){"Only the selected tile can be rotated!"}
 
-        game.selectedTile.rotationOffset = (game.selectedTile.rotationOffset+1).mod(game.selectedTile.terrains.size)
-        game.selectedTile.terrains.add(0,
-            game.selectedTile.terrains.removeAt(game.selectedTile.terrains.size-1))
+        selectedTile.rotationOffset = (selectedTile.rotationOffset+1).mod(selectedTile.terrains.size)
+        selectedTile.terrains.add(0,
+            selectedTile.terrains.removeAt(selectedTile.terrains.size-1))
 
         onAllRefreshables { refreshAfterTileRotation() }
     }
