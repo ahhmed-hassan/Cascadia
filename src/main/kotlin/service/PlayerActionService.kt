@@ -38,7 +38,11 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
     }
 
     /**
-     *
+     * The method adds the current selected [WildlifeToken] to the given coordinates
+     * @param habitatCoordinates the given coordinates of the [entity.Player.habitat]
+     * @throws IllegalStateException if [entity.CascadiaGame.selectedTile] is null
+     * @throws IllegalArgumentException if the parameters are not next to some already put [entity.HabitatTile]
+     * After this function the [entity.CascadiaGame.selectedTile] is set to null
      */
     fun addTileToHabitat(habitatCoordinates : Pair<Int, Int>) {
         //ToDo
@@ -46,12 +50,11 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
         val possibleNeighbours = offsets.map {
             habitatCoordinates.first+it.first to habitatCoordinates.second + it.second }
 
-        val game = requireNotNull(rootService.currentGame) {"No game started"}
-        requireNotNull(game.selectedTile){"No habitat tile has been chosen yet"}
+        val game = checkNotNull(rootService.currentGame) {"No game started"}
+        val selectedTile = checkNotNull(game.selectedTile){"No habitat tile has been chosen yet"}
         require(possibleNeighbours.any { game.currentPlayer.habitat.containsKey(it) }
         ){"A habitat tile shall only be placed to an already placed one"}
-        //TODO : Remove the next comments
-        //game.currentPlayer.habitat.put(habitatCoordinates, game.selectedTile)
+        game.currentPlayer.habitat[habitatCoordinates] = selectedTile
         game.selectedTile = null
         onAllRefreshables { refreshAfterHabitatTileAdded() }
     }
