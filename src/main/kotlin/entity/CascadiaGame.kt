@@ -27,13 +27,13 @@ class CascadiaGame(
     var hasReplacedThreeToken: Boolean,
     var hasPlayedTile: Boolean,
     var shop: MutableList<Pair<HabitatTile?,WildlifeToken?>>,
-    private var discardedToken: MutableList<WildlifeToken>,
+    var discardedToken: MutableList<WildlifeToken>,
 
     var currentPlayer: Player,
     val playerList: List<Player>,
     val habitatTileList: MutableList<HabitatTile>,
-    var selectedTile: HabitatTile,
-    var selectedToken: WildlifeToken,
+    var selectedTile: HabitatTile?,
+    var selectedToken: WildlifeToken?,
     var wildlifeTokenList: MutableList<WildlifeToken>
     ) {
 

@@ -16,7 +16,7 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
     fun chooseTokenTilePair(choosenPair : Int) {
         //ToDo
 
-        onAllRefreshables { refreshAfterTokenTilePairChoosen() }
+        onAllRefreshables { refreshAfterTokenTilePairChosen() }
     }
 
     /**
@@ -25,7 +25,7 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
     fun chooseCustomPair(titleIndex : Int, tokenIndex : Int) {
         //ToDo
 
-        onAllRefreshables { refreshAfterTokenTilePairChoosen() }
+        onAllRefreshables { refreshAfterTokenTilePairChosen() }
     }
 
     /**
@@ -70,7 +70,7 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
     fun discardToken() {
         //ToDo
 
-        onAllRefreshables { /*ToDo refreshAfterTokenDiscarded() */ }
+        onAllRefreshables { refreshAfterNextTurn() }
     }
 
 
