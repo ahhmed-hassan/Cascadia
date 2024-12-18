@@ -10,7 +10,7 @@ import entity.Player
  *
  *  @param [rootService] the games RootService for communication with entity layer
  */
-class ScoringService(private val rootSerivce : RootService) : AbstractRefreshingService() {
+class ScoringService(private val rootService : RootService) : AbstractRefreshingService() {
 
     /**
      *
