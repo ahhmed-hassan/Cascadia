@@ -67,11 +67,13 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
     /**
      * [discardToken] discards the currently selected token.
      */
-    fun discardToken() {
+    fun discardToken(token: WildlifeToken) {
         val game = rootService.currentGame
         checkNotNull(game)
 
         game.selectedToken = null
+        game.wildlifeTokenList.add(token)
+
         rootService.gameService.nextTurn()
         onAllRefreshables { refreshAfterNextTurn() }
     }
