@@ -13,6 +13,7 @@ class EasyBotService(private val rootService: RootService) {
     val PLACEWILDLIFECHANCE = 70
     val USENATURETOKENCHANCE = 10
     val RESOLVEOVERPOPULATIONCHANCE = 80
+    val REPLACESINGLETOKENCHANCE = 33
 
     /**
      * takes the Turn for am easy bot
@@ -23,7 +24,6 @@ class EasyBotService(private val rootService: RootService) {
         val player = game.currentPlayer
 
         var hasChosenCustomPair = false
-        var hasResolvedOverpopulation = false
 
         /**
          * Resolves the overpopulation of 3 if it is possible and if the chance allows it.
@@ -31,7 +31,7 @@ class EasyBotService(private val rootService: RootService) {
         fun resolveOverpopulation() {
             if (game.shop.groupBy { it.second }.values.any { it.size == 3 }
                 && RESOLVEOVERPOPULATIONCHANCE <= (1..100).random()
-                && !hasResolvedOverpopulation) {
+                && !game.hasReplacedThreeToken) {
 
                 val animal = game.shop.groupBy { it.second }.values.first { it.size == 3 }[0].second
                 val indices = mutableListOf<Int>()
@@ -46,14 +46,14 @@ class EasyBotService(private val rootService: RootService) {
 
         resolveOverpopulation()
 
-        //Maybe uses wildlifetoken
+        //Maybe uses natureToken
         if (player.natureToken >= 1 && USENATURETOKENCHANCE <= (1..100).random()) {
             if ((1..2).random() == 1) {
                 //replace WildelifeTokens
 
                 val list = mutableListOf<Int>()
                 for (i in 0..3) {
-                    if ((1..3).random() == 1) {
+                    if (REPLACESINGLETOKENCHANCE <= (1..100).random()) {
                         list.add(i)
                     }
                 }
@@ -82,7 +82,7 @@ class EasyBotService(private val rootService: RootService) {
         }
 
         //maybe rotates the tile before placing
-        val rotation = (0..6).random()
+        val rotation = (0..5).random()
         for (i in 1..rotation) {
             playerActionService.rotateTile()
         }
@@ -92,9 +92,11 @@ class EasyBotService(private val rootService: RootService) {
 
         //maybe places the wildlife
         if (PLACEWILDLIFECHANCE <= (1..100).random()) {
-            val tiles = gameService.getAllPossibleTilesForWildlife(game.selectedToken.animal)
+            val selectedToken = game.selectedToken
+            checkNotNull(selectedToken)
+            val tiles = gameService.getAllPossibleTilesForWildlife(selectedToken.animal)
             if (tiles.isNotEmpty()) {
-                playerActionService.addToken(game.selectedToken, tiles.random())
+                playerActionService.addToken(selectedToken, tiles.random())
             } else {
                 playerActionService.discardToken()
             }

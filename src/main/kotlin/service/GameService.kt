@@ -9,12 +9,12 @@ import entity.PlayerType
  *
  *  @param [rootService] the games RootService for communication with entity layer
  */
-class GameService(private val rootService : RootService) : AbstractRefreshingService() {
+class GameService(private val rootService: RootService) : AbstractRefreshingService() {
 
     /**
      *
      */
-    fun startNewGame(playerNames : Map<String,PlayerType>, scoreRules : List<Boolean>) {
+    fun startNewGame(playerNames: Map<String, PlayerType>, scoreRules: List<Boolean>) {
         //ToDo
 
         onAllRefreshables { refreshAfterGameStart() }
@@ -36,7 +36,7 @@ class GameService(private val rootService : RootService) : AbstractRefreshingSer
      */
     fun getAllPossibleCoordinatesForTilePlacing(): List<Pair<Int, Int>> {
         val coordinates = hashSetOf<Pair<Int, Int>>()
-        val habitat = rootSerivce.currentGame?.currentPlayer?.habitat
+        val habitat = rootService.currentGame?.currentPlayer?.habitat
         checkNotNull(habitat)
 
         habitat.forEach {
@@ -88,7 +88,7 @@ class GameService(private val rootService : RootService) : AbstractRefreshingSer
      * @return List<HabitatTile>
      */
     fun getAllPossibleTilesForWildlife(animal: Animal): List<HabitatTile> {
-        val habitat = rootSerivce.currentGame?.currentPlayer?.habitat
+        val habitat = rootService.currentGame?.currentPlayer?.habitat
         checkNotNull(habitat)
 
         return habitat.values.filter { it.wildlifeToken == null && it.wildlifeSymbols.contains(animal) }
