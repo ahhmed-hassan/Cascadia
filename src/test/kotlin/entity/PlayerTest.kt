@@ -22,7 +22,7 @@ class PlayerTest {
     @Test
     fun testPlayer() {
         val name = "Cascadia Player"
-        val habitat = mapOf<Pair<Int,Int>, HabitatTile>()
+        val habitat = mutableMapOf<Pair<Int,Int>, HabitatTile>()
         val playerType = PlayerType.LOCAL
 
         val player = Player(name, habitat, playerType)
@@ -42,7 +42,7 @@ class PlayerTest {
      */
     @Test
     fun testNatureToken() {
-        val player = Player("Test Player", emptyMap(), PlayerType.NETWORK)
+        val player = Player("Test Player", mutableMapOf(), PlayerType.NETWORK)
 
         player.natureToken += 1
 
@@ -57,7 +57,7 @@ class PlayerTest {
      */
     @Test
     fun testScore() {
-        val player = Player("Test Player", emptyMap(), PlayerType.LOCAL)
+        val player = Player("Test Player", mutableMapOf(), PlayerType.LOCAL)
 
         player.score += 64
 
