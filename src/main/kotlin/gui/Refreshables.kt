@@ -8,12 +8,14 @@ package gui
  * Default (empty) implementations are provided for all methods, so that implementing
  * UI classes only need to react to events relevant to them.
  *
- * @see AbstractRefreshingService
+ * @see service.AbstractRefreshingService
  *
  */
 interface Refreshables {
 
     fun refreshAfterGameStart() {}
+
+    fun refreshAfterGameEnds() {}
 
     fun refreshAfterNextTurn() {}
 
