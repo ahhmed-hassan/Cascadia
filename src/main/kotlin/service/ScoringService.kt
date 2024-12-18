@@ -1,8 +1,8 @@
 package service
 
 import entity.Animal
-import entity.Terrain
 import entity.Player
+import entity.Terrain
 
 
 /**
@@ -10,7 +10,7 @@ import entity.Player
  *
  *  @param [rootService] the games RootService for communication with entity layer
  */
-class ScoringService(private val rootService : RootService) : AbstractRefreshingService() {
+class ScoringService(private val rootService: RootService) : AbstractRefreshingService() {
 
 
     companion object {
@@ -33,11 +33,12 @@ class ScoringService(private val rootService : RootService) : AbstractRefreshing
         private val addPairs: (Pair<Int, Int>, Pair<Int, Int>) -> Pair<Int, Int> = { a, b ->
             a.first + b.first to a.second + b.second
         }
-        private val getNeighbours : (Pair<Int,Int>) -> List<Pair<Int,Int>> = {
-            pair -> directionsPairsAndCorrespondingEdges.keys.map { addPairs(pair, it) }
+        private val getNeighbours: (Pair<Int, Int>) -> List<Pair<Int, Int>> = { pair ->
+            directionsPairsAndCorrespondingEdges.keys.map { addPairs(pair, it) }
         }
-        private fun Pair<Int,Int>.neighbours () : List<Pair<Int,Int>>{
-            return directionsPairsAndCorrespondingEdges.keys.map { addPairs(it,this) }
+
+        private fun Pair<Int, Int>.neighbours(): List<Pair<Int, Int>> {
+            return directionsPairsAndCorrespondingEdges.keys.map { addPairs(it, this) }
         }
 
         /**
@@ -46,24 +47,27 @@ class ScoringService(private val rootService : RootService) : AbstractRefreshing
          * @param graph the graph to search
          * @param visited the visited coordinates so far
          */
-        private fun depthFirstLongestPathAt(graph: Map<Pair<Int,Int>, List<Pair<Int,Int>>>,
-                                            visited : MutableSet<Pair<Int,Int>>,
-                                            coordinate: Pair<Int, Int>) : Int {
-            var longestPath : Int = 1
+        private fun depthFirstLongestPathAt(
+            graph: Map<Pair<Int, Int>, List<Pair<Int, Int>>>,
+            visited: MutableSet<Pair<Int, Int>>,
+            coordinate: Pair<Int, Int>
+        ): Int {
+            var longestPath: Int = 1
             visited.add(coordinate)
-            val notVisitedNeighbours =  directionsPairsAndCorrespondingEdges.keys.map { addPairs(it,coordinate) }
+            val notVisitedNeighbours = directionsPairsAndCorrespondingEdges.keys.map { addPairs(it, coordinate) }
                 .filter { neighbour -> !visited.contains(neighbour) }
-            for(notVisitedNeighbour in notVisitedNeighbours ){
-                longestPath+= depthFirstLongestPathAt(graph, visited, notVisitedNeighbour)
+            for (notVisitedNeighbour in notVisitedNeighbours) {
+                longestPath += depthFirstLongestPathAt(graph, visited, notVisitedNeighbour)
             }
             return longestPath
 
         }
     }
+
     /**
      *
      */
-    fun calculateScore(player : Player) {
+    fun calculateScore(player: Player) {
         //ToDo
 
         onAllRefreshables { /*ToDo*/ }
@@ -72,35 +76,35 @@ class ScoringService(private val rootService : RootService) : AbstractRefreshing
     /**
      *
      */
-    private fun calculateLongestTerrain(type : Terrain, player : Player) {
+    private fun calculateLongestTerrain(type: Terrain, player: Player) {
         //ToDo
     }
 
     /**
      *
      */
-    private fun calculateBearScore(player : Player) {
+    private fun calculateBearScore(player: Player) {
         //ToDo
     }
 
     /**
      *
      */
-    private fun calculateElkScore(player : Player) {
+    private fun calculateElkScore(player: Player) {
         //ToDo
     }
 
     /**
      *
      */
-    private fun calculateHawkScore(player : Player) {
+    private fun calculateHawkScore(player: Player) {
         //ToDo
     }
 
     /**
      *
      */
-    private fun calculateSalmonScore(player : Player) {
+    private fun calculateSalmonScore(player: Player) {
         //ToDo
     }
 
@@ -121,16 +125,17 @@ class ScoringService(private val rootService : RootService) : AbstractRefreshing
 
         foxes.forEach {
             val animals = intArrayOf(0, 0, 0, 0, 0, 0)
-            val game = rootSerivce.currentGame
+            val game = rootService.currentGame
             checkNotNull(game)
 
+            val neighbours = Pair(it.first, it.second).neighbours()
+
             //counts the animals
-            animals[habitat[Pair(it.first + 1, it.second - 1)]?.wildlifeToken?.animal?.ordinal ?: 5]++
-            animals[habitat[Pair(it.first, it.second - 1)]?.wildlifeToken?.animal?.ordinal ?: 5]++
-            animals[habitat[Pair(it.first - 1, it.second)]?.wildlifeToken?.animal?.ordinal ?: 5]++
-            animals[habitat[Pair(it.first - 1, it.second + 1)]?.wildlifeToken?.animal?.ordinal ?: 5]++
-            animals[habitat[Pair(it.first, it.second + 1)]?.wildlifeToken?.animal?.ordinal ?: 5]++
-            animals[habitat[Pair(it.first + 1, it.second)]?.wildlifeToken?.animal?.ordinal ?: 5]++
+            neighbours.forEach { neighbour ->
+                {
+                    animals[habitat[neighbour]?.wildlifeToken?.animal?.ordinal ?: 5]++
+                }
+            }
 
             //resets the fallback value for animals that are null
             animals[5] = 0
@@ -138,6 +143,7 @@ class ScoringService(private val rootService : RootService) : AbstractRefreshing
             if (game.ruleSet[Animal.FOX.ordinal]) {
                 //B
                 var pairs = 0
+                animals[Animal.FOX.ordinal] = 0
                 animals.forEach { animal ->
                     {
                         if (animal >= 2) {
