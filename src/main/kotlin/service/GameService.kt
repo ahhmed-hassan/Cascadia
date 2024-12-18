@@ -9,12 +9,12 @@ import entity.PlayerType
  *
  *  @param [rootService] the games RootService for communication with entity layer
  */
-class GameService(private val rootSerivce: RootService) : AbstractRefreshingService() {
+class GameService(private val rootService : RootService) : AbstractRefreshingService() {
 
     /**
      *
      */
-    fun startNewGame(playerNames: Map<String, PlayerType>, scoreRules: List<Boolean>) {
+    fun startNewGame(playerNames : Map<String,PlayerType>, scoreRules : List<Boolean>) {
         //ToDo
 
         onAllRefreshables { refreshAfterGameStart() }
