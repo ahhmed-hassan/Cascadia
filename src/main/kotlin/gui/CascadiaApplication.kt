@@ -19,7 +19,7 @@ class CascadiaApplication : BoardGameApplication("Cascadia Game"), Refreshables 
     }
 
     private val networkJoinMenuScene = NetworkJoinMenuScene(rootService).apply {
-        joinButton.onMouseClicked = {
+        startButton.onMouseClicked = {
             hideMenuScene()
             showMenuScene(winningMenuScene)
         }

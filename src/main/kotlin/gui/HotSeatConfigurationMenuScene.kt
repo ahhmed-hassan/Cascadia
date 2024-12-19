@@ -166,8 +166,7 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             height = 50,
             posY = posY,
             posX = 50,
-            text = "D",
-            visual = ColorVisual(Color.GRAY)
+            visual = ImageVisual("downward.png")
         )
     }
 
@@ -177,8 +176,7 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             height = 50,
             posY = posY,
             posX = 100,
-            text = "U",
-            visual = ColorVisual(Color.GRAY)
+            visual = ImageVisual("upward.png")
         )
     }
 
