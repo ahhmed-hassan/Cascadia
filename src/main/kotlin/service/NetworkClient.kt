@@ -1,8 +1,7 @@
 package service
 
-import com.sun.tools.jconsole.JConsoleContext.ConnectionState
 import entity.PlayerType
-import edu.udo.cs.sopra.ntf.*
+import edu.udo.cs.sopra.ntf.messages.*
 import tools.aqua.bgw.core.BoardGameApplication
 import tools.aqua.bgw.net.client.BoardGameClient
 import tools.aqua.bgw.net.client.NetworkLogging
@@ -55,7 +54,7 @@ class NetworkClient (playerName: String, host: String, secret: String, val netwo
      */
     override fun onJoinGameResponse(response: JoinGameResponse) {
         BoardGameApplication.runOnGUIThread {
-            check(networkService.connectionState == ConnectionState.WAITING_FOR_JOIN_CONFIRMATION)
+            check(networkService.connectionState == ConnectionState.GUEST_WAITING_FOR_CONFIRMATION)
             {"unexpected JoinGameResponse"}
 
             when (response.status) {
@@ -79,9 +78,9 @@ class NetworkClient (playerName: String, host: String, secret: String, val netwo
      */
     override fun onPlayerJoined(notification: PlayerJoinedNotification) {
         BoardGameApplication.runOnGUIThread {
-            check(networkService.connectionState == ConnectionState.WAITING_FOR_GUEST )
+            check(networkService.connectionState == ConnectionState.WAITING_FOR_GUESTS )
             { "not awaiting any guests."}
-            val players = networkService.playerList
+            val players = networkService.playersList
             if (players.contains(notification.sender)) {
                 disconnectAndError("Player names are not unique!")
             }
@@ -124,7 +123,7 @@ class NetworkClient (playerName: String, host: String, secret: String, val netwo
     @Suppress("UNUSED_PARAMETER", "unused")
     @GameActionReceiver
     fun onResolveOverPopulation(message: ResolveOverpopulationMessage, sender: String) {
-        check(networkService.connectionState == ConnectionState.WAITING_FOR_OPPONENT)
+        check(networkService.connectionState == ConnectionState.WAITING_FOR_OPPONENTS_TURN)
         { "Not Opponent's turn" }
 
         BoardGameApplication.runOnGUIThread {
@@ -142,7 +141,7 @@ class NetworkClient (playerName: String, host: String, secret: String, val netwo
     @Suppress("UNUSED_PARAMETER", "unused")
     @GameActionReceiver
     fun onPlacedMessage(message: PlaceMessage, sender: String) {
-        check(networkService.connectionState == ConnectionState.WAITING_FOR_OPPONENT)
+        check(networkService.connectionState == ConnectionState.WAITING_FOR_OPPONENTS_TURN)
 
         BoardGameApplication.runOnGUIThread {
             networkService.placedMessage(message, sender)
@@ -157,8 +156,8 @@ class NetworkClient (playerName: String, host: String, secret: String, val netwo
     */
     @Suppress("UNUSED_PARAMETER", "unused")
     @GameActionReceiver
-    fun onShuffledWildlifeTokens(message: ShuffleWilflifeTokensMessage, sender: String) {
-        check(networkService.connectionState == ConnectionState.OPPONENT_SWAPPING_WILDLIFETOKEN)
+    fun onShuffledWildlifeTokens(message: ShuffleWildlifeTokensMessage, sender: String) {
+        check(networkService.connectionState == ConnectionState.OPPONENT_SWAPPING_WILDLIFE_TOKENS)
         { "Not waiting for shuffleWilfelifeToken" }
         BoardGameApplication.runOnGUIThread {
             networkService.shuffledWildlifeTokensMessage(message, sender)
@@ -173,8 +172,8 @@ class NetworkClient (playerName: String, host: String, secret: String, val netwo
      */
     @Suppress("UNUSED_PARAMETER", "unused")
     @GameActionReceiver
-    fun onSwappedWithNatureTokenMessage(message: SwapWithNatureTokenMessage, sender: String) {
-        check(networkService.connectionState == ConnectionState.WAITING_FOR_OPPONENTS)
+    fun onSwappedWithNatureTokenMessage(message: SwappedWithNatureTokenMessage, sender: String) {
+        check(networkService.connectionState == ConnectionState.WAITING_FOR_OPPONENTS_TURN)
         { "Not waiting for shuffleWilfelifeToken" }
         BoardGameApplication.runOnGUIThread {
             networkService.swappedWithNatureTokenMessage(message, sender)
