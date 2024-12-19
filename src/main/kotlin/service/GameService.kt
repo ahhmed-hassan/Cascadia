@@ -42,32 +42,14 @@ class GameService(private val rootService : RootService) : AbstractRefreshingSer
 
 
         // if Tokenlist is empty or not enough tokens left to automatically resolve an overpopulation, end game
-        if (game.wildlifeTokenList.size == 0 || (game.wildlifeTokenList.size < 4)) {
+        if (game.wildlifeTokenList.size == 0 || game.wildlifeTokenList.size < 4) {
             onAllRefreshables { refreshAfterGameEnd() }
         }
 
-        // perform token replacement
-        (0..3).forEach {
-            game.discardedToken.add(game.shop[it].second)
-            game.shop[it] = Pair(game.shop[it].first, game.wildlifeTokenList[game.wildlifeTokenList.size-1])
-        }
+        // perform actual token replacement
+        executeTokenReplacement(listOf(0,1,2,3))
 
-        // resolve possible overpopulation of four
-        if (checkForSameAnimal()) {
-            resolveOverpopulation()
-        }
-        // return discarded wildlifeTokens
-        else {
-            for (token in game.discardedToken) {
-                checkNotNull(token)
-                game.wildlifeTokenList.add(token)
-            }
-            game.discardedToken = mutableListOf()
-            game.wildlifeTokenList.shuffle()
-        }
 
-        // refresh GUI Elements
-        onAllRefreshables { refreshAfterWildlifeTokenReplaced() }
     }
 
     /**
@@ -81,14 +63,14 @@ class GameService(private val rootService : RootService) : AbstractRefreshingSer
      * or number of indices is either too big or too small.
      *
      */
-    internal fun checkForSameAnimal( tokenIndices : List<Int> = listOf(0,1,2,3) ): Boolean {
+    fun checkForSameAnimal( tokenIndices : List<Int> = listOf(0,1,2,3) ): Boolean {
 
         // check for existing game
         val game = rootService.currentGame
         checkNotNull(game)
 
         // check if argument contains any indices
-        require(tokenIndices.size > 0 || tokenIndices.size < 5) {"number of indices must be between 0 and 5"}
+        require(tokenIndices.size in 1..4) {"number of indices must be between 0 and 5"}
 
         //check whether indices are not the same
         require(tokenIndices.distinct().size == tokenIndices.size) {"All indices must be different"}
@@ -108,6 +90,46 @@ class GameService(private val rootService : RootService) : AbstractRefreshingSer
             }
         }
         return true
+    }
+
+    /**
+     * Perform the actual replacement of tokens in the shop and trigger GUI update afterwards.
+     * Used in [replaceWildlifeTokens] and [resolveOverpopulation]
+     *
+     */
+    fun executeTokenReplacement(tokenIndices : List<Int>, networkReplacement : Boolean = false) {
+
+        //check for existing game
+        val game = checkNotNull(rootService.currentGame)
+
+        // perform replacement
+        tokenIndices.forEach {
+            game.discardedToken.add(game.shop[it].second)
+            game.shop[it] = Pair(game.shop[it].first,
+                game.wildlifeTokenList.removeLast())
+        }
+
+        // resolve possible overpopulation of four
+        if (checkForSameAnimal() && !networkReplacement) {
+            resolveOverpopulation()
+        }
+
+        // return discarded wildlifeTokens
+        else {
+            for (token in game.discardedToken) {
+                checkNotNull(token)
+                game.wildlifeTokenList.add(token)
+            }
+            game.discardedToken = mutableListOf()
+            if (!networkReplacement) {
+                game.wildlifeTokenList.shuffle()
+            }
+
+        }
+
+        // refresh GUI Elements
+        onAllRefreshables { refreshAfterWildlifeTokenReplaced() }
+
     }
 
 }
