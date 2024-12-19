@@ -43,11 +43,11 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
         check(game.selectedTile != null || game.selectedToken != null || game.hasPlayedTile, ) {
             "Player already selected a pair"
         }
-        check(game.currentPlayer.natureToken < 1) {"Player has no nature token left to select custom pair"}
+        check(game.currentPlayer.natureToken >= 1) {"Player has no nature token left to select custom pair"}
 
         // check arguments
-        require(tileIndex < 0 || tileIndex > 3) {"Index for tile must be between 0 and 3"}
-        require(tokenIndex < 0 || tokenIndex > 3) {"Index for token must be between 0 and 3"}
+        require(tileIndex in 0..3) {"Index for tile must be between 0 and 3"}
+        require(tileIndex in 0..3) {"Index for token must be between 0 and 3"}
 
         // select custom pair
         game.selectedTile = game.shop[tileIndex].first
