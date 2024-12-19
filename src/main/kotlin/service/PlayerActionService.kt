@@ -38,7 +38,7 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
     }
 
     /**
-     * The method adds the current selected [WildlifeToken] to the given coordinates
+     * The method adds the current selected [HabitatTile] to the given coordinates
      * @param habitatCoordinates the given coordinates of the [entity.Player.habitat]
      * @throws IllegalStateException if [entity.CascadiaGame.selectedTile] is null
      * @throws IllegalArgumentException if the parameters are not next to some already put [entity.HabitatTile]
