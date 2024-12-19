@@ -123,7 +123,8 @@ class NetworkClient (playerName: String, host: String, secret: String, val netwo
     @Suppress("UNUSED_PARAMETER", "unused")
     @GameActionReceiver
     fun onResolveOverPopulation(message: ResolveOverpopulationMessage, sender: String) {
-        check(networkService.connectionState == ConnectionState.WAITING_FOR_OPPONENTS_TURN)
+        check(networkService.connectionState == ConnectionState.WAITING_FOR_OPPONENTS_TURN ||
+        networkService.connectionState == ConnectionState.OPPONENT_SWAPPING_WILDLIFE_TOKENS)
         { "Not Opponent's turn" }
 
         BoardGameApplication.runOnGUIThread {
