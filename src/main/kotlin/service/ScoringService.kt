@@ -14,52 +14,59 @@ class ScoringService(private val rootService : RootService) : AbstractRefreshing
     /**
      *
      */
-    fun calculateScore(player : Player) {
+    fun calculateScore(player : Player): Int {
         //ToDo
 
         onAllRefreshables { /*ToDo*/ }
+        return 0
     }
 
     /**
      *
      */
-    private fun calculateLongestTerrain(type : Terrain, player : Player) {
+    private fun calculateLongestTerrain(type : Terrain, player : Player):Int {
         //ToDo
+        return 0
     }
 
     /**
      *
      */
-    private fun calculateBearScore(player : Player) {
+    private fun calculateBearScore(player : Player): Int {
         //ToDo
+        return 0
     }
 
     /**
      *
      */
-    private fun calculateElkScore(player : Player) {
+    private fun calculateElkScore(player : Player): Int {
         //ToDo
+        return 0
     }
 
     /**
      *
      */
-    private fun calculateHawkScore(player : Player) {
+    private fun calculateHawkScore(player : Player) : Int {
         //ToDo
+        return 0
     }
 
     /**
      *
      */
-    private fun calculateSalmonScore(player : Player) {
+    private fun calculateSalmonScore(player : Player): Int {
         //ToDo
+        return 0
     }
 
     /**
      *
      */
-    private fun calculateFoxScore(player : Player) {
+    private fun calculateFoxScore(player : Player): Int {
         //ToDo
+        return 0
     }
 
 }
