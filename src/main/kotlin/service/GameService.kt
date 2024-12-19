@@ -96,6 +96,9 @@ class GameService(private val rootService : RootService) : AbstractRefreshingSer
      * Perform the actual replacement of tokens in the shop and trigger GUI update afterwards.
      * Used in [replaceWildlifeTokens] and [resolveOverpopulation]
      *
+     * @param [tokenIndices] is a list of indices of the tile-token pairs in [shop] whose token shall be replaced.
+     * @param networkReplacement is a boolean to flag replacements done by other network players.
+     *
      */
     fun executeTokenReplacement(tokenIndices : List<Int>, networkReplacement : Boolean = false) {
 
