@@ -10,7 +10,7 @@ package entity
  * @property natureToken The number of nature tokens the player currently holds.
  * @property score The player's current score.
  */
-class Player(val name: String, val habitat: Map<Pair<Int, Int>, HabitatTile>, val playerType: PlayerType) {
+class Player(val name: String, val habitat: MutableMap<Pair<Int, Int>, HabitatTile>, val playerType: PlayerType) {
     var natureToken : Int = 0
     var score : Int = 0
 }
