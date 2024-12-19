@@ -196,7 +196,7 @@ class GameService(private val rootService : RootService) : AbstractRefreshingSer
             val playerStartTile = startTiles[i]
             player.habitat[0 to 0] = playerStartTile[0]
             player.habitat[0 to 1] = playerStartTile[1]
-            player.habitat[1 to 0] = playerStartTile[1]
+            player.habitat[1 to 0] = playerStartTile[2]
         }
 
         rootService.currentGame = game
