@@ -74,11 +74,10 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
         checkNotNull(selectedToken)
 
         game.wildlifeTokenList.add(selectedToken)
+        game.wildlifeTokenList.shuffle()
         game.selectedToken = null
 
         rootService.gameService.nextTurn()
-
-        onAllRefreshables { refreshAfterNextTurn() }
     }
 
 
