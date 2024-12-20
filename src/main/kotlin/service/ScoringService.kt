@@ -84,6 +84,10 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
         }
     }
 
+    fun calculateBonusForThreeOrMorePlayers (playersLongestTerrain :Map<Player, Map<Terrain, Int>>)
+    : Map<Player, Map<Terrain, Int>>{
+        return emptyMap()
+    }
     /**
      * TODO
      */
@@ -175,6 +179,11 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
                 , natureTokens = player.natureToken)
         }
 
+        if(game.playerList.size>2){
+            val playerLongestTerrainsMap = playersScores.mapValues { it.value.ownLongestTerrainsScores}
+            val playerTerrainsBonus = calculateBonusForThreeOrMorePlayers(playerLongestTerrainsMap)
+            return playersScores.mapValues { it.value.copy(longestAmongOtherPlayers = playerTerrainsBonus[it.key]!!) }
+        }
         val (firstPlayer, secondPlayer) = playersScores.keys.toList()
         val firstPlayerLongestTerrains = playersScores[firstPlayer]?.ownLongestTerrainsScores ?: emptyMap()
         val secondPlayerLongestTerrains = playersScores[secondPlayer]?.ownLongestTerrainsScores ?: emptyMap()
@@ -199,12 +208,12 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
     /**
      *
      */
-    fun calculateScore(player: Player): Int {
-        //ToDo
-
-        onAllRefreshables { /*ToDo*/ }
-        return 0
-    }
+//    fun calculateScore(player: Player): Int {
+//        //ToDo
+//
+//        onAllRefreshables { /*ToDo*/ }
+//        return 0
+//    }
 
     /**
      *
