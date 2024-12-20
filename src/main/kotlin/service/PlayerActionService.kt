@@ -65,7 +65,9 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
     }
 
     /**
-     * [discardToken] discards the currently selected token.
+     * [discardToken] discards the currently selected token and adds it back to the wildlife token bag.
+     *
+     * @throws IllegalStateException if the selected Token is null
      */
     fun discardToken() {
         val game = rootService.currentGame
