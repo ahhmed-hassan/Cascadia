@@ -17,6 +17,9 @@ class ScoringService(private val rootService : RootService) : AbstractRefreshing
      *
      */
     fun calculateScore(player : Player) {
+        val game = rootService.currentGame
+        checkNotNull(game)
+
         //calculates the largest habitat of each terrain
         for(terrain in Terrain.values()){
             calculateLongestTerrain(terrain,player)
@@ -29,16 +32,87 @@ class ScoringService(private val rootService : RootService) : AbstractRefreshing
         calculateSalmonScore(player)
         calculateFoxScore(player)
 
+        when(game.playerList.size){
+            2 -> for(type in Terrain.values()){
+                    val list = longestTerrainBetweenPlayers(type)
+                    if(list[0].second == list[1].second){
+                        list[0].first.score += 1
+                        list[1].first.score += 1
+                    }
+                    else{
+                        list[0].first.score += 2
+                    }
+            }
+
+            3 -> for(type in Terrain.values()){
+                    val list = longestTerrainBetweenPlayers(type)
+                    if(list[0].second > list[1].second){
+                        list[0].first.score += 3
+                        if(list[1].second > list[2].second){
+                            list[1].first.score += 1
+                        }
+                    }
+                    else if(list[0].second == list[1].second && list[1].second == list[2].second){
+                        list[0].first.score += 1
+                        list[1].first.score += 1
+                        list[2].first.score += 1
+                    }
+                    else if(list[0].second == list[1].second && list[1].second > list[2].second){
+                        list[0].first.score += 2
+                        list[1].first.score += 2
+                    }
+            }
+
+            4 -> for(type in Terrain.values()){
+                val list = longestTerrainBetweenPlayers(type)
+                if(list[0].second > list[1].second){
+                    list[0].first.score += 3
+                    if(list[1].second > list[2].second){
+                        list[1].first.score += 1
+                    }
+                }
+                else if(list[0].second == list[1].second && list[1].second == list[2].second &&
+                    list[2].second == list[3].second){
+
+                    list[0].first.score += 1
+                    list[1].first.score += 1
+                    list[2].first.score += 1
+                    list[3].first.score += 1
+                }
+                else if(list[0].second == list[1].second && list[1].second == list[2].second &&
+                    list[2].second > list[3].second){
+
+                    list[0].first.score += 1
+                    list[1].first.score += 1
+                    list[2].first.score += 1
+                }
+                else if(list[0].second == list[1].second && list[1].second > list[2].second){
+                    list[0].first.score += 2
+                    list[1].first.score += 2
+                }
+            }
+        }
+
         //nature tokens are added to the score
         player.score += player.natureToken
 
         onAllRefreshables { /*ToDo*/ }
     }
 
+    private fun longestTerrainBetweenPlayers(type: Terrain): List<Pair<Player, Int>> {
+        val game = rootService.currentGame
+        checkNotNull(game)
+
+        val playerTerrains = game.playerList
+            .map { player -> Pair(player, calculateLongestTerrain(type, player)) } // Spieler und Terrain-Länge als Pair
+
+        return playerTerrains.sortedByDescending { it.second }
+    }
+
     /**
      *
      */
-    private fun calculateLongestTerrain(type : Terrain, player : Player):Int {
+    private fun calculateLongestTerrain(type : Terrain, player : Player): Int {
         //ToDo
         return 0
     }
