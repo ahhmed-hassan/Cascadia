@@ -90,7 +90,68 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
     fun calculateScoresForThreeORMorePlayers(): Map<Player, PlayerScore> {
         //TODO
         val game = checkNotNull(rootService.currentGame) { "No game started yet" }
-        return emptyMap()
+        check(game.playerList.size>=3) {"Only call this when having only two players"}
+
+        val playersScores = game.playerList.associateWith { player ->
+            PlayerScore(animalsScores = mapOf(
+                Animal.BEAR to calculateBearScore(player),
+                Animal.SALMON to calculateSalmonScore(player),
+                Animal.ELK to calculateElkScore(player),
+                Animal.FOX to calculateFoxScore(player),
+                Animal.HAWK to calculateHawkScore(player)
+            )
+                , ownLongestTerrainsScores = Terrain.values().associateWith { calculateLongestTerrain(it, player) }
+                , natureTokens = player.natureToken)
+        }
+        val makeTerrainPlayerBonusMap: () -> Map<Terrain, Map<Player,Int>> = {
+            Terrain.values().associateWith { terrain ->
+                val terrainsScores = playersScores.mapValues { it.value.ownLongestTerrainsScores[terrain]!! }
+
+                val sortedPlayerScores : List<Pair<Player, Int>> = terrainsScores.toList()
+                    .sortedByDescending { terrainsScores[it.first] }
+
+                val bonuses = mutableMapOf<Player, Int>()
+                val largestScore = sortedPlayerScores.first().second
+                val secondLargestScore =
+                    sortedPlayerScores.dropWhile { it.second == largestScore }.firstOrNull()?.second
+
+                val playersWithLargestScore = sortedPlayerScores.filter { it.second == largestScore }.map { it.first }
+                val largestScoreBonusBasedOnNumberOfPlayersAchieved = mapOf(1 to 3, 2 to 2)
+                playersWithLargestScore.forEach { player ->
+                    bonuses[player] = largestScoreBonusBasedOnNumberOfPlayersAchieved.getOrDefault(
+                        playersWithLargestScore.size, 1
+                    )
+                }
+
+                if (secondLargestScore != null) {
+                    val playersWithSecondLargestScore: List<Player> = sortedPlayerScores
+                        .filter { it.second == secondLargestScore }
+                        .map { it.first }
+                    playersWithSecondLargestScore.forEach { player ->
+                        bonuses[player] = if (playersWithSecondLargestScore.size == 1) 1 else 0
+                    }
+                }
+                bonuses
+            }
+        }
+        val terrainBonusScore = makeTerrainPlayerBonusMap()
+        val playerTerrainBonusMap : Map<Player, Map<Terrain, Int>> = terrainBonusScore.entries.flatMap {
+            (terrain, playerMap) ->
+            playerMap.entries.map { (player, bonus) -> player to (terrain to bonus) }
+        }
+            .groupBy (/*keySelector*/{(player, terrainBonusMap) -> player },
+            /**Value transformer
+             * Without this we would have a map from the player to a  List<Pair<Player, Pair<Terrain, Int>>>  which
+             * what we basically after flatMap call have
+              */
+            {it.second})
+            /**
+             * Here we are transforming the list of pairs to map
+             */
+            .mapValues { (player, terrainBonusList) -> terrainBonusList.toMap() }
+
+        return playersScores.mapValues{(player, scoring) ->
+            scoring.copy(longestAmongOtherPlayers =  playerTerrainBonusMap[player]!!)}
     }
 
     /**
