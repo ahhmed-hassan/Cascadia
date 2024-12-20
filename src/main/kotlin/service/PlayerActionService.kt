@@ -75,6 +75,7 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
         game.selectedToken = null
 
         onAllRefreshables { refreshAfterWildlifeTokenAdded() }
+
         rootService.gameService.nextTurn()
 
     }
