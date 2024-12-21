@@ -101,20 +101,15 @@ class ScoringService(private val rootSerivce : RootService) : AbstractRefreshing
         //gets the ruleset
         val isB = checkNotNull(rootSerivce.currentGame).ruleSet[Animal.HAWK.ordinal]
 
-        //implementing one Set of Pairs for rule a and one for rule b
+        //implementing one Set of pairs for rule a
         val notAdjacent: MutableSet<Pair<Int, Int>> = mutableSetOf()
-        val inSight : MutableSet<Pair<Int, Int>> = mutableSetOf()
 
         for(coordinate in hawkCoordinate){
             //checks for every hawk if it is not adjacent to any other hawks
-            if( Pair(coordinate.first -1, coordinate.second +1) !in hawkCoordinate &&
-                Pair(coordinate.first, coordinate.second +1) !in hawkCoordinate &&
-                Pair(coordinate.first +1, coordinate.second) !in hawkCoordinate &&
-                Pair(coordinate.first +1, coordinate.second -1) !in hawkCoordinate &&
-                Pair(coordinate.first , coordinate.second -1) !in hawkCoordinate &&
-                Pair(coordinate.first -1, coordinate.second) !in hawkCoordinate){
-                    notAdjacent.add(coordinate)
-                }
+            val neighbours = getNeighbours(coordinate)
+            if (neighbours.none { it in hawkCoordinate }) {
+                notAdjacent.add(coordinate)
+            }
         }
 
         if(!isB) {
@@ -128,9 +123,11 @@ class ScoringService(private val rootSerivce : RootService) : AbstractRefreshing
             if(notAdjacent.size==7) {player.score += 22}
             if(notAdjacent.size>=8) {player.score += 26}
         } else {
+            //implementing one set of pairs for rule b
+            val inSight: MutableSet<Pair<Int, Int>> = mutableSetOf()
             //checks if a hawk is also in direct sight to another hawk
             for(coordinate in notAdjacent){
-                for(innerCoordinate in notAdjacent){
+                for(innerCoordinate in hawkCoordinate){
                     //vertical
                     if(coordinate.second == innerCoordinate.second){
                         inSight.add(coordinate)
