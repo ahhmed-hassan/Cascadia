@@ -112,6 +112,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
     /**
      * Calculating the scores for the salmon runs
      * @param player the [Player] to calculate its runs.
+     * returns an int of salmon score for the given [Player]
      */
     private fun calculateSalmonScore(player: Player): Int {
         val hasSalmonToken: (HabitatTile) -> Boolean = { it.wildlifeToken?.animal == Animal.SALMON }
@@ -130,7 +131,6 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
 
                 }.filterValues { neighbours -> neighbours.size <= 2 }
                 graph
-
             }
         val salmonGraph = makeSalmonGraph(player.habitat)
         val visited: MutableSet<Pair<Int, Int>> = mutableSetOf()
