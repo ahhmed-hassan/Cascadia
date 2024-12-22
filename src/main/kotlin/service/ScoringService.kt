@@ -10,7 +10,7 @@ import entity.Terrain
  *
  *  @param [rootService] the games RootService for communication with entity layer
  */
-class ScoringService(private val rootService : RootService) : AbstractRefreshingService() {
+class ScoringService(private val rootService: RootService) : AbstractRefreshingService() {
 
 
     companion object {
@@ -67,7 +67,7 @@ class ScoringService(private val rootService : RootService) : AbstractRefreshing
     /**
      *
      */
-    fun calculateScore(player : Player): Int {
+    fun calculateScore(player: Player): Int {
         //ToDo
 
         onAllRefreshables { /*ToDo*/ }
@@ -77,7 +77,7 @@ class ScoringService(private val rootService : RootService) : AbstractRefreshing
     /**
      *
      */
-    private fun calculateLongestTerrain(type : Terrain, player : Player):Int {
+    private fun calculateLongestTerrain(type: Terrain, player: Player): Int {
         //ToDo
         return 0
     }
@@ -85,7 +85,7 @@ class ScoringService(private val rootService : RootService) : AbstractRefreshing
     /**
      *
      */
-    private fun calculateBearScore(player : Player): Int {
+    private fun calculateBearScore(player: Player): Int {
         //ToDo
         return 0
     }
@@ -93,7 +93,7 @@ class ScoringService(private val rootService : RootService) : AbstractRefreshing
     /**
      *
      */
-    private fun calculateElkScore(player : Player): Int {
+    private fun calculateElkScore(player: Player): Int {
         //ToDo
         return 0
     }
@@ -101,7 +101,7 @@ class ScoringService(private val rootService : RootService) : AbstractRefreshing
     /**
      *
      */
-    private fun calculateHawkScore(player : Player) : Int {
+    private fun calculateHawkScore(player: Player): Int {
         //ToDo
         return 0
     }
@@ -109,7 +109,7 @@ class ScoringService(private val rootService : RootService) : AbstractRefreshing
     /**
      *
      */
-    private fun calculateSalmonScore(player : Player): Int {
+    private fun calculateSalmonScore(player: Player): Int {
         //ToDo
         return 0
     }
@@ -119,9 +119,11 @@ class ScoringService(private val rootService : RootService) : AbstractRefreshing
      *
      * @param player the player for witch the score shoud be calculated
      */
-    private fun calculateFoxScore(player: Player) {
+    private fun calculateFoxScore(player: Player): Int {
         val foxes = mutableListOf<Pair<Int, Int>>()
         val habitat = player.habitat
+        var points = 0
+
         //gets all foxes
         habitat.forEach {
             if (it.value.wildlifeToken?.animal == Animal.FOX) {
@@ -158,9 +160,9 @@ class ScoringService(private val rootService : RootService) : AbstractRefreshing
                     }
                 }
 
-                if (pairs == 1) player.score += 3
-                if (pairs == 2) player.score += 5
-                if (pairs == 3) player.score += 7
+                if (pairs == 1) points += 3
+                if (pairs == 2) points += 5
+                if (pairs == 3) points += 7
             } else {
                 //A
                 var differentAnimals = 0
@@ -171,8 +173,9 @@ class ScoringService(private val rootService : RootService) : AbstractRefreshing
                         }
                     }
                 }
-                player.score += differentAnimals
+                points += differentAnimals
             }
         }
+        return points
     }
 }
