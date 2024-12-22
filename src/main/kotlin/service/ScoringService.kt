@@ -1,8 +1,8 @@
 package service
 
 import entity.HabitatTile
-import entity.Terrain
 import entity.Player
+import entity.Terrain
 
 
 /**
@@ -10,7 +10,7 @@ import entity.Player
  *
  *  @param [rootService] the games RootService for communication with entity layer
  */
-class ScoringService(private val rootService : RootService) : AbstractRefreshingService() {
+class ScoringService(private val rootService: RootService) : AbstractRefreshingService() {
 
 
     companion object {
@@ -33,11 +33,12 @@ class ScoringService(private val rootService : RootService) : AbstractRefreshing
         private val addPairs: (Pair<Int, Int>, Pair<Int, Int>) -> Pair<Int, Int> = { a, b ->
             a.first + b.first to a.second + b.second
         }
-        private val getNeighbours : (Pair<Int,Int>) -> List<Pair<Int,Int>> = {
-            pair -> directionsPairsAndCorrespondingEdges.keys.map { addPairs(pair, it) }
+        private val getNeighbours: (Pair<Int, Int>) -> List<Pair<Int, Int>> = { pair ->
+            directionsPairsAndCorrespondingEdges.keys.map { addPairs(pair, it) }
         }
-        private fun Pair<Int,Int>.neighbours () : List<Pair<Int,Int>>{
-            return directionsPairsAndCorrespondingEdges.keys.map { addPairs(it,this) }
+
+        private fun Pair<Int, Int>.neighbours(): List<Pair<Int, Int>> {
+            return directionsPairsAndCorrespondingEdges.keys.map { addPairs(it, this) }
         }
 
         /**
@@ -46,26 +47,29 @@ class ScoringService(private val rootService : RootService) : AbstractRefreshing
          * @param graph the graph to search
          * @param visited the visited coordinates so far
          */
-        private fun depthFirstConnectedComponentLength(graph: Map<Pair<Int,Int>, List<Pair<Int,Int>>>,
-                                            visited : MutableSet<Pair<Int,Int>>,
-                                            coordinate: Pair<Int, Int>) : Int {
-            if(visited.contains(coordinate)) return 0
-            var connectedComponentLength : Int = 1
+        private fun depthFirstConnectedComponentLength(
+            graph: Map<Pair<Int, Int>, List<Pair<Int, Int>>>,
+            visited: MutableSet<Pair<Int, Int>>,
+            coordinate: Pair<Int, Int>
+        ): Int {
+            if (visited.contains(coordinate)) return 0
+            var connectedComponentLength: Int = 1
             visited.add(coordinate)
             val neighbours = coordinate.neighbours()
 
-            for(neighbour in neighbours ){
-                if(!visited.contains(neighbour))
-                    connectedComponentLength+= depthFirstConnectedComponentLength(graph, visited, neighbour)
+            for (neighbour in neighbours) {
+                if (!visited.contains(neighbour))
+                    connectedComponentLength += depthFirstConnectedComponentLength(graph, visited, neighbour)
             }
             return connectedComponentLength
 
         }
     }
+
     /**
      *
      */
-    fun calculateScore(player : Player): Int {
+    fun calculateScore(player: Player): Int {
         //ToDo
 
         onAllRefreshables { /*ToDo*/ }
@@ -76,29 +80,30 @@ class ScoringService(private val rootService : RootService) : AbstractRefreshing
      * Calculating the longest connected terrains of some type for some player
      * @param type the wished [Terrain] type
      * @param player The [Player] having this longest terrains
+     * @return [Int] representing the longest connected combination of [Terrain]s at this [Player.habitat]
      */
-    private fun calculateLongestTerrain(searchedTerrain : Terrain, player : Player) : Int {
+    private fun calculateLongestTerrain(searchedTerrain: Terrain, player: Player): Int {
 
-        val hasAtLeastOneEdgeOfSearchedTerrain : (HabitatTile) -> Boolean = {it.terrains.any { it==searchedTerrain }}
-        val buildSearchedTerrainGraph : (Map<Pair<Int,Int>, HabitatTile>) -> Map<Pair<Int,Int>, List<Pair<Int,Int>>> ={
-                playerTiles ->
-            val searchedTerrainNodesCoordinates = playerTiles.
-            filterValues { hasAtLeastOneEdgeOfSearchedTerrain(it) }
-                .keys.toSet()
+        val hasAtLeastOneEdgeOfSearchedTerrain: (HabitatTile) -> Boolean = { it.terrains.any { it == searchedTerrain } }
+        val buildSearchedTerrainGraph: (Map<Pair<Int, Int>, HabitatTile>) -> Map<Pair<Int, Int>, List<Pair<Int, Int>>> =
+            { playerTiles ->
+                val searchedTerrainNodesCoordinates =
+                    playerTiles.filterValues { hasAtLeastOneEdgeOfSearchedTerrain(it) }
+                        .keys.toSet()
 
-            val graph = searchedTerrainNodesCoordinates.associateWith { coordinate ->
-                coordinate
-                    .neighbours()
-                    .filter { neighbour-> searchedTerrainNodesCoordinates.contains(neighbour) }
+                val graph = searchedTerrainNodesCoordinates.associateWith { coordinate ->
+                    coordinate
+                        .neighbours()
+                        .filter { neighbour -> searchedTerrainNodesCoordinates.contains(neighbour) }
+                }
+                graph
+
             }
-            graph
-
-        }
         val searchedTerrainGraph = buildSearchedTerrainGraph(player.habitat)
-        val visited : MutableSet<Pair<Int,Int>> = mutableSetOf()
+        val visited: MutableSet<Pair<Int, Int>> = mutableSetOf()
         var longestConnectedComponent = 0
-        for(terrainNode in searchedTerrainGraph.keys){
-            if(!visited.contains(terrainNode))
+        for (terrainNode in searchedTerrainGraph.keys) {
+            if (!visited.contains(terrainNode))
                 longestConnectedComponent = maxOf(
                     longestConnectedComponent,
                     depthFirstConnectedComponentLength(searchedTerrainGraph, visited, terrainNode)
@@ -110,7 +115,7 @@ class ScoringService(private val rootService : RootService) : AbstractRefreshing
     /**
      *
      */
-    private fun calculateBearScore(player : Player): Int {
+    private fun calculateBearScore(player: Player): Int {
         //ToDo
         return 0
     }
@@ -118,7 +123,7 @@ class ScoringService(private val rootService : RootService) : AbstractRefreshing
     /**
      *
      */
-    private fun calculateElkScore(player : Player): Int {
+    private fun calculateElkScore(player: Player): Int {
         //ToDo
         return 0
     }
@@ -126,7 +131,7 @@ class ScoringService(private val rootService : RootService) : AbstractRefreshing
     /**
      *
      */
-    private fun calculateHawkScore(player : Player) : Int {
+    private fun calculateHawkScore(player: Player): Int {
         //ToDo
         return 0
     }
@@ -134,7 +139,7 @@ class ScoringService(private val rootService : RootService) : AbstractRefreshing
     /**
      *
      */
-    private fun calculateSalmonScore(player : Player): Int {
+    private fun calculateSalmonScore(player: Player): Int {
         //ToDo
         return 0
     }
@@ -142,7 +147,7 @@ class ScoringService(private val rootService : RootService) : AbstractRefreshing
     /**
      *
      */
-    private fun calculateFoxScore(player : Player): Int {
+    private fun calculateFoxScore(player: Player): Int {
         //ToDo
         return 0
     }
