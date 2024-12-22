@@ -128,7 +128,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
             val game = rootService.currentGame
             checkNotNull(game)
 
-            val neighbours = Pair(it.first, it.second).neighbours()
+            val neighbours = it.neighbours()
 
             //counts the animals
             neighbours.forEach { neighbour ->
