@@ -61,7 +61,7 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
         require(tokenIndices.distinct().size == tokenIndices.size) {"All indices must be different"}
 
         // check if indices in argument in range
-        tokenIndices.forEach { require(it > 3 || it < 0) {"Indices for tokens must be between 0 and 3"} }
+        tokenIndices.forEach { require(it in 0..3) {"Indices for tokens must be between 0 and 3"} }
 
         // check if enough tokens are left for replacement, if not the player may try again with a smaller amount
         check(game.wildlifeTokenList.size < tokenIndices.size) {

@@ -76,7 +76,7 @@ class GameService(private val rootService : RootService) : AbstractRefreshingSer
         require(tokenIndices.distinct().size == tokenIndices.size) {"All indices must be different"}
 
         // check if indices in argument in range
-        tokenIndices.forEach { require(it > 3 || it < 0) {"Indices for tokens must be between 0 and 3"} }
+        tokenIndices.forEach { require(it in 0 .. 3) {"Indices for tokens must be between 0 and 3"} }
 
         // check for same animal in all tokens at given indices in game shop
         val firstToken = game.shop[tokenIndices[0]].second
@@ -94,7 +94,9 @@ class GameService(private val rootService : RootService) : AbstractRefreshingSer
 
     /**
      * Perform the actual replacement of tokens in the shop and trigger GUI update afterwards.
-     * Used in [replaceWildlifeTokens] and [resolveOverpopulation]
+     * Usage of this function assumes that there either is an overpopulation of three the player can resolve
+     * for free or that the player want's to replace an arbitrary number of tokens by using a nature token.
+     * Used for this purposes in [replaceWildlifeTokens] and [resolveOverpopulation].
      *
      * @param [tokenIndices] is a list of indices of the tile-token pairs in [shop] whose token shall be replaced.
      * @param networkReplacement is a boolean to flag replacements done by other network players.
