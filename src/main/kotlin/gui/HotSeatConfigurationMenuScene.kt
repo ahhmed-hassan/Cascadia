@@ -3,23 +3,28 @@ package gui
 import entity.PlayerType
 import service.RootService
 import tools.aqua.bgw.components.layoutviews.Pane
-import tools.aqua.bgw.components.uicomponents.Button
-import tools.aqua.bgw.components.uicomponents.Label
-import tools.aqua.bgw.components.uicomponents.TextField
-import tools.aqua.bgw.components.uicomponents.UIComponent
+import tools.aqua.bgw.components.uicomponents.*
 import tools.aqua.bgw.core.MenuScene
 import tools.aqua.bgw.util.Font
 import tools.aqua.bgw.visual.ColorVisual
 import tools.aqua.bgw.visual.ImageVisual
 import java.awt.Color
-import kotlin.random.Random
 
+/**
+ * Menu Scene that is used if Player wants to play a HotSeat game. Here you can enter Players,
+ * choose Player types, choose rules, enter simulation speed for bots
+ */
 class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1920, 1080), Refreshables {
 
+    //List of Name fields
     private val playerNameFields = mutableListOf<TextField>()
+    //List of playerTypes
     private val playerButtons = mutableListOf<Button>()
+    //List of downButtons
     private val downButtons = mutableListOf<Button>()
+    //List of upButtons
     private val upButtons = mutableListOf<Button>()
+    //List containing the playRules
     private var rules = mutableListOf<Boolean>()
     private var randomRule = false
     private var randomOrder = false
@@ -86,28 +91,7 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     ).apply {
         onMouseClicked = {
             if (playerNameFields.size < 4) {
-                val newField = createPlayerNameField(300 + playerNameFields.size * 100)
-                playerNameFields.add(newField)
-                overlay.add(newField)
-                val buttons = createPlayerButtons(300 + (playerNameFields.size - 1) * 100)
-                playerButtons.add(buttons)
-                overlay.add(buttons)
-                val downButton = createDownSymbol(300 + (playerNameFields.size - 1) * 100)
-                downButtons.add(downButton)
-                downButton.apply {
-                    onMouseClicked ={
-                        changeDown(downButton)
-                    }
-                }
-                overlay.add(downButton)
-                val upButton = createUpSymbol(300 + (playerNameFields.size - 1) * 100)
-                upButtons.add(upButton)
-                upButton.apply {
-                    onMouseClicked = {
-                        changeUp(upButton)
-                    }
-                }
-                overlay.add(upButton)
+                createNameFields()
                 posY += 100
                 if (playerNameFields.size == 4){
                     isDisabled = true
@@ -180,21 +164,14 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         )
     }
 
-
-    private val randomOrderButton = Button(
+    private val randomOrderToggle = ToggleButton(
         width = 250,
         height = 50,
         posX = 100,
         posY = 800,
         text = "RandomOrder",
         font = Font(24),
-        visual = ColorVisual(255, 255, 255)
-    ).apply {
-        onMouseClicked = {
-            randomOrder = true
-            visual = ColorVisual(Color.GRAY)
-        }
-    }
+    )
 
     private val bearImage = Label(
         width = 60,
@@ -301,21 +278,16 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         }
     }
 
-    private val randomRuleButton = Button(
+    private val randomRuleToggle = ToggleButton(
         width = 250,
         height = 50,
         posX = 400,
         posY = 800,
         text = "Random Rule",
         font = Font(24),
-        visual = ColorVisual(255, 255, 255)
-    ).apply {
-        onMouseClicked = {
-            randomRule = true
-            visual = ColorVisual(Color.GRAY)
-        }
-    }
+    )
 
+    // StartButton with gameStart
     private val startButton = Button(
         width = 250,
         height = 50,
@@ -330,12 +302,17 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             val playerTypes = playerButtons.filter { it.text.isNotBlank() }.map { it.text }
             val param = mapPlayerToPlayerTypes(playerNames,playerTypes)
             val rules = determineRules()
-            //rootService.gameService.startNewGame(playerNames = param, scoreRules = rules)
-            println(param)
+            if (randomOrderToggle.isSelected) { randomOrder = true }
+            if (randomOrderToggle.isSelected) { randomRule = true}
+            //missing parameter randomOrder, randomRule
+            rootService.gameService.startNewGame(playerNames = param, scoreRules = rules)
             rules.clear()
         }
     }
 
+    /**
+     * initialize the Scene
+     */
     init {
         background = ImageVisual("Cascadia.jpg")
 
@@ -346,8 +323,8 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             simSpeed,
             simEntry,
             addPlayerButton,
-            randomOrderButton,
-            randomRuleButton,
+            randomOrderToggle,
+            randomRuleToggle,
             startButton,
             bearImage,
             bearToggleButton,
@@ -364,28 +341,7 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
 
         // Initialize two players by default
         for (i in 0 until 2) {
-            val playerNameField = createPlayerNameField(300 + i * 100)
-            playerNameFields.add(playerNameField)
-            overlay.add(playerNameField)
-            val buttons = createPlayerButtons(300 + i * 100)
-            playerButtons.add(buttons)
-            overlay.add(buttons)
-            val downButton = createDownSymbol(300 + i * 100)
-            downButtons.add(downButton)
-            downButton.apply {
-                onMouseClicked ={
-                    changeDown(downButton)
-                }
-            }
-            overlay.add(downButton)
-            val upButton = createUpSymbol(300 + i * 100)
-            upButtons.add(upButton)
-            upButton.apply {
-                onMouseClicked = {
-                    changeUp(upButton)
-                }
-            }
-            overlay.add(upButton)
+            createNameFields()
         }
     }
 
@@ -393,41 +349,33 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
      * [determineRules] looks at each Animal Button and looks whether the Button shows A or B.
      * If Button shows A then it equals false
      * If Button shows B then it equals true
-     * If Rules are to be determined Random based on if button RandomRule is pressed, this method
-     * puts a random order of false and true in a list
      */
     private fun determineRules(): MutableList<Boolean> {
 
-        if (!randomRule) {
-            if (bearToggleButton.text == "A") {
-                rules.add(false)
-            } else
-                rules.add(true)
+        if (bearToggleButton.text == "A") {
+            rules.add(false)
+        } else
+            rules.add(true)
 
-            if (elkToggleButton.text == "A") {
-                rules.add(false)
-            } else
-                rules.add(true)
+        if (elkToggleButton.text == "A") {
+            rules.add(false)
+        } else
+            rules.add(true)
 
-            if (foxToggleButton.text == "A") {
-                rules.add(false)
-            } else
-                rules.add(true)
+        if (foxToggleButton.text == "A") {
+            rules.add(false)
+        } else
+            rules.add(true)
 
-            if (hawkToggleButton.text == "A") {
-                rules.add(false)
-            } else
-                rules.add(true)
+        if (hawkToggleButton.text == "A") {
+            rules.add(false)
+        } else
+            rules.add(true)
 
-            if (salmonToggleButton.text == "A") {
-                rules.add(false)
-            } else
-                rules.add(true)
-        }
-        else{
-            for (i in 0..4)
-                rules.add(Random.nextBoolean())
-        }
+        if (salmonToggleButton.text == "A") {
+            rules.add(false)
+        } else
+            rules.add(true)
 
         return rules
     }
@@ -454,58 +402,88 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             pairs[names[i]] = playerType
         }
 
-        return if (randomOrder) {
-            // Shuffle the entries and reconstruct the map
-            pairs.entries.shuffled().associate { it.toPair() }
-        } else {
-            pairs
-        }
+        return pairs
     }
 
+    /**
+     * [changeDown] changes the inputs from the line this button is and the one below
+     */
     private fun changeDown(down : Button){
         val index = downButtons.indexOf(down)
         when (index){
             0 -> {
-                val swap = playerNameFields[0].text
-                playerNameFields[0].text = playerNameFields[1].text
-                playerNameFields[1].text = swap
+                swap(0,1)
             }
             1-> {
-                val swap = playerNameFields[1].text
-                playerNameFields[1].text = playerNameFields[2].text
-                playerNameFields[2].text = swap
+                swap(1,2)
             }
             2-> {
-                val swap = playerNameFields[2].text
-                playerNameFields[2].text = playerNameFields[3].text
-                playerNameFields[3].text = swap
+                swap(2,3)
             }
             else -> {}
         }
     }
 
+    /**
+     * [changeUp] changes the inputs from this line and the line above
+     */
     private fun changeUp (up : Button){
         val index = upButtons.indexOf(up)
         when (index){
             1 -> {
-                val swap = playerNameFields[0].text
-                playerNameFields[0].text = playerNameFields[1].text
-                playerNameFields[1].text = swap
-                val swap2 = playerButtons[0].text
-                playerButtons[0].text = playerButtons[1].text
-                playerButtons[1].text = swap2
+                swap(0,1)
             }
             2-> {
-                val swap = playerNameFields[1].text
-                playerNameFields[1].text = playerNameFields[2].text
-                playerNameFields[2].text = swap
+                swap(1,2)
             }
             3-> {
-                val swap = playerNameFields[2].text
-                playerNameFields[2].text = playerNameFields[3].text
-                playerNameFields[3].text = swap
+                swap(2,3)
             }
             else -> {}
         }
+    }
+
+    /**
+     * creates the buttons up and down,entry's for names, and logos for player type
+     * and adds these to the overlay which is then displayed for the user
+     */
+    private fun createNameFields(){
+        val playerNameField = createPlayerNameField(300 + playerNameFields.size * 100)
+        playerNameFields.add(playerNameField)
+        overlay.add(playerNameField)
+        val buttons = createPlayerButtons(300 + (playerNameFields.size-1) * 100)
+        playerButtons.add(buttons)
+        overlay.add(buttons)
+        val downButton = createDownSymbol(300 + (playerNameFields.size-1) * 100)
+        downButtons.add(downButton)
+        downButton.apply {
+            onMouseClicked ={
+                changeDown(downButton)
+            }
+        }
+        overlay.add(downButton)
+        val upButton = createUpSymbol(300 + (playerNameFields.size-1) * 100)
+        upButtons.add(upButton)
+        upButton.apply {
+            onMouseClicked = {
+                changeUp(upButton)
+            }
+        }
+        overlay.add(upButton)
+    }
+
+    /**
+     * Swaps the names,player types (String), player type symbols
+     */
+    private fun swap(swap1:Int,swap2:Int){
+        val swapText = playerNameFields[swap1].text
+        playerNameFields[swap1].text = playerNameFields[swap2].text
+        playerNameFields[swap2].text = swapText
+        val swapButton = playerButtons[swap1].text
+        playerButtons[swap1].text = playerButtons[swap2].text
+        playerButtons[swap2].text = swapButton
+        val swapVisual = playerButtons[swap1].visual
+        playerButtons[swap1].visual = playerButtons[swap2].visual
+        playerButtons[swap2].visual = swapVisual
     }
 }
