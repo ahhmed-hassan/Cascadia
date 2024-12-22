@@ -84,6 +84,12 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
         }
     }
 
+    /**
+     * Calculates bonus points for three or more players based on their longest terrain scores.
+     *
+     * @param playersLongestTerrain A map containing each player and their terrain-specific scores.
+     * @return A map where each player is mapped to their bonus points for each terrain.
+     */
     fun calculateBonusForThreeOrMorePlayers (playersLongestTerrain : Map<Player, Map<Terrain, Int>>)
     : Map<Player, Map<Terrain, Int>>{
         val makeTerrainPlayerBonusMap: () -> Map<Terrain, Map<Player,Int>> = {
@@ -122,7 +128,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
                 (terrain, playerMap) ->
             playerMap.entries.map { (player, bonus) -> player to (terrain to bonus) }
         }
-            .groupBy (/*keySelector*/{(player, terrainBonusMap) -> player },
+            .groupBy (/*keySelector*/{(player, _) -> player },
                 /**Value transformer
                  * Without this we would have a map from the player to a  List<Pair<Player, Pair<Terrain, Int>>>  which
                  * what we basically after flatMap call have
@@ -131,7 +137,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
             /**
              * Here we are transforming the list of pairs to map
              */
-            .mapValues { (player, terrainBonusList) -> terrainBonusList.toMap() }
+            .mapValues { (_, terrainBonusList) -> terrainBonusList.toMap() }
 
         return playerTerrainBonusMap
     }
@@ -141,7 +147,6 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
 
     /**
      * Calculates the detailed scores for every player in the game
-     * preconditions : The game has only two players
      * returns a map from each player to the [PlayerScore] object having all the infos for the scoring boards
      */
     fun calculateBonusScores(playersLongestTerrainMap : Map<Player, Map<Terrain, Int>>): Map<Player, Map<Terrain, Int>> {
@@ -158,10 +163,12 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
 
         val firstPlayerBonusMap = Terrain.values().associateWith {
             if (firstPlayerLongestTerrains[it]!! > secondPlayerLongestTerrains[it]!!) 2
+            if (firstPlayerLongestTerrains[it]!! == secondPlayerLongestTerrains[it]!!) 1
             else 0
         }
         val secondPlayerBonusMap = Terrain.values().associateWith {
             if (secondPlayerLongestTerrains[it]!! > firstPlayerLongestTerrains[it]!!) 2
+            if (secondPlayerLongestTerrains[it]!! == firstPlayerLongestTerrains[it]!!) 1
             else 0
         }
 
@@ -192,8 +199,6 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
             }
 
         val bonus = calculateBonusScores(terrainScoresByPlayer)
-
-        onAllRefreshables { /*ToDo*/ }
 
         return playersScores.mapValues { (player, playerScore) -> playerScore.copy(
             longestAmongOtherPlayers = bonus[player]!!) }
