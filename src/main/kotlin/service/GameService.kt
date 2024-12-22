@@ -39,10 +39,11 @@ class GameService(private val rootService : RootService) : AbstractRefreshingSer
 
 
         // check if player performed action
-        check(!game.hasPlayedTile) { "Player must at least add a habitat tile each turn" }
+        check(game.hasPlayedTile) { "Player must at least add a habitat tile each turn" }
 
-        // check for game end and if so, update GUI
+        // check for game end and if so, calculate score and update GUI
         if (game.habitatTileList.size == 0) {
+            game.playerList.onEach { player -> rootService.scoringService.calculateScore(player) }
             onAllRefreshables { refreshAfterGameEnd() }
             return
         }
