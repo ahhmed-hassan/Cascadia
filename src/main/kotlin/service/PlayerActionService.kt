@@ -70,11 +70,10 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
         }
 
         // player is allowed to freely resolve an overpopulation of three once
-        if (!game.hasReplacedThreeToken && tokenIndices.size == 3) {
-            require(rootService.gameService.checkForSameAnimal(tokenIndices)) {
-                "Token at indices must have same animal for overpopulation of three"
-            }
-            game.hasReplacedThreeToken = true
+        if (tokenIndices.size == 3 &&
+            rootService.gameService.checkForSameAnimal(tokenIndices) &&
+            !game.hasReplacedThreeToken) {
+                game.hasReplacedThreeToken = true
         }
         // otherwise the player must use a nature token in exchange
         else if (game.currentPlayer.natureToken > 0) {
@@ -84,30 +83,11 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
             throw IllegalStateException("Current Player not allowed to perform replacement")
         }
 
-        // perform actual replacement
-        tokenIndices.forEach {
-            game.discardedToken.add(game.shop[it].second)
-            game.shop[it] = Pair(game.shop[it].first, game.wildlifeTokenList[game.wildlifeTokenList.size-1])
-        }
+        // perform actual replacement of tokens
+        rootService.gameService.executeTokenReplacement(tokenIndices)
 
-        // resolve possible overpopulation of four
-        if (rootService.gameService.checkForSameAnimal()) {
-            rootService.gameService.resolveOverpopulation()
-        }
-
-        // return discarded wildlifeTokens
-        else {
-            for (token in game.discardedToken) {
-                checkNotNull(token)
-                game.wildlifeTokenList.add(token)
-            }
-            game.discardedToken = mutableListOf()
-            game.wildlifeTokenList.shuffle()
-        }
-
-        // refresh GUI Elements
-        onAllRefreshables { refreshAfterWildlifeTokenReplaced() }
     }
+
 
     /**
      *
