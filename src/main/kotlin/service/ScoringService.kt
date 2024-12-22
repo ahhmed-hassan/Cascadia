@@ -128,7 +128,6 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
                     Thus we still need to filter out every node that has more than two neighbours
                     Note that we already know at this point that each node would have at least one salmon neighbour,
                     so no need for checking the lower bound */
-
                 }.filterValues { neighbours -> neighbours.size <= 2 }
                 graph
             }
