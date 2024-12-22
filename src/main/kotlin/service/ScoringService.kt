@@ -2,8 +2,8 @@ package service
 
 import entity.Animal
 import entity.HabitatTile
-import entity.Terrain
 import entity.Player
+import entity.Terrain
 
 
 /**
@@ -53,7 +53,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
             visited: MutableSet<Pair<Int, Int>>,
             coordinate: Pair<Int, Int>
         ): Int {
-            if(visited.contains(coordinate)) return 0
+            if (visited.contains(coordinate)) return 0
             var connectedComponentLength: Int = 1
             visited.add(coordinate)
             val neighbours = coordinate.neighbours()
@@ -70,7 +70,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
     /**
      *
      */
-    fun calculateScore(player : Player): Int {
+    fun calculateScore(player: Player): Int {
         //ToDo
 
         onAllRefreshables { /*ToDo*/ }
@@ -80,7 +80,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
     /**
      *
      */
-    private fun calculateLongestTerrain(type : Terrain, player : Player):Int {
+    private fun calculateLongestTerrain(type: Terrain, player: Player): Int {
         //ToDo
         return 0
     }
@@ -88,7 +88,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
     /**
      *
      */
-    private fun calculateBearScore(player : Player): Int {
+    private fun calculateBearScore(player: Player): Int {
         //ToDo
         return 0
     }
@@ -96,7 +96,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
     /**
      *
      */
-    private fun calculateElkScore(player : Player): Int {
+    private fun calculateElkScore(player: Player): Int {
         //ToDo
         return 0
     }
@@ -104,7 +104,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
     /**
      *
      */
-    private fun calculateHawkScore(player : Player) : Int {
+    private fun calculateHawkScore(player: Player): Int {
         //ToDo
         return 0
     }
@@ -142,7 +142,6 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
         for (salmonCoordinate in salmonGraph.keys) {
             if (!visited.contains(salmonCoordinate))
                 salmonRuns += depthFirstConnectedComponentLength(salmonGraph, visited, salmonCoordinate)
-
         }
         return scoreMap.getOrDefault(maxOf(salmonRuns, maxRuns), 0)
     }
@@ -150,7 +149,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
     /**
      *
      */
-    private fun calculateFoxScore(player : Player): Int {
+    private fun calculateFoxScore(player: Player): Int {
         //ToDo
         return 0
     }
