@@ -4,6 +4,7 @@ import entity.Animal
 import entity.HabitatTile
 import entity.PlayerType
 import entity.Terrain
+import org.junit.jupiter.api.assertThrows
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -20,21 +21,22 @@ class RotateTester {
             mapOf("Ahmed" to PlayerType.NORMAL, "Hello" to PlayerType.NORMAL),
             listOf(true, true, true, true)
         )
+    }
+
+    @Test
+    fun properRotation() {
         rootService.currentGame?.selectedTile = HabitatTile(
             73,
             false,
             0,
-            listOf(Animal.ELK, Animal.HAWK),
+            wildlifeSymbols = mutableListOf(Animal.ELK, Animal.HAWK),
             wildlifeToken = null,
             terrains = mutableListOf(
                 Terrain.PRAIRIE, Terrain.PRAIRIE, Terrain.PRAIRIE,
                 Terrain.MOUNTAIN, Terrain.MOUNTAIN, Terrain.MOUNTAIN
             )
         )
-    }
 
-    @Test
-    fun testRotation() {
         rootService.playerActionService.rotateTile()
         assertEquals(
             1, rootService.currentGame?.selectedTile?.rotationOffset,
@@ -62,5 +64,11 @@ class RotateTester {
             expectedListAfterTwoRotations, rootService.currentGame?.selectedTile?.terrains,
             "The list elements are not rotated properly"
         )
+    }
+
+    @Test
+    fun rotatingNullTile() {
+        val exception = assertThrows<IllegalArgumentException> { rootService.playerActionService.rotateTile() }
+        assertEquals("Only the selected tile can be rotated!", exception.message)
     }
 }
