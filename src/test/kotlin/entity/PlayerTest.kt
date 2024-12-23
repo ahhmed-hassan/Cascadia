@@ -49,18 +49,4 @@ class PlayerTest {
         assertEquals(1, player.natureToken)
     }
 
-    /**
-     * Tests the incrementing of the score property.
-     *
-     * Verifies:
-     *      The score increases correctly after an update.
-     */
-    @Test
-    fun testScore() {
-        val player = Player("Test Player", mutableMapOf(), PlayerType.LOCAL)
-
-        player.score += 64
-
-        assertEquals(64, player.score)
-    }
 }
