@@ -138,7 +138,6 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
     }
 
     /**
-     *
      *Adds the Points from the foxes to the players score according to the current rule for foxes
      *
      * @param player the player for witch the score shoud be calculated
