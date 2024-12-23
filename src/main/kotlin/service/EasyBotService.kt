@@ -96,7 +96,7 @@ class EasyBotService(private val rootService: RootService) {
             checkNotNull(selectedToken)
             val tiles = gameService.getAllPossibleTilesForWildlife(selectedToken.animal)
             if (tiles.isNotEmpty()) {
-                playerActionService.addToken(selectedToken, tiles.random())
+                playerActionService.addToken(tiles.random())
             } else {
                 playerActionService.discardToken()
             }
