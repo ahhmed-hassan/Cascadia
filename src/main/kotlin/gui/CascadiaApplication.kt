@@ -19,7 +19,7 @@ class CascadiaApplication : BoardGameApplication("Cascadia Game"), Refreshables 
     }
 
     private val networkJoinMenuScene = NetworkJoinMenuScene(rootService).apply {
-        joinButton.onMouseClicked = {
+        startButton.onMouseClicked = {
             hideMenuScene()
             showMenuScene(winningMenuScene)
         }
@@ -46,7 +46,6 @@ class CascadiaApplication : BoardGameApplication("Cascadia Game"), Refreshables 
         }
     }
 
-
     init {
         rootService.addRefreshables(
             this,
@@ -59,7 +58,6 @@ class CascadiaApplication : BoardGameApplication("Cascadia Game"), Refreshables 
         this.showMenuScene(mainMenuScene, 0)
     }
 
-
     override fun refreshAfterGameEnds() {
         this.showMenuScene(winningMenuScene)
     }
@@ -68,4 +66,5 @@ class CascadiaApplication : BoardGameApplication("Cascadia Game"), Refreshables 
         hideMenuScene()
         this.showGameScene(gameScene)
     }
+
 }
