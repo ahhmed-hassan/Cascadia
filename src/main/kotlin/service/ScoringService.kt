@@ -97,13 +97,42 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
         return 0
     }
 
-    /**
-     *
+    /***
+     * Calculating the longest connected terrains of some type for some player
+     * @param type the wished [Terrain] type
+     * @param player The [Player] having this longest terrains
+     * @return [Int] representing the longest connected combination of [Terrain]s at this [Player.habitat]
      */
-    private fun calculateLongestTerrain(type: Terrain, player: Player): Int {
-        //ToDo
-        return 0
+    private fun calculateLongestTerrain(searchedTerrain: Terrain, player: Player): Int {
+
+        val hasAtLeastOneEdgeOfSearchedTerrain: (HabitatTile) -> Boolean = { it.terrains.any { it == searchedTerrain } }
+        val buildSearchedTerrainGraph: (Map<Pair<Int, Int>, HabitatTile>) -> Map<Pair<Int, Int>, List<Pair<Int, Int>>> =
+            { playerTiles ->
+                val searchedTerrainNodesCoordinates =
+                    playerTiles.filterValues { hasAtLeastOneEdgeOfSearchedTerrain(it) }
+                        .keys.toSet()
+
+                val graph = searchedTerrainNodesCoordinates.associateWith { coordinate ->
+                    coordinate
+                        .neighbours()
+                        .filter { neighbour -> searchedTerrainNodesCoordinates.contains(neighbour) }
+                }
+                graph
+
+            }
+        val searchedTerrainGraph = buildSearchedTerrainGraph(player.habitat)
+        val visited: MutableSet<Pair<Int, Int>> = mutableSetOf()
+        var longestConnectedComponent = 0
+        for (terrainNode in searchedTerrainGraph.keys) {
+            if (!visited.contains(terrainNode))
+                longestConnectedComponent = maxOf(
+                    longestConnectedComponent,
+                    depthFirstConnectedComponentLength(searchedTerrainGraph, visited, terrainNode)
+                )
+        }
+        return longestConnectedComponent
     }
+
 
     /**
      *Calculates the Score resulted from the bear collection
