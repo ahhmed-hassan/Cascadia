@@ -43,8 +43,7 @@ class GameService(private val rootService : RootService) : AbstractRefreshingSer
 
         // check for game end and if so, calculate score and update GUI
         if (game.habitatTileList.size == 0) {
-            game.playerList.onEach { player -> rootService.scoringService.calculateScore(player) }
-            onAllRefreshables { refreshAfterGameEnd() }
+            onAllRefreshables { refreshAfterGameEnd(rootService.scoringService.calculateScore()) }
             return
         }
 
