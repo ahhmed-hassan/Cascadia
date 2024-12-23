@@ -65,12 +65,21 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
     }
 
     /**
+     * [discardToken] discards the currently selected token and adds it back to the wildlife token bag.
      *
+     * @throws IllegalStateException if the selected Token is null
      */
     fun discardToken() {
-        //ToDo
+        val game = rootService.currentGame
+        checkNotNull(game)
+        val selectedToken = game.selectedToken
+        checkNotNull(selectedToken)
 
-        onAllRefreshables { refreshAfterNextTurn() }
+        game.wildlifeTokenList.add(selectedToken)
+        game.wildlifeTokenList.shuffle()
+        game.selectedToken = null
+
+        rootService.gameService.nextTurn()
     }
 
 
