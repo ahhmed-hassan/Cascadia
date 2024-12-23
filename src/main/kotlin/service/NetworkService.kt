@@ -1,14 +1,12 @@
 package service
 
 
-
 import edu.udo.cs.sopra.ntf.entity.ScoringCards
+import edu.udo.cs.sopra.ntf.messages.*
 import entity.*
 import entity.Animal as LocalAnimal
-import edu.udo.cs.sopra.ntf.messages.*
-import java.lang.IllegalStateException
 
-class NetworkService (private  val rootService: RootService) : AbstractRefreshingService() {
+class NetworkService(private val rootService: RootService) : AbstractRefreshingService() {
 
     companion object {
         /** URL of the BGW net server hosted for SoPra participants */
@@ -31,7 +29,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
      *
      * @throws IllegalStateException if already connected to another game or connection attempt fails
      */
-    fun hostGame(secret: String, sessionID: String?, name: String, playerType : PlayerType) {
+    fun hostGame(secret: String, sessionID: String?, name: String, playerType: PlayerType) {
         if (!connect(secret, name, playerType)) {
             error("Connection failed")
         }
@@ -54,7 +52,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
      *
      * @throws IllegalStateException if already connected to another game or connection attempt fails
      */
-    fun joinGame(secret: String, name: String, sessionID: String, playerType: PlayerType ) {
+    fun joinGame(secret: String, name: String, sessionID: String, playerType: PlayerType) {
         if (!connect(secret, name, playerType)) {
             error("Connection failed")
         }
@@ -75,6 +73,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         //}
 
     }
+
     fun startNewJoinedGame(message: GameInitMessage) {
         check(connectionState == ConnectionState.WAITING_FOR_INIT) {
             "Not waiting for game init message."
@@ -108,6 +107,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         }
 
     }
+
     fun resolvedOverPopulationMessage(message: ResolveOverpopulationMessage, sender: String) {
 
         updateConnectionState(ConnectionState.OPPONENT_SWAPPING_WILDLIFE_TOKENS)
@@ -134,6 +134,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
                         .take(4)
                     rootService.playerActionService.replaceWildlifeTokens(indices)
                 }
+
                 3 -> {
                     val indices = shopTokens
                         .mapIndexedNotNull { index, token -> if (token?.animal == animal) index else null }
@@ -179,7 +180,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         val habitatCoordinates = Pair(qCoordTile, rCoordTile)
 
         game.selectedTile = game.startTileList.flatten()[message.placedTile]
-        repeat(message.tileRotation) { rootService.playerActionService.rotateTile(game.selectedTile!!) }
+        repeat(message.tileRotation) { rootService.playerActionService.rotateTile() }
         rootService.playerActionService.addTileToHabitat(habitatCoordinates)
 
         //require(message.selectedToken in game.shop.indices) { "Ungültiger Token-Index: ${message.selectedToken}" }
@@ -194,13 +195,13 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         //game.wildlifeTokenList = message.wildlifeTokens.map { animal ->
         //    WildlifeToken(LocalAnimal.valueOf(animal.name))
         // }.toMutableList()
-        if(message.usedNatureToken) {
+        if (message.usedNatureToken) {
             game.currentPlayer.natureToken -= 1
         }
         updateConnectionState(ConnectionState.PLAYING_MY_TURN)
     }
 
-    fun swappedWithNatureTokenMessage(message: SwappedWithNatureTokenMessage, sender: String){
+    fun swappedWithNatureTokenMessage(message: SwappedWithNatureTokenMessage, sender: String) {
         updateConnectionState(ConnectionState.WAITING_FOR_OPPONENTS_TURN)
         val game = rootService.currentGame
         checkNotNull(game) { "Kein aktuelles Spiel vorhanden." }
@@ -221,15 +222,19 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         //}.toMutableList()
 
     }
+
     fun sendPlacedMessage() {
         require(connectionState == ConnectionState.PLAYING_MY_TURN) { "not my turn" }
     }
+
     fun sendSwappedWithNatureTokenMessage() {
         require(connectionState == ConnectionState.PLAYING_MY_TURN) { "not my turn" }
     }
+
     fun sendResolvedOverPopulationMessage() {
         require(connectionState == ConnectionState.SWAPPING_WILDLIFE_TOKENS) { "not my turn" }
     }
+
     fun sendShuffledWildlifeTokensMessage() {
         require(connectionState == ConnectionState.SWAPPING_WILDLIFE_TOKENS)
     }
@@ -243,7 +248,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
      * @throws IllegalStateException when ConnectionState is not [ConnectionState.DISCONNECTED]
      * @throws IllegalArgumentException when secret or name is blank
      */
-    fun connect(secret: String, name: String, playerType: PlayerType) : Boolean {
+    fun connect(secret: String, name: String, playerType: PlayerType): Boolean {
         require(connectionState == ConnectionState.DISCONNECTED && client == null)
         { "already connected to another game" }
 
@@ -269,10 +274,10 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
     }
 
     /**
-    * Disconnects the [client] from the server, nulls it and updates the
-    * [connectionState] to [ConnectionState.DISCONNECTED]. Can safely be called
-    * even if no connection is currently active.
-    */
+     * Disconnects the [client] from the server, nulls it and updates the
+     * [connectionState] to [ConnectionState.DISCONNECTED]. Can safely be called
+     * even if no connection is currently active.
+     */
     fun disconnect() {
         client?.apply {
             if (sessionID != null) leaveGame("Goodbye!")
