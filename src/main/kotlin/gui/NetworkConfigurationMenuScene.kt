@@ -3,10 +3,7 @@ package gui
 import entity.PlayerType
 import service.RootService
 import tools.aqua.bgw.components.layoutviews.Pane
-import tools.aqua.bgw.components.uicomponents.Button
-import tools.aqua.bgw.components.uicomponents.Label
-import tools.aqua.bgw.components.uicomponents.TextField
-import tools.aqua.bgw.components.uicomponents.UIComponent
+import tools.aqua.bgw.components.uicomponents.*
 import tools.aqua.bgw.core.MenuScene
 import tools.aqua.bgw.util.Font
 import tools.aqua.bgw.visual.ColorVisual
@@ -66,13 +63,15 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         font = Font(32)
     )
 
-    private val simEntry = TextField(
+    private val simEntry = ComboBox<Float>(
         posX = 1050,
         posY = 300,
         width = 200,
         height = 50,
-        font = Font(24)
-    )
+        items = listOf(0.5f, 1.0f, 1.5f, 2.0f, 2.5f, 3.0f),
+    ).apply {
+        selectedItem = 0.5f
+    }
 
     private val playersField = TextField(
         width = 200,
@@ -130,7 +129,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         visual = ImageVisual("bear.png")
     )
 
-    private val bearToggleButton = Button(
+    private val bearToggleButton = ToggleButton(
         width = 60,
         height = 60,
         posX = 860,
@@ -151,7 +150,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         visual = ImageVisual("elk.png")
     )
 
-    private val elkToggleButton = Button(
+    private val elkToggleButton = ToggleButton(
         width = 60,
         height = 60,
         posX = 860,
@@ -172,7 +171,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         visual = ImageVisual("hawk.png")
     )
 
-    private val hawkToggleButton = Button(
+    private val hawkToggleButton = ToggleButton(
         width = 60,
         height = 60,
         posX = 860,
@@ -193,7 +192,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         visual = ImageVisual("salmon.png")
     )
 
-    private val salmonToggleButton = Button(
+    private val salmonToggleButton = ToggleButton(
         width = 60,
         height = 60,
         posX = 860,
@@ -214,7 +213,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         visual = ImageVisual("fox.png")
     )
 
-    private val foxToggleButton = Button(
+    private val foxToggleButton = ToggleButton(
         width = 60,
         height = 60,
         posX = 860,

@@ -69,17 +69,19 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         posY = 100,
         width = 400,
         height = 300,
-        text = "Enter Simulation Speed",
+        text = "Bot Simulation Speed",
         font = Font(32)
     )
 
-    private val simEntry = TextField(
+    private val simEntry = ComboBox<Float>(
         posX = 1050,
         posY = 300,
         width = 200,
         height = 50,
-        font = Font(24)
-    )
+        items = listOf(0.5f, 1.0f, 1.5f, 2.0f, 2.5f, 3.0f),
+    ).apply {
+        selectedItem = 0.5f
+    }
 
     private val addPlayerButton = Button(
         width = 50,
@@ -97,6 +99,28 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
                     isDisabled = true
                     isVisible = false
                 }
+            }
+        }
+    }
+
+    private val deletePlayerButton = Button(
+        width = 50,
+        height = 50,
+        posX = 300,
+        posY = 680,
+        text = "-",
+        visual = ColorVisual(255, 255, 255)
+    ).apply {
+        onMouseClicked = {
+            if (playerNameFields.size > 2) {
+                val lastIndex = playerNameFields.size - 1
+                overlay.remove(playerNameFields.removeAt(lastIndex))
+                overlay.remove(playerButtons.removeAt(lastIndex))
+                overlay.remove(downButtons.removeAt(lastIndex))
+                overlay.remove(upButtons.removeAt(lastIndex))
+                addPlayerButton.isDisabled = false
+                addPlayerButton.isVisible = true
+                isVisible = true
             }
         }
     }
@@ -181,7 +205,7 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         visual = ImageVisual("bear.png")
     )
 
-    private val bearToggleButton = Button(
+    private val bearToggleButton = ToggleButton(
         width = 60,
         height = 60,
         posX = 860,
@@ -202,7 +226,7 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         visual = ImageVisual("elk.png")
     )
 
-    private val elkToggleButton = Button(
+    private val elkToggleButton = ToggleButton(
         width = 60,
         height = 60,
         posX = 860,
@@ -223,7 +247,7 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         visual = ImageVisual("hawk.png")
     )
 
-    private val hawkToggleButton = Button(
+    private val hawkToggleButton = ToggleButton(
         width = 60,
         height = 60,
         posX = 860,
@@ -244,7 +268,7 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         visual = ImageVisual("salmon.png")
     )
 
-    private val salmonToggleButton = Button(
+    private val salmonToggleButton = ToggleButton(
         width = 60,
         height = 60,
         posX = 860,
@@ -265,7 +289,7 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         visual = ImageVisual("fox.png")
     )
 
-    private val foxToggleButton = Button(
+    private val foxToggleButton = ToggleButton(
         width = 60,
         height = 60,
         posX = 860,
@@ -323,6 +347,7 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             simSpeed,
             simEntry,
             addPlayerButton,
+            deletePlayerButton,
             randomOrderToggle,
             randomRuleToggle,
             startButton,
@@ -460,6 +485,7 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             onMouseClicked ={
                 changeDown(downButton)
             }
+            isVisible = playerNameFields.size != 4
         }
         overlay.add(downButton)
         val upButton = createUpSymbol(300 + (playerNameFields.size-1) * 100)
@@ -468,6 +494,7 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             onMouseClicked = {
                 changeUp(upButton)
             }
+            isVisible = playerNameFields.size != 1
         }
         overlay.add(upButton)
     }
