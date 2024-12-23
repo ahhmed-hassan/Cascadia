@@ -1,7 +1,7 @@
 package service
 
-import entity.HabitatTile
 import entity.WildlifeToken
+import entity.HabitatTile
 
 /**
  *  Service class for all actions that can be initialized by the player.
@@ -43,9 +43,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         check(game.selectedTile != null || game.selectedToken != null || game.hasPlayedTile) {
             "Player already selected a pair"
         }
-        check(game.currentPlayer.natureToken >= 1) { "Player has no nature token left to select custom pair" }
-        fun chooseCustomPair(titleIndex: Int, tokenIndex: Int) {
-            //ToDo
+        check(game.currentPlayer.natureToken >= 1) {"Player has no nature token left to select custom pair"}
 
             // check arguments
             require(tileIndex in 0..3) { "Index for tile must be between 0 and 3" }
@@ -75,23 +73,59 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
             onAllRefreshables { refreshAfterWildlifeTokenReplaced() }
         }
 
-        /**
-         *
-         */
-        fun addTileToHabitat(habitatCoordinates: Pair<Int, Int>) {
-            //ToDo
+    /**
+     * The method adds the current selected [HabitatTile] to the given coordinates
+     * @param habitatCoordinates the given coordinates of the [entity.Player.habitat]
+     * @throws IllegalStateException if [entity.CascadiaGame.selectedTile] is null
+     * @throws IllegalArgumentException if the parameters are not next to some already put [entity.HabitatTile]
+     * After this function the [entity.CascadiaGame.selectedTile] is set to null
+     */
+    fun addTileToHabitat(habitatCoordinates : Pair<Int, Int>) {
+        val offsets = listOf(Pair(-1,1), Pair(0,1), Pair(1,0), Pair(1,-1), Pair(0,-1), Pair(-1,0))
+        val possibleNeighbours = offsets.map {
+            habitatCoordinates.first+it.first to habitatCoordinates.second + it.second }
 
-            onAllRefreshables { refreshAfterHabitatTileAdded() }
+        val game = checkNotNull(rootService.currentGame) {"No game started"}
+        require(!game.currentPlayer.habitat.containsKey(habitatCoordinates)){
+            "At this coordinate there is already an existing tile"}
+        val selectedTile = checkNotNull(game.selectedTile){"No habitat tile has been chosen yet"}
+        require(possibleNeighbours.any { game.currentPlayer.habitat.containsKey(it) }
+        ){"A habitat tile shall only be placed to an already placed one"}
+        game.currentPlayer.habitat[habitatCoordinates] = selectedTile
+        game.selectedTile = null
+        onAllRefreshables { refreshAfterHabitatTileAdded() }
+    }
+
+    /**
+     * [addToken] is responsible for placing tokens on already placed habitat tiles.
+     *
+     * @param tile The habitat tile where the wildlife token is to be placed.
+     * @throws IllegalStateException If the tile already has a wildlife token.
+     * @throws IllegalArgumentException If the wildlife token is not valid for the tile.
+     */
+    fun addToken(tile : HabitatTile) {
+        val game = rootService.currentGame
+        checkNotNull(game)
+        val selectedToken = game.selectedToken
+        checkNotNull(selectedToken)
+        val currentPlayer = game.currentPlayer
+
+        //Check if a wildlife token is already placed on this tile
+        requireNotNull(tile.wildlifeToken){"There is already a wildlife token on this tile!"}
+
+        //Check if the wildlife token is a valid token to begin with
+        require(tile.wildlifeSymbols.contains(selectedToken.animal)){"Wildlife token cannot be placed on this tile!"}
+
+        tile.wildlifeToken = selectedToken
+
+        if(tile.isKeystoneTile){
+            currentPlayer.natureToken += 1
         }
 
-        /**
-         *
-         */
-        fun addToken(token: WildlifeToken, tile: HabitatTile) {
-            //ToDo
+        game.selectedToken = null
 
-            onAllRefreshables { refreshAfterWildlifeTokenAdded() }
-        }
+        onAllRefreshables { refreshAfterWildlifeTokenAdded() }
+    }
 
         /**
          * Rotate the selected tile
