@@ -131,22 +131,18 @@ class ScoringService(private val rootSerivce : RootService) : AbstractRefreshing
                     //vertical
                     if(coordinate.second == innerCoordinate.second){
                         inSight.add(coordinate)
-                        inSight.add(innerCoordinate)
                     }
                     //horizontal
                     if(coordinate.first == innerCoordinate.first){
                         inSight.add(coordinate)
-                        inSight.add(innerCoordinate)
                     }
                     //diagonal plus
                     if(coordinate.first - innerCoordinate.first == coordinate.second - innerCoordinate.second){
                         inSight.add(coordinate)
-                        inSight.add(innerCoordinate)
                     }
                     //diagonal minus
                     if(coordinate.first - innerCoordinate.first == -(coordinate.second - innerCoordinate.second)){
                         inSight.add(coordinate)
-                        inSight.add(innerCoordinate)
                     }
                 }
             }
