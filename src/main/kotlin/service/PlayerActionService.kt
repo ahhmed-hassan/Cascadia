@@ -1,7 +1,7 @@
 package service
 
-import entity.WildlifeToken
 import entity.HabitatTile
+import entity.WildlifeToken
 
 /**
  *  Service class for all actions that can be initialized by the player.
@@ -33,106 +33,107 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
      * or if player does not have enough nature tokens to choose a custom pair
      *
      */
-    fun chooseCustomPair(tileIndex : Int, tokenIndex : Int) {
+    fun chooseCustomPair(tileIndex: Int, tokenIndex: Int) {
         // check prerequisites
         // check if game exists
         val game = rootService.currentGame
         checkNotNull(game)
 
         // check if player allowed to choose tile
-        check(game.selectedTile != null || game.selectedToken != null || game.hasPlayedTile, ) {
+        check(game.selectedTile != null || game.selectedToken != null || game.hasPlayedTile) {
             "Player already selected a pair"
         }
-        check(game.currentPlayer.natureToken >= 1) {"Player has no nature token left to select custom pair"}
-    fun chooseCustomPair(titleIndex: Int, tokenIndex: Int) {
-        //ToDo
+        check(game.currentPlayer.natureToken >= 1) { "Player has no nature token left to select custom pair" }
+        fun chooseCustomPair(titleIndex: Int, tokenIndex: Int) {
+            //ToDo
 
-        // check arguments
-        require(tileIndex in 0..3) {"Index for tile must be between 0 and 3"}
-        require(tileIndex in 0..3) {"Index for token must be between 0 and 3"}
+            // check arguments
+            require(tileIndex in 0..3) { "Index for tile must be between 0 and 3" }
+            require(tileIndex in 0..3) { "Index for token must be between 0 and 3" }
 
-        // select custom pair
-        game.selectedTile = game.shop[tileIndex].first
-        game.selectedToken = game.shop[tokenIndex].second
+            // select custom pair
+            game.selectedTile = game.shop[tileIndex].first
+            game.selectedToken = game.shop[tokenIndex].second
 
-        // remove chosen elements from shop
-        game.shop[tileIndex] = Pair(null, game.shop[tileIndex].second)
-        game.shop[tokenIndex] = Pair(game.shop[tokenIndex].first, null)
+            // remove chosen elements from shop
+            game.shop[tileIndex] = Pair(null, game.shop[tileIndex].second)
+            game.shop[tokenIndex] = Pair(game.shop[tokenIndex].first, null)
 
-        // decrease players nature token
-        game.currentPlayer.natureToken--
+            // decrease players nature token
+            game.currentPlayer.natureToken--
 
-        // refresh GUI
-        onAllRefreshables { refreshAfterTokenTilePairChosen() }
+            // refresh GUI
+            onAllRefreshables { refreshAfterTokenTilePairChosen() }
+        }
+
+        /**
+         *
+         */
+        fun replaceWildlifeTokens(tokenIndices: List<Int>) {
+            //ToDo
+
+            onAllRefreshables { refreshAfterWildlifeTokenReplaced() }
+        }
+
+        /**
+         *
+         */
+        fun addTileToHabitat(habitatCoordinates: Pair<Int, Int>) {
+            //ToDo
+
+            onAllRefreshables { refreshAfterHabitatTileAdded() }
+        }
+
+        /**
+         *
+         */
+        fun addToken(token: WildlifeToken, tile: HabitatTile) {
+            //ToDo
+
+            onAllRefreshables { refreshAfterWildlifeTokenAdded() }
+        }
+
+        /**
+         * Rotate the selected tile
+         * preconditions : There is already a selected tile that has not been placed yet!
+         * @throws IllegalArgumentException if there is no [HabitatTile] to place
+         * post :
+         * The [HabitatTile.rotationOffset] is incremented.
+         * the [HabitatTile.terrains] would have the right order as how it would be placed (one step clockwise rotated)
+         *
+         */
+        fun rotateTile() {
+            val game = checkNotNull(rootService.currentGame) { "No game started yet" }
+
+            val selectedTile = checkNotNull(game.selectedTile) { "Only the selected tile can be rotated!" }
+
+            selectedTile.rotationOffset = (selectedTile.rotationOffset + 1).mod(selectedTile.terrains.size)
+            selectedTile.terrains.add(
+                0,
+                selectedTile.terrains.removeLast()
+            )
+
+            onAllRefreshables { refreshAfterTileRotation() }
+        }
+
+        /**
+         * [discardToken] discards the currently selected token and adds it back to the wildlife token bag.
+         *
+         * @throws IllegalStateException if the selected Token is null
+         */
+        fun discardToken() {
+            val game = rootService.currentGame
+            checkNotNull(game)
+            val selectedToken = game.selectedToken
+            checkNotNull(selectedToken)
+
+            game.wildlifeTokenList.add(selectedToken)
+            game.wildlifeTokenList.shuffle()
+            game.selectedToken = null
+
+            rootService.gameService.nextTurn()
+        }
+
+
     }
-
-    /**
-     *
-     */
-    fun replaceWildlifeTokens(tokenIndices: List<Int>) {
-        //ToDo
-
-        onAllRefreshables { refreshAfterWildlifeTokenReplaced() }
-    }
-
-    /**
-     *
-     */
-    fun addTileToHabitat(habitatCoordinates: Pair<Int, Int>) {
-        //ToDo
-
-        onAllRefreshables { refreshAfterHabitatTileAdded() }
-    }
-
-    /**
-     *
-     */
-    fun addToken(token: WildlifeToken, tile: HabitatTile) {
-        //ToDo
-
-        onAllRefreshables { refreshAfterWildlifeTokenAdded() }
-    }
-
-    /**
-     * Rotate the selected tile
-     * preconditions : There is already a selected tile that has not been placed yet!
-     * @throws IllegalArgumentException if there is no [HabitatTile] to place
-     * post :
-     * The [HabitatTile.rotationOffset] is incremented.
-     * the [HabitatTile.terrains] would have the right order as how it would be placed (one step clockwise rotated)
-     *
-     */
-    fun rotateTile() {
-        val game = checkNotNull(rootService.currentGame) { "No game started yet" }
-
-        val selectedTile = checkNotNull(game.selectedTile) { "Only the selected tile can be rotated!" }
-
-        selectedTile.rotationOffset = (selectedTile.rotationOffset + 1).mod(selectedTile.terrains.size)
-        selectedTile.terrains.add(
-            0,
-            selectedTile.terrains.removeLast()
-        )
-
-        onAllRefreshables { refreshAfterTileRotation() }
-    }
-
-    /**
-     * [discardToken] discards the currently selected token and adds it back to the wildlife token bag.
-     *
-     * @throws IllegalStateException if the selected Token is null
-     */
-    fun discardToken() {
-        val game = rootService.currentGame
-        checkNotNull(game)
-        val selectedToken = game.selectedToken
-        checkNotNull(selectedToken)
-
-        game.wildlifeTokenList.add(selectedToken)
-        game.wildlifeTokenList.shuffle()
-        game.selectedToken = null
-
-        rootService.gameService.nextTurn()
-    }
-
-
 }
