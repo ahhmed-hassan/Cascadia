@@ -106,12 +106,51 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
     }
 
     /**
-     *
+     *Calculates the Score resulted from the bear collection
+     * @param player the player whose score should be calculated
+     * @return [Int] representing the score resulted from the Bear combinations of this player based on
+     * the current [entity.CascadiaGame.ruleSet]
      */
     private fun calculateBearScore(player: Player): Int {
-        //ToDo
-        return 0
+        val makeBearGraph: (Map<Pair<Int, Int>, HabitatTile>) -> Map<Pair<Int, Int>, List<Pair<Int, Int>>> =
+            { habitatTiles ->
+                val bearNodesCoordinates = habitatTiles.filterValues { it.wildlifeToken?.animal == Animal.BEAR }
+                    .keys.toSet()
+
+                val graph = bearNodesCoordinates.associateWith { coordinate ->
+                    coordinate
+                        .neighbours()
+                        .filter { neighbour -> bearNodesCoordinates.contains(neighbour) }
+
+                }
+                graph
+            }
+        val bearGraph = makeBearGraph(player.habitat)
+        val visited: MutableSet<Pair<Int, Int>> = mutableSetOf()
+        val game = checkNotNull(rootService.currentGame) { "No Game started yet!" }
+        val isB = game.ruleSet[Animal.BEAR.ordinal]
+        val searchedLength = if (isB) 3 else 2
+        var connectedComponentsWithSearchedLength = 0
+
+        for (bearNode in bearGraph.keys) {
+            if (!visited.contains(bearNode)) {
+                if (depthFirstConnectedComponentLength(bearGraph, visited, bearNode) == searchedLength) {
+                    connectedComponentsWithSearchedLength++
+                }
+            }
+        }
+        if (isB)
+            return 10 * connectedComponentsWithSearchedLength
+        else
+            return when (connectedComponentsWithSearchedLength) {
+                1 -> 4
+                2 -> 11
+                3 -> 19
+                4 -> 27
+                else -> 0
+            }
     }
+
 
     /**
      *
