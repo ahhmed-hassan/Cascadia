@@ -43,6 +43,26 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
         }
 
         /**
+         * A class aggregating all the detailed bonus points
+         * @property animalsScores a Map for Animal, Score pairs for each animal
+         * @property ownLongestTerrainsScores a map for the longest connected [Terrain]s for each one
+         * @property natureTokens the number of nature tokens left for the player
+         * @property longestAmongOtherPlayers the bonus points the player becomes when having the longest Terrains
+         */
+        data class PlayerScore(
+            val animalsScores: Map<Animal, Int>,
+            val ownLongestTerrainsScores: Map<Terrain, Int>,
+            val natureTokens: Int = 0,
+            var longestAmongOtherPlayers: Map<Terrain, Int> =
+                Terrain.values().associateWith { 0 }.toMutableMap()
+        ) {
+            val sum: () -> Int = {
+                animalsScores.values.sum() + ownLongestTerrainsScores.values.sum() +
+                        longestAmongOtherPlayers.values.sum() + natureTokens
+            }
+        }
+
+        /**
          * Calculating the longest path starting at some coordinates
          * @param coordinate the start coordinate
          * @param graph the graph to search
@@ -145,12 +165,69 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
         return scoreMap.getOrDefault(maxOf(salmonRuns, maxRuns), 0)
     }
 
+
     /**
+     *Adds the Points from the foxes to the players score according to the current rule for foxes
      *
+     * @param player the player for witch the score shoud be calculated
      */
     private fun calculateFoxScore(player: Player): Int {
-        //ToDo
-        return 0
-    }
+        val foxes = mutableListOf<Pair<Int, Int>>()
+        val habitat = player.habitat
+        var points = 0
 
+        //gets all foxes
+        habitat.forEach {
+            if (it.value.wildlifeToken?.animal == Animal.FOX) {
+                foxes.add(it.key)
+            }
+        }
+
+        foxes.forEach {
+            val animals = intArrayOf(0, 0, 0, 0, 0, 0)
+            val game = rootService.currentGame
+            checkNotNull(game)
+
+            val neighbours = it.neighbours()
+
+            //counts the animals
+            neighbours.forEach { neighbour ->
+                {
+                    animals[habitat[neighbour]?.wildlifeToken?.animal?.ordinal ?: 5]++
+                }
+            }
+
+            //resets the fallback value for animals that are null
+            animals[5] = 0
+
+            if (game.ruleSet[Animal.FOX.ordinal]) {
+                //B
+                var pairs = 0
+                animals[Animal.FOX.ordinal] = 0
+                animals.forEach { animal ->
+                    {
+                        if (animal >= 2) {
+                            pairs++
+                        }
+                    }
+                }
+
+                if (pairs == 1) points += 3
+                if (pairs == 2) points += 5
+                if (pairs == 3) points += 7
+            } else {
+                //A
+                var differentAnimals = 0
+                animals.forEach { animal ->
+                    {
+                        if (animal >= 1) {
+                            differentAnimals++
+                        }
+                    }
+                }
+                points += differentAnimals
+            }
+        }
+        return points
+    }
 }
