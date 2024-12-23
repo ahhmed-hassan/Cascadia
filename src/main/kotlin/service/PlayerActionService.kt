@@ -1,7 +1,7 @@
 package service
 
-import entity.WildlifeToken
 import entity.HabitatTile
+import entity.WildlifeToken
 
 /**
  *  Service class for all actions that can be initialized by the player.
@@ -43,35 +43,35 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         check(game.selectedTile != null || game.selectedToken != null || game.hasPlayedTile) {
             "Player already selected a pair"
         }
-        check(game.currentPlayer.natureToken >= 1) {"Player has no nature token left to select custom pair"}
+        check(game.currentPlayer.natureToken >= 1) { "Player has no nature token left to select custom pair" }
 
-            // check arguments
-            require(tileIndex in 0..3) { "Index for tile must be between 0 and 3" }
-            require(tileIndex in 0..3) { "Index for token must be between 0 and 3" }
+        // check arguments
+        require(tileIndex in 0..3) { "Index for tile must be between 0 and 3" }
+        require(tileIndex in 0..3) { "Index for token must be between 0 and 3" }
 
-            // select custom pair
-            game.selectedTile = game.shop[tileIndex].first
-            game.selectedToken = game.shop[tokenIndex].second
+        // select custom pair
+        game.selectedTile = game.shop[tileIndex].first
+        game.selectedToken = game.shop[tokenIndex].second
 
-            // remove chosen elements from shop
-            game.shop[tileIndex] = Pair(null, game.shop[tileIndex].second)
-            game.shop[tokenIndex] = Pair(game.shop[tokenIndex].first, null)
+        // remove chosen elements from shop
+        game.shop[tileIndex] = Pair(null, game.shop[tileIndex].second)
+        game.shop[tokenIndex] = Pair(game.shop[tokenIndex].first, null)
 
-            // decrease players nature token
-            game.currentPlayer.natureToken--
+        // decrease players nature token
+        game.currentPlayer.natureToken--
 
-            // refresh GUI
-            onAllRefreshables { refreshAfterTokenTilePairChosen() }
-        }
+        // refresh GUI
+        onAllRefreshables { refreshAfterTokenTilePairChosen() }
+    }
 
-        /**
-         *
-         */
-        fun replaceWildlifeTokens(tokenIndices: List<Int>) {
-            //ToDo
+    /**
+     *
+     */
+    fun replaceWildlifeTokens(tokenIndices: List<Int>) {
+        //ToDo
 
-            onAllRefreshables { refreshAfterWildlifeTokenReplaced() }
-        }
+        onAllRefreshables { refreshAfterWildlifeTokenReplaced() }
+    }
 
     /**
      * The method adds the current selected [HabitatTile] to the given coordinates
@@ -80,17 +80,18 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
      * @throws IllegalArgumentException if the parameters are not next to some already put [entity.HabitatTile]
      * After this function the [entity.CascadiaGame.selectedTile] is set to null
      */
-    fun addTileToHabitat(habitatCoordinates : Pair<Int, Int>) {
-        val offsets = listOf(Pair(-1,1), Pair(0,1), Pair(1,0), Pair(1,-1), Pair(0,-1), Pair(-1,0))
+    fun addTileToHabitat(habitatCoordinates: Pair<Int, Int>) {
+        val offsets = listOf(Pair(-1, 1), Pair(0, 1), Pair(1, 0), Pair(1, -1), Pair(0, -1), Pair(-1, 0))
         val possibleNeighbours = offsets.map {
-            habitatCoordinates.first+it.first to habitatCoordinates.second + it.second }
+            habitatCoordinates.first + it.first to habitatCoordinates.second + it.second
+        }
 
-        val game = checkNotNull(rootService.currentGame) {"No game started"}
-        require(!game.currentPlayer.habitat.containsKey(habitatCoordinates)){
-            "At this coordinate there is already an existing tile"}
-        val selectedTile = checkNotNull(game.selectedTile){"No habitat tile has been chosen yet"}
-        require(possibleNeighbours.any { game.currentPlayer.habitat.containsKey(it) }
-        ){"A habitat tile shall only be placed to an already placed one"}
+        val game = checkNotNull(rootService.currentGame) { "No game started" }
+        require(!game.currentPlayer.habitat.containsKey(habitatCoordinates)) {
+            "At this coordinate there is already an existing tile"
+        }
+        val selectedTile = checkNotNull(game.selectedTile) { "No habitat tile has been chosen yet" }
+        require(possibleNeighbours.any { game.currentPlayer.habitat.containsKey(it) }) { "A habitat tile shall only be placed to an already placed one" }
         game.currentPlayer.habitat[habitatCoordinates] = selectedTile
         game.selectedTile = null
         onAllRefreshables { refreshAfterHabitatTileAdded() }
@@ -103,7 +104,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
      * @throws IllegalStateException If the tile already has a wildlife token.
      * @throws IllegalArgumentException If the wildlife token is not valid for the tile.
      */
-    fun addToken(tile : HabitatTile) {
+    fun addToken(tile: HabitatTile) {
         val game = rootService.currentGame
         checkNotNull(game)
         val selectedToken = game.selectedToken
@@ -111,14 +112,14 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         val currentPlayer = game.currentPlayer
 
         //Check if a wildlife token is already placed on this tile
-        requireNotNull(tile.wildlifeToken){"There is already a wildlife token on this tile!"}
+        requireNotNull(tile.wildlifeToken) { "There is already a wildlife token on this tile!" }
 
         //Check if the wildlife token is a valid token to begin with
-        require(tile.wildlifeSymbols.contains(selectedToken.animal)){"Wildlife token cannot be placed on this tile!"}
+        require(tile.wildlifeSymbols.contains(selectedToken.animal)) { "Wildlife token cannot be placed on this tile!" }
 
         tile.wildlifeToken = selectedToken
 
-        if(tile.isKeystoneTile){
+        if (tile.isKeystoneTile) {
             currentPlayer.natureToken += 1
         }
 
@@ -127,47 +128,45 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         onAllRefreshables { refreshAfterWildlifeTokenAdded() }
     }
 
-        /**
-         * Rotate the selected tile
-         * preconditions : There is already a selected tile that has not been placed yet!
-         * @throws IllegalArgumentException if there is no [HabitatTile] to place
-         * post :
-         * The [HabitatTile.rotationOffset] is incremented.
-         * the [HabitatTile.terrains] would have the right order as how it would be placed (one step clockwise rotated)
-         *
-         */
-        fun rotateTile() {
-            val game = checkNotNull(rootService.currentGame) { "No game started yet" }
+    /**
+     * Rotate the selected tile
+     * preconditions : There is already a selected tile that has not been placed yet!
+     * @throws IllegalArgumentException if there is no [HabitatTile] to place
+     * post :
+     * The [HabitatTile.rotationOffset] is incremented.
+     * the [HabitatTile.terrains] would have the right order as how it would be placed (one step clockwise rotated)
+     *
+     */
+    fun rotateTile() {
+        val game = checkNotNull(rootService.currentGame) { "No game started yet" }
 
-            val selectedTile = checkNotNull(game.selectedTile) { "Only the selected tile can be rotated!" }
+        val selectedTile = checkNotNull(game.selectedTile) { "Only the selected tile can be rotated!" }
 
-            selectedTile.rotationOffset = (selectedTile.rotationOffset + 1).mod(selectedTile.terrains.size)
-            selectedTile.terrains.add(
-                0,
-                selectedTile.terrains.removeLast()
-            )
+        selectedTile.rotationOffset = (selectedTile.rotationOffset + 1).mod(selectedTile.terrains.size)
+        selectedTile.terrains.add(
+            0, selectedTile.terrains.removeLast()
+        )
 
-            onAllRefreshables { refreshAfterTileRotation() }
-        }
-
-        /**
-         * [discardToken] discards the currently selected token and adds it back to the wildlife token bag.
-         *
-         * @throws IllegalStateException if the selected Token is null
-         */
-        fun discardToken() {
-            val game = rootService.currentGame
-            checkNotNull(game)
-            val selectedToken = game.selectedToken
-            checkNotNull(selectedToken)
-
-            game.wildlifeTokenList.add(selectedToken)
-            game.wildlifeTokenList.shuffle()
-            game.selectedToken = null
-
-            rootService.gameService.nextTurn()
-        }
-
-
+        onAllRefreshables { refreshAfterTileRotation() }
     }
+
+    /**
+     * [discardToken] discards the currently selected token and adds it back to the wildlife token bag.
+     *
+     * @throws IllegalStateException if the selected Token is null
+     */
+    fun discardToken() {
+        val game = rootService.currentGame
+        checkNotNull(game)
+        val selectedToken = game.selectedToken
+        checkNotNull(selectedToken)
+
+        game.wildlifeTokenList.add(selectedToken)
+        game.wildlifeTokenList.shuffle()
+        game.selectedToken = null
+
+        rootService.gameService.nextTurn()
+    }
+
+
 }
