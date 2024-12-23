@@ -91,7 +91,8 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
             "At this coordinate there is already an existing tile"
         }
         val selectedTile = checkNotNull(game.selectedTile) { "No habitat tile has been chosen yet" }
-        require(possibleNeighbours.any { game.currentPlayer.habitat.containsKey(it) }) { "A habitat tile shall only be placed to an already placed one" }
+        require(possibleNeighbours.any { game.currentPlayer.habitat.containsKey(it) }
+        ) { "A habitat tile shall only be placed to an already placed one" }
         game.currentPlayer.habitat[habitatCoordinates] = selectedTile
         game.selectedTile = null
         onAllRefreshables { refreshAfterHabitatTileAdded() }
