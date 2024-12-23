@@ -5,23 +5,29 @@ import entity.WildlifeToken
 import service.RootService
 import tools.aqua.bgw.components.container.HexagonGrid
 import tools.aqua.bgw.components.gamecomponentviews.HexagonView
-import tools.aqua.bgw.components.gamecomponentviews.TokenView
 import tools.aqua.bgw.components.layoutviews.GridPane
 import tools.aqua.bgw.components.layoutviews.Pane
 import tools.aqua.bgw.components.uicomponents.Button
 import tools.aqua.bgw.components.uicomponents.Label
 import tools.aqua.bgw.components.uicomponents.UIComponent
 import tools.aqua.bgw.core.BoardGameScene
+import tools.aqua.bgw.style.BorderRadius
 import tools.aqua.bgw.util.BidirectionalMap
 import tools.aqua.bgw.util.Font
 import tools.aqua.bgw.visual.ColorVisual
+import tools.aqua.bgw.visual.CompoundVisual
 import tools.aqua.bgw.visual.ImageVisual
+import tools.aqua.bgw.visual.TextVisual
 import java.awt.Color
+import kotlin.math.cos
+import kotlin.math.sin
 
 class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Refreshables {
 
     private val habitats : BidirectionalMap<HabitatTile,HexagonView> = BidirectionalMap()
-    private val tokens : BidirectionalMap<WildlifeToken,TokenView> = BidirectionalMap()
+    private val tokens : BidirectionalMap<WildlifeToken,HexagonView> = BidirectionalMap()
+    private var selectedHabitat : HexagonView? = null
+    private var selectedToken : HexagonView? = null
 
     private val shopHabitats = GridPane<HexagonView> (
         posX = 1400,
@@ -32,12 +38,12 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         visual = ColorVisual(Color.GRAY)
     )
 
-    private val shopTokens = GridPane<TokenView> (
+    private val shopTokens = GridPane<HexagonView> (
         posX = 1400,
         posY = 250,
         rows = 1,
         columns = 4,
-        spacing = 150,
+        spacing = 100,
         visual = ColorVisual(Color.GRAY)
     )
 
@@ -64,7 +70,9 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
 
     private val testHabitat1 = HexagonView(
         size = 75,
-        visual = ColorVisual(Color.WHITE)
+        visual = ColorVisual(Color.WHITE).apply {
+            //style.borderRadius = BorderRadius(10)
+        }
     )
 
     private val testHabitat2 = HexagonView(
@@ -78,10 +86,14 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
     )
 
 
-    private val testToken = TokenView(
-        width = 50,
-        height = 50,
-        visual = ColorVisual(Color.WHITE)
+    private val testToken = HexagonView(
+        size = 50,
+        visual = CompoundVisual(
+            ColorVisual(Color.WHITE).apply {
+                //style.borderRadius = BorderRadius(10)
+            },
+            TextVisual("Bear")
+        )
     )
 
     /**
@@ -169,7 +181,7 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         visual = ColorVisual(200, 150, 255)
     ).apply {
         onMouseClicked = {
-
+            rootService.gameService.nextTurn()
         }
     }
 
@@ -292,18 +304,20 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
                 shopHabitats[i,0]?.apply {
                     posY -= 25
                 }
+                selectedHabitat = shopHabitats[i,0]
             }
             shopTokens[i,0] = testToken
             testToken.onMouseClicked = {
                 shopTokens[i,0]?.apply {
                     posY -= 25
                 }
+                selectedToken = shopTokens[i,0]
             }
         }
         //shopHabitats.isVisible = false
         //shopHabitats.isDisabled = true
 
-        playArea[0,0] = testHabitat1
+        playArea[0,0] = labeledHexagon1
         playArea[0,1] = testHabitat2
         playArea[-1,1] = testHabitat3
 
@@ -343,5 +357,46 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         ).forEach { it.isDisabled = false }
     }
 
+    private fun createLabeledHexagonView(size: Int = 75, color: Color, labels: List<String>): HexagonView {
+        require(labels.size == 6) { "There must be exactly 6 labels for the hexagon sides." }
+
+        // Helper: Calculate the position for the middle of each side
+        fun calculateSidePosition(index: Int): Pair<Double, Double> {
+            val startAngle = Math.toRadians(60.0 * index - 90.0) // Start at the top side
+            val endAngle = Math.toRadians(60.0 * (index + 1) - 90.0)
+
+            // Midpoint between the two corners of the side
+            val midAngle = (startAngle + endAngle) / 2.0
+            val offsetX = size * cos(midAngle)
+            val offsetY = size * sin(midAngle)
+            return offsetX to offsetY
+        }
+
+        // Create text visuals for each side
+        val textVisuals = labels.mapIndexed { index, text ->
+            val (offsetX, offsetY) = calculateSidePosition(index)
+            TextVisual(
+                text = text,
+                font = Font(size = 14, color = Color.BLACK),
+                offsetX = offsetX,
+                offsetY = offsetY
+            )
+        }
+
+        return HexagonView(
+            size = size,
+            visual = CompoundVisual(
+                ColorVisual(color), // Background color of the hexagon
+                *textVisuals.toTypedArray() // Spread operator to include all text visuals
+            )
+        )
+    }
+
+
+    private val labeledHexagon1 = createLabeledHexagonView(
+        size = 75,
+        color = Color.LIGHT_GRAY,
+        labels = listOf("F", "F", "F", "E", "E", "E")
+    )
 
 }
