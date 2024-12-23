@@ -86,7 +86,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
     }
 
     /**
-     *Calculates the Score resulted from the bear collection
+     *Calculates the Score resulted from the bear collection.
      * @param player the player whose score should be calculated
      * @return [Int] representing the score resulted from the Bear combinations of this player based on
      * the current [entity.CascadiaGame.ruleSet]
