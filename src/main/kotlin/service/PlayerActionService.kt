@@ -83,12 +83,37 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
     }
 
     /**
+     * [addToken] is responsible for placing tokens on already placed habitat tiles.
      *
+     * @param tile The habitat tile where the wildlife token is to be placed.
+     * @throws IllegalStateException If the tile already has a wildlife token.
+     * @throws IllegalArgumentException If the wildlife token is not valid for the tile.
      */
-    fun addToken(token: WildlifeToken, tile : HabitatTile) {
-        //ToDo
+    fun addToken(tile : HabitatTile) {
+        val game = rootService.currentGame
+        checkNotNull(game)
+        val selectedToken = game.selectedToken
+        checkNotNull(selectedToken)
+        val currentPlayer = game.currentPlayer
+
+        //Check if a wildlife token is already placed on this tile
+        requireNotNull(tile.wildlifeToken){"There is already a wildlife token on this tile!"}
+
+        //Check if the wildlife token is a valid token to begin with
+        require(tile.wildlifeSymbols.contains(selectedToken.animal)){"Wildlife token cannot be placed on this tile!"}
+
+        tile.wildlifeToken = selectedToken
+
+        if(tile.isKeystoneTile){
+            currentPlayer.natureToken += 1
+        }
+
+        game.selectedToken = null
 
         onAllRefreshables { refreshAfterWildlifeTokenAdded() }
+
+        rootService.gameService.nextTurn()
+
     }
 
     /**
@@ -117,6 +142,5 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
 
         rootService.gameService.nextTurn()
     }
-
 
 }
