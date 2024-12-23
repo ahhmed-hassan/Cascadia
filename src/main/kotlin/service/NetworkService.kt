@@ -83,7 +83,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         val players = message.playerList.map { playerName ->
             Player(
                 name = playerName,
-                habitat = emptyMap(),
+                habitat = mutableMapOf(),
                 playerType = PlayerType.NETWORK
             )
         }.toMutableList()
@@ -120,7 +120,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
 
         val shopTokens = game.shop.map { it.second }
 
-        val animalCount = shopTokens.groupingBy { it.animal }.eachCount()
+        val animalCount = shopTokens.groupingBy { it?.animal }.eachCount()
         val mostFrequentAnimal = animalCount.maxByOrNull { it.value }
 
         if (mostFrequentAnimal != null) {
@@ -130,13 +130,13 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
             when (count) {
                 4 -> {
                     val indices = shopTokens
-                        .mapIndexedNotNull { index, token -> if (token.animal == animal) index else null }
+                        .mapIndexedNotNull { index, token -> if (token?.animal == animal) index else null }
                         .take(4)
                     rootService.playerActionService.replaceWildlifeTokens(indices)
                 }
                 3 -> {
                     val indices = shopTokens
-                        .mapIndexedNotNull { index, token -> if (token.animal == animal) index else null }
+                        .mapIndexedNotNull { index, token -> if (token?.animal == animal) index else null }
                         .take(3)
                     rootService.playerActionService.replaceWildlifeTokens(indices)
                 }
@@ -179,8 +179,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         val habitatCoordinates = Pair(qCoordTile, rCoordTile)
 
         game.selectedTile = game.startTileList.flatten()[message.placedTile]
-
-        repeat(message.tileRotation) { rootService.playerActionService.rotateTile(game.selectedTile) }
+        repeat(message.tileRotation) { rootService.playerActionService.rotateTile(game.selectedTile!!) }
         rootService.playerActionService.addTileToHabitat(habitatCoordinates)
 
         //require(message.selectedToken in game.shop.indices) { "Ungültiger Token-Index: ${message.selectedToken}" }
@@ -290,7 +289,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
     fun updateConnectionState(newState: ConnectionState) {
         this.connectionState = newState
         onAllRefreshables {
-            refreshConnectionState(newState)
+            //refreshConnectionState(newState)
         }
     }
 

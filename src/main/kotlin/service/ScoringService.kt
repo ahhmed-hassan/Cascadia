@@ -42,27 +42,48 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
         }
 
         /**
+         * A class aggregating all the detailed bonus points
+         * @property animalsScores a Map for Animal, Score pairs for each animal
+         * @property ownLongestTerrainsScores a map for the longest connected [Terrain]s for each one
+         * @property natureTokens the number of nature tokens left for the player
+         * @property longestAmongOtherPlayers the bonus points the player becomes when having the longest Terrains
+         */
+        data class PlayerScore(
+            val animalsScores: Map<Animal, Int>,
+            val ownLongestTerrainsScores: Map<Terrain, Int>,
+            val natureTokens: Int = 0,
+            var longestAmongOtherPlayers: Map<Terrain, Int> =
+                Terrain.values().associateWith { 0 }.toMutableMap()
+        ){
+            val sum : () -> Int = {animalsScores.values.sum() + ownLongestTerrainsScores.values.sum() +
+                    longestAmongOtherPlayers.values.sum() + natureTokens}
+        }
+
+        /**
          * Calculating the longest path starting at some coordinates
          * @param coordinate the start coordinate
          * @param graph the graph to search
          * @param visited the visited coordinates so far
          */
-        private fun depthFirstLongestPathAt(
+        private fun depthFirstConnectedComponentLength(
             graph: Map<Pair<Int, Int>, List<Pair<Int, Int>>>,
             visited: MutableSet<Pair<Int, Int>>,
             coordinate: Pair<Int, Int>
         ): Int {
-            var longestPath: Int = 1
+            if (visited.contains(coordinate)) return 0
+            var connectedComponentLength: Int = 1
             visited.add(coordinate)
-            val notVisitedNeighbours = directionsPairsAndCorrespondingEdges.keys.map { addPairs(it, coordinate) }
-                .filter { neighbour -> !visited.contains(neighbour) }
-            for (notVisitedNeighbour in notVisitedNeighbours) {
-                longestPath += depthFirstLongestPathAt(graph, visited, notVisitedNeighbour)
+            val neighbours = coordinate.neighbours()
+
+            for (neighbour in neighbours) {
+                if (!visited.contains(neighbour))
+                    connectedComponentLength += depthFirstConnectedComponentLength(graph, visited, neighbour)
             }
-            return longestPath
+            return connectedComponentLength
 
         }
     }
+
 
     /**
      *
