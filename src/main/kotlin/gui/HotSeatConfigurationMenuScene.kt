@@ -73,7 +73,7 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         font = Font(32)
     )
 
-    private val simEntry = ComboBox<Float>(
+    private val simEntry = ComboBox(
         posX = 1050,
         posY = 300,
         width = 200,
@@ -120,6 +120,7 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
                 overlay.remove(upButtons.removeAt(lastIndex))
                 addPlayerButton.isDisabled = false
                 addPlayerButton.isVisible = true
+                addPlayerButton.posY -= 100
                 isVisible = true
             }
         }
