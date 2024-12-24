@@ -65,12 +65,63 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
     }
 
     /**
+     * Replace a number of [WildlifeToken] from the tile-token pairs in the [shop] with new ones from [WildlifeToken].
+     *
+     * Can be used for the free replacement of three token if three tokens in the [shop] are the same at the turn start.
+     *
+     * Can be used to replace a chosen number of tokens if the player has at least one nature token.
+     * After that the number of nature tokens of the current player is reduced by one.
+     *
+     * The replaced tokens are stored in [discardedToken] till the end of the current turn
+     * and are added back to [WildlifeToken] afterwards in [nextTurn].
+     *
+     * @param [tokenIndices] is a list of indices of the tile-token pairs in [shop] whose token shall be replaced.
+     *
+     * @throws illegalArgumentException if indices in [tokenIndices] are out of bound for shop, not mutually distinct
+     * , number of indices is either too big or too small
+     * or, in case of free overpopulation of three resolution, if token at indices do not share the same animal value.
+     * @throws illegalStateException if player is not allowed to perform a replacement
+     * or if not enough wildlife tokens are left in [tokenList] to replace with.
      *
      */
-    fun replaceWildlifeTokens(tokenIndices: List<Int>) {
-        //ToDo
+    fun replaceWildlifeTokens(tokenIndices : List<Int>) {
 
-        onAllRefreshables { refreshAfterWildlifeTokenReplaced() }
+        //check if game exists
+        val game = rootService.currentGame
+        checkNotNull(game)
+
+        // check if argument contains any indices
+        require(tokenIndices.size > 0 || tokenIndices.size < 5) {"number of indices must be between 0 and 5"}
+
+        //check whether indices are not the same
+        require(tokenIndices.distinct().size == tokenIndices.size) {"All indices must be different"}
+
+        // check if indices in argument in range
+        tokenIndices.forEach { require(it in 0..3) {"Indices for tokens must be between 0 and 3"} }
+
+        // check if enough tokens are left for replacement, if not the player may try again with a smaller amount
+        check(game.wildlifeTokenList.size < tokenIndices.size) {
+            "Not enough wildlifeTokens for replacement left. " +
+                    "Replacement of up to ${game.wildlifeTokenList.size} Tokens still possible."
+        }
+
+        // player is allowed to freely resolve an overpopulation of three once
+        if (tokenIndices.size == 3 &&
+            rootService.gameService.checkForSameAnimal(tokenIndices) &&
+            !game.hasReplacedThreeToken) {
+            game.hasReplacedThreeToken = true
+        }
+        // otherwise the player must use a nature token in exchange
+        else if (game.currentPlayer.natureToken > 0) {
+            game.currentPlayer.natureToken--
+        }
+        else {
+            throw IllegalStateException("Current Player not allowed to perform replacement")
+        }
+
+        // perform actual replacement of tokens
+        rootService.gameService.executeTokenReplacement(tokenIndices)
+
     }
 
     /**
