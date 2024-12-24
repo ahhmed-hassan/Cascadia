@@ -1,6 +1,7 @@
 package service
 
 import entity.Animal
+import entity.HabitatTile
 import entity.Player
 import entity.Terrain
 
@@ -54,9 +55,11 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
             val natureTokens: Int = 0,
             var longestAmongOtherPlayers: Map<Terrain, Int> =
                 Terrain.values().associateWith { 0 }.toMutableMap()
-        ){
-            val sum : () -> Int = {animalsScores.values.sum() + ownLongestTerrainsScores.values.sum() +
-                    longestAmongOtherPlayers.values.sum() + natureTokens}
+        ) {
+            val sum: () -> Int = {
+                animalsScores.values.sum() + ownLongestTerrainsScores.values.sum() +
+                        longestAmongOtherPlayers.values.sum() + natureTokens
+            }
         }
 
         /**
@@ -84,7 +87,6 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
         }
     }
 
-
     /**
      *
      */
@@ -95,21 +97,89 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
         return 0
     }
 
-    /**
-     *
+    /***
+     * Calculating the longest connected terrains of some type for some player
+     * @param type the wished [Terrain] type
+     * @param player The [Player] having this longest terrains
+     * @return [Int] representing the longest connected combination of [Terrain]s at this [Player.habitat]
      */
-    private fun calculateLongestTerrain(type: Terrain, player: Player): Int {
-        //ToDo
-        return 0
+    private fun calculateLongestTerrain(searchedTerrain: Terrain, player: Player): Int {
+
+        val hasAtLeastOneEdgeOfSearchedTerrain: (HabitatTile) -> Boolean = { it.terrains.any { it == searchedTerrain } }
+        val buildSearchedTerrainGraph: (Map<Pair<Int, Int>, HabitatTile>) -> Map<Pair<Int, Int>, List<Pair<Int, Int>>> =
+            { playerTiles ->
+                val searchedTerrainNodesCoordinates =
+                    playerTiles.filterValues { hasAtLeastOneEdgeOfSearchedTerrain(it) }
+                        .keys.toSet()
+
+                val graph = searchedTerrainNodesCoordinates.associateWith { coordinate ->
+                    coordinate
+                        .neighbours()
+                        .filter { neighbour -> searchedTerrainNodesCoordinates.contains(neighbour) }
+                }
+                graph
+
+            }
+        val searchedTerrainGraph = buildSearchedTerrainGraph(player.habitat)
+        val visited: MutableSet<Pair<Int, Int>> = mutableSetOf()
+        var longestConnectedComponent = 0
+        for (terrainNode in searchedTerrainGraph.keys) {
+            if (!visited.contains(terrainNode))
+                longestConnectedComponent = maxOf(
+                    longestConnectedComponent,
+                    depthFirstConnectedComponentLength(searchedTerrainGraph, visited, terrainNode)
+                )
+        }
+        return longestConnectedComponent
     }
 
+
     /**
-     *
+     *Calculates the Score resulted from the bear collection
+     * @param player the player whose score should be calculated
+     * @return [Int] representing the score resulted from the Bear combinations of this player based on
+     * the current [entity.CascadiaGame.ruleSet]
      */
     private fun calculateBearScore(player: Player): Int {
-        //ToDo
-        return 0
+        val makeBearGraph: (Map<Pair<Int, Int>, HabitatTile>) -> Map<Pair<Int, Int>, List<Pair<Int, Int>>> =
+            { habitatTiles ->
+                val bearNodesCoordinates = habitatTiles.filterValues { it.wildlifeToken?.animal == Animal.BEAR }
+                    .keys.toSet()
+
+                val graph = bearNodesCoordinates.associateWith { coordinate ->
+                    coordinate
+                        .neighbours()
+                        .filter { neighbour -> bearNodesCoordinates.contains(neighbour) }
+
+                }
+                graph
+            }
+        val bearGraph = makeBearGraph(player.habitat)
+        val visited: MutableSet<Pair<Int, Int>> = mutableSetOf()
+        val game = checkNotNull(rootService.currentGame) { "No Game started yet!" }
+        val isB = game.ruleSet[Animal.BEAR.ordinal]
+        val searchedLength = if (isB) 3 else 2
+        var connectedComponentsWithSearchedLength = 0
+
+        for (bearNode in bearGraph.keys) {
+            if (!visited.contains(bearNode)) {
+                if (depthFirstConnectedComponentLength(bearGraph, visited, bearNode) == searchedLength) {
+                    connectedComponentsWithSearchedLength++
+                }
+            }
+        }
+        if (isB)
+            return 10 * connectedComponentsWithSearchedLength
+        else
+            return when (connectedComponentsWithSearchedLength) {
+                1 -> 4
+                2 -> 11
+                3 -> 19
+                4 -> 27
+                else -> 0
+            }
     }
+
 
     /**
      *
@@ -128,12 +198,41 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
     }
 
     /**
-     *
+     * Calculating the scores for the salmon runs
+     * @param player the [Player] to calculate its runs.
+     * @return an [Int] of salmon score for the given [Player] based on the current [entity.CascadiaGame.ruleSet]
      */
     private fun calculateSalmonScore(player: Player): Int {
-        //ToDo
-        return 0
+        val hasSalmonToken: (HabitatTile) -> Boolean = { it.wildlifeToken?.animal == Animal.SALMON }
+        val makeSalmonGraph: (Map<Pair<Int, Int>, HabitatTile>) -> Map<Pair<Int, Int>, List<Pair<Int, Int>>> =
+            { habitatTile ->
+                val salmonCoordinates = habitatTile.filterValues { hasSalmonToken(it) }.keys.toSet()
+                val graph = salmonCoordinates.associateWith { coordinate ->
+                    coordinate
+                        .neighbours()
+                        .filter { neighbour -> salmonCoordinates.contains(neighbour) }//filter out non-salmons
+                    /**At this point the nodes are of type salmons and edges are between two direct neighbours only if
+                    both of them are salmon
+                    Thus we still need to filter out every node that has more than two neighbours
+                    Note that we already know at this point that each node would have at least one salmon neighbour,
+                    so no need for checking the lower bound */
+                }.filterValues { neighbours -> neighbours.size <= 2 }
+                graph
+            }
+        val salmonGraph = makeSalmonGraph(player.habitat)
+        val visited: MutableSet<Pair<Int, Int>> = mutableSetOf()
+        val isB = checkNotNull(rootService.currentGame) { "No game started yet" }.ruleSet[Animal.SALMON.ordinal]
+        val scoreMap = if (isB) mapOf(1 to 2, 2 to 4, 3 to 9, 4 to 11, 5 to 17)
+        else mapOf(1 to 2, 2 to 5, 3 to 8, 4 to 12, 5 to 16, 7 to 25)
+        val maxRuns = if (isB) 7 else 5
+        var salmonRuns = 0
+        for (salmonCoordinate in salmonGraph.keys) {
+            if (!visited.contains(salmonCoordinate))
+                salmonRuns += depthFirstConnectedComponentLength(salmonGraph, visited, salmonCoordinate)
+        }
+        return scoreMap.getOrDefault(maxOf(salmonRuns, maxRuns), 0)
     }
+
 
     /**
      *Adds the Points from the foxes to the players score according to the current rule for foxes
