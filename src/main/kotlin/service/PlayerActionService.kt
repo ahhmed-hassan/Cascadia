@@ -8,7 +8,7 @@ import entity.WildlifeToken
  *
  *  @param [rootService] the games RootService for communication with entity layer
  */
-class PlayerActionService(private val rootService : RootService) : AbstractRefreshingService() {
+class PlayerActionService(private val rootService: RootService) : AbstractRefreshingService() {
 
     /**
      * [chooseTokenTilePair] This function is responsible for saving a Token-Tile pair as "selected" within the game.
@@ -18,12 +18,12 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
      *
      * @throws IllegalArgumentException if the chosenPair is out of bounds
      */
-    fun chooseTokenTilePair(chosenPair : Int) {
+    fun chooseTokenTilePair(chosenPair: Int) {
         val game = rootService.currentGame
         checkNotNull(game)
 
         // check if chosenPair is not out of bounds
-        require(chosenPair in 0..3) {"Index for pair must be between 0 and 3"}
+        require(chosenPair in 0..3) { "Index for pair must be between 0 and 3" }
 
         val shopTile = game.shop[chosenPair].first
         val shopToken = game.shop[chosenPair].second
@@ -43,10 +43,10 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
     }
 
     /**
-     * Choose a custom pair of [HabitatTile] and [WildlifeToken] from the tile-token-pairs in [CascadiaGame.shop].
+     * Choose a custom pair of [HabitatTile] and [WildlifeToken] from the tile-token-pairs in [entity.CascadiaGame.shop].
      * Chosen tile is saved as selectedTile and chosen token as selectedToken.
-     * Their former locations in the shop pairs are set to [null].
-     * Decrease [Player]s natureToken by one afterwards.
+     * Their former locations in the shop pairs are set to null.
+     * Decrease [entity.Player]s natureToken by one afterward.
      *
      * @param tileIndex is the index of the pair in the shop whose [HabitatTile] is chosen
      * @param tokenIndex is the index of the pair in the shop whose [WildlifeToken] is chosen
@@ -88,39 +88,42 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
     }
 
     /**
-     * Replace a number of [WildlifeToken] from the tile-token pairs in the [shop] with new ones from [WildlifeToken].
+     * Replace a number of [WildlifeToken] from the tile-token pairs in the [entity.CascadiaGame.shop] with new ones
+     * from [WildlifeToken].
      *
-     * Can be used for the free replacement of three token if three tokens in the [shop] are the same at the turn start.
+     * Can be used for the free replacement of three token if three tokens in the [entity.CascadiaGame.shop] are the
+     * same at the turn start.
      *
      * Can be used to replace a chosen number of tokens if the player has at least one nature token.
      * After that the number of nature tokens of the current player is reduced by one.
      *
-     * The replaced tokens are stored in [discardedToken] till the end of the current turn
-     * and are added back to [WildlifeToken] afterwards in [nextTurn].
+     * The replaced tokens are stored in [entity.CascadiaGame.discardedToken] till the end of the current turn
+     * and are added back to [WildlifeToken] afterward in [GameService.nextTurn].
      *
-     * @param [tokenIndices] is a list of indices of the tile-token pairs in [shop] whose token shall be replaced.
+     * @param [tokenIndices] is a list of indices of the tile-token pairs in [entity.CascadiaGame.shop] whose token
+     * shall be replaced.
      *
-     * @throws illegalArgumentException if indices in [tokenIndices] are out of bound for shop, not mutually distinct
+     * @throws IllegalArgumentException if indices in [tokenIndices] are out of bound for shop, not mutually distinct
      * , number of indices is either too big or too small
      * or, in case of free overpopulation of three resolution, if token at indices do not share the same animal value.
-     * @throws illegalStateException if player is not allowed to perform a replacement
-     * or if not enough wildlife tokens are left in [tokenList] to replace with.
+     * @throws IllegalStateException if player is not allowed to perform a replacement
+     * or if not enough wildlife tokens are left in [entity.CascadiaGame.wildlifeTokenList] to replace with.
      *
      */
-    fun replaceWildlifeTokens(tokenIndices : List<Int>) {
+    fun replaceWildlifeTokens(tokenIndices: List<Int>) {
 
         //check if game exists
         val game = rootService.currentGame
         checkNotNull(game)
 
         // check if argument contains any indices
-        require(tokenIndices.size > 0 || tokenIndices.size < 5) {"number of indices must be between 0 and 5"}
+        require(tokenIndices.size > 0 || tokenIndices.size < 5) { "number of indices must be between 0 and 5" }
 
         //check whether indices are not the same
-        require(tokenIndices.distinct().size == tokenIndices.size) {"All indices must be different"}
+        require(tokenIndices.distinct().size == tokenIndices.size) { "All indices must be different" }
 
         // check if indices in argument in range
-        tokenIndices.forEach { require(it in 0..3) {"Indices for tokens must be between 0 and 3"} }
+        tokenIndices.forEach { require(it in 0..3) { "Indices for tokens must be between 0 and 3" } }
 
         // check if enough tokens are left for replacement, if not the player may try again with a smaller amount
         check(game.wildlifeTokenList.size < tokenIndices.size) {
@@ -131,14 +134,14 @@ class PlayerActionService(private val rootService : RootService) : AbstractRefre
         // player is allowed to freely resolve an overpopulation of three once
         if (tokenIndices.size == 3 &&
             rootService.gameService.checkForSameAnimal(tokenIndices) &&
-            !game.hasReplacedThreeToken) {
+            !game.hasReplacedThreeToken
+        ) {
             game.hasReplacedThreeToken = true
         }
         // otherwise the player must use a nature token in exchange
         else if (game.currentPlayer.natureToken > 0) {
             game.currentPlayer.natureToken--
-        }
-        else {
+        } else {
             throw IllegalStateException("Current Player not allowed to perform replacement")
         }
 
