@@ -104,23 +104,47 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
      * @return [Int] representing the longest connected combination of [Terrain]s at this [Player.habitat]
      */
     private fun calculateLongestTerrain(searchedTerrain: Terrain, player: Player): Int {
-
-        val hasAtLeastOneEdgeOfSearchedTerrain: (HabitatTile) -> Boolean = { it.terrains.any { it == searchedTerrain } }
-        val buildSearchedTerrainGraph: (Map<Pair<Int, Int>, HabitatTile>) -> Map<Pair<Int, Int>, List<Pair<Int, Int>>> =
-            { playerTiles ->
-                val searchedTerrainNodesCoordinates =
-                    playerTiles.filterValues { hasAtLeastOneEdgeOfSearchedTerrain(it) }
-                        .keys.toSet()
-
-                val graph = searchedTerrainNodesCoordinates.associateWith { coordinate ->
-                    coordinate
-                        .neighbours()
-                        .filter { neighbour -> searchedTerrainNodesCoordinates.contains(neighbour) }
-                }
-                graph
-
+        data class TileAndCoordinate(val tile: HabitatTile, val coordinate: Pair<Int, Int>) {
+            val searchedTerrainEdgesIndices = tile.terrains.mapIndexedNotNull { index, terrain ->
+                if (terrain == searchedTerrain) index else null
             }
-        val searchedTerrainGraph = buildSearchedTerrainGraph(player.habitat)
+            val oppositeSearchedTerrainEdgesIndices = searchedTerrainEdgesIndices.map { (it + 3).mod(6) }
+            val hasSearchedTerrain: Boolean = searchedTerrainEdgesIndices.isNotEmpty()
+
+            /**Checking if this tileAndCoordinate is connected with  the other TileAndCoordinate
+             * and that the corresponding edges in both tileAndCoordinates refers to searchedTerrainEdges
+             * returns true iff this TileAndCoordinate has at least one Edge of type searchedTerrain,
+             * and the other TileAndCoordinate has at least one Edge of type searchedTerrain
+             * and both of them are connecting at one of those edges.
+             */
+            val youAndMeHaveConnectingSearchedTerrainEdge: (another: TileAndCoordinate) -> Boolean =
+                { anotherTileAndCoordinate ->
+                    this.searchedTerrainEdgesIndices.any { myTerrainIndex ->
+                        anotherTileAndCoordinate.oppositeSearchedTerrainEdgesIndices.contains(myTerrainIndex)
+                    }
+                }
+        }
+
+        val buildSearchedTerrainGraph: (Map<Pair<Int, Int>, TileAndCoordinate>) -> Map<Pair<Int, Int>, List<Pair<Int, Int>>> =
+            { playerTilesAndCoordinate ->
+                val tilesAndCoordinatesWithSearchedTerrain =
+                    playerTilesAndCoordinate.filterValues { it.hasSearchedTerrain }
+                val graph =
+                    tilesAndCoordinatesWithSearchedTerrain.mapValues { (coordinate, parentTileAndCoordinate) ->
+                        val neighboursWithSearchedTerrain =
+                            coordinate.neighbours().mapNotNull { tilesAndCoordinatesWithSearchedTerrain[it] }
+                        val neighboursWithSearchedTerrainConnectedAtRightEdge =
+                            neighboursWithSearchedTerrain.filter { neighbourTileAndCoordinate ->
+                                parentTileAndCoordinate.youAndMeHaveConnectingSearchedTerrainEdge(
+                                    neighbourTileAndCoordinate
+                                )
+                            }
+                        neighboursWithSearchedTerrainConnectedAtRightEdge.map { it.coordinate }
+                    }
+                graph
+            }
+        val searchedTerrainGraph =
+            buildSearchedTerrainGraph(player.habitat.mapValues { TileAndCoordinate(it.value, it.key) })
         val visited: MutableSet<Pair<Int, Int>> = mutableSetOf()
         var longestConnectedComponent = 0
         for (terrainNode in searchedTerrainGraph.keys) {
