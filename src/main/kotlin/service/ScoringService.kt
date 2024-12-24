@@ -1,12 +1,12 @@
 package service
 
 import entity.Animal
-import entity.Terrain
 import entity.Player
+import entity.Terrain
 
 
 /**
- *  Service class for scoring of all players at the end of a [CascadiaGame]
+ *  Service class for scoring of all players at the end of a [entity.CascadiaGame]
  *
  *  @param [rootService] the games RootService for communication with entity layer
  */
@@ -54,9 +54,11 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
             val natureTokens: Int = 0,
             var longestAmongOtherPlayers: Map<Terrain, Int> =
                 Terrain.values().associateWith { 0 }.toMutableMap()
-        ){
-            val sum : () -> Int = {animalsScores.values.sum() + ownLongestTerrainsScores.values.sum() +
-                    longestAmongOtherPlayers.values.sum() + natureTokens}
+        ) {
+            val sum: () -> Int = {
+                animalsScores.values.sum() + ownLongestTerrainsScores.values.sum() +
+                        longestAmongOtherPlayers.values.sum() + natureTokens
+            }
         }
 
         /**
@@ -90,16 +92,19 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
      * @param playersLongestTerrain A map containing each player and their terrain-specific scores.
      * @return A map where each player is mapped to their bonus points for each terrain.
      */
-    fun calculateBonusForThreeOrMorePlayers (playersLongestTerrain : Map<Player, Map<Terrain, Int>>)
-    : Map<Player, Map<Terrain, Int>>{
-        val makeTerrainPlayerBonusMap: () -> Map<Terrain, Map<Player,Int>> = {
+    private fun calculateBonusForThreeOrMorePlayers(playersLongestTerrain: Map<String, Map<Terrain, Int>>)
+            : Map<String, Map<Terrain, Int>> {
+        val makeTerrainPlayerBonusMap: () -> Map<Terrain, Map<String, Int>> = {
             Terrain.values().associateWith { terrain ->
-                val terrainsScores = playersLongestTerrain.mapValues { it.value[terrain]!! }
+                val terrainsScores = playersLongestTerrain.mapValues {
+                    val terrainValue = checkNotNull(it.value[terrain])
+                    terrainValue
+                }
 
-                val sortedPlayerScores : List<Pair<Player, Int>> = terrainsScores.toList()
+                val sortedPlayerScores: List<Pair<String, Int>> = terrainsScores.toList()
                     .sortedByDescending { terrainsScores[it.first] }
 
-                val bonuses = mutableMapOf<Player, Int>()
+                val bonuses = mutableMapOf<String, Int>()
                 val largestScore = sortedPlayerScores.first().second
                 val secondLargestScore =
                     sortedPlayerScores.dropWhile { it.second == largestScore }.firstOrNull()?.second
@@ -113,7 +118,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
                 }
 
                 if (secondLargestScore != null) {
-                    val playersWithSecondLargestScore: List<Player> = sortedPlayerScores
+                    val playersWithSecondLargestScore: List<String> = sortedPlayerScores
                         .filter { it.second == secondLargestScore }
                         .map { it.first }
                     playersWithSecondLargestScore.forEach { player ->
@@ -124,20 +129,20 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
             }
         }
         val terrainBonusScore = makeTerrainPlayerBonusMap()
-        val playerTerrainBonusMap : Map<Player, Map<Terrain, Int>> = terrainBonusScore.entries.flatMap {
-                (terrain, playerMap) ->
-            playerMap.entries.map { (player, bonus) -> player to (terrain to bonus) }
-        }
-            .groupBy (/*keySelector*/{(player, _) -> player },
-                /**Value transformer
-                 * Without this we would have a map from the player to a  List<Pair<Player, Pair<Terrain, Int>>>  which
-                 * what we basically after flatMap call have
+        val playerTerrainBonusMap: Map<String, Map<Terrain, Int>> =
+            terrainBonusScore.entries.flatMap { (terrain, playerMap) ->
+                playerMap.entries.map { (player, bonus) -> player to (terrain to bonus) }
+            }
+                .groupBy(/*keySelector*/{ (player, _) -> player },
+                    /**Value transformer
+                     * Without this we would have a map from the player to a  List<Pair<Player, Pair<Terrain, Int>>>
+                     * which what we basically after flatMap call have
+                     */
+                    { it.second })
+                /**
+                 * Here we are transforming the list of pairs to map
                  */
-                {it.second})
-            /**
-             * Here we are transforming the list of pairs to map
-             */
-            .mapValues { (_, terrainBonusList) -> terrainBonusList.toMap() }
+                .mapValues { (_, terrainBonusList) -> terrainBonusList.toMap() }
 
         return playerTerrainBonusMap
     }
@@ -149,59 +154,68 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
      * Calculates the detailed scores for every player in the game
      * returns a map from each player to the [PlayerScore] object having all the infos for the scoring boards
      */
-    fun calculateBonusScores(playersLongestTerrainMap : Map<Player, Map<Terrain, Int>>): Map<Player, Map<Terrain, Int>> {
+    fun calculateBonusScores(playersLongestTerrainMap: Map<String, Map<Terrain, Int>>): Map<String, Map<Terrain, Int>> {
         val game = checkNotNull(rootService.currentGame) { "No game started yet" }
 
-        if(game.playerList.size > 2){
+        if (game.playerList.size > 2) {
             return calculateBonusForThreeOrMorePlayers(playersLongestTerrainMap)
         }
 
         val (firstPlayer, secondPlayer) = playersLongestTerrainMap.keys.toList()
 
-        val firstPlayerLongestTerrains = playersLongestTerrainMap[firstPlayer]!!
-        val secondPlayerLongestTerrains = playersLongestTerrainMap[secondPlayer]!!
+
+        val firstPlayerLongestTerrains = checkNotNull(playersLongestTerrainMap[firstPlayer])
+        val secondPlayerLongestTerrains = checkNotNull(playersLongestTerrainMap[secondPlayer])
 
         val firstPlayerBonusMap = Terrain.values().associateWith {
-            if (firstPlayerLongestTerrains[it]!! > secondPlayerLongestTerrains[it]!!) 2
-            if (firstPlayerLongestTerrains[it]!! == secondPlayerLongestTerrains[it]!!) 1
+            if (checkNotNull(firstPlayerLongestTerrains[it]) > checkNotNull(secondPlayerLongestTerrains[it])) 2
+            else if (checkNotNull(firstPlayerLongestTerrains[it]) == checkNotNull(secondPlayerLongestTerrains[it])) 1
             else 0
         }
         val secondPlayerBonusMap = Terrain.values().associateWith {
-            if (secondPlayerLongestTerrains[it]!! > firstPlayerLongestTerrains[it]!!) 2
-            if (secondPlayerLongestTerrains[it]!! == firstPlayerLongestTerrains[it]!!) 1
+            if (checkNotNull(secondPlayerLongestTerrains[it]) > checkNotNull(firstPlayerLongestTerrains[it])) 2
+            else if (checkNotNull(secondPlayerLongestTerrains[it]) == checkNotNull(firstPlayerLongestTerrains[it])) 1
             else 0
         }
 
-       return mapOf(firstPlayer to firstPlayerBonusMap, secondPlayer to secondPlayerBonusMap)
+        return mapOf(firstPlayer to firstPlayerBonusMap, secondPlayer to secondPlayerBonusMap)
     }
 
     /**
      *
      */
-    fun calculateScore() : Map<Player, PlayerScore> {
+    fun calculateScore(): Map<String, PlayerScore> {
         val game = rootService.currentGame
         checkNotNull(game) { "No game started yet" }
 
-        val playersScores = game.playerList.associateWith { player ->
-            PlayerScore(animalsScores = mapOf(
-                Animal.BEAR to calculateBearScore(player),
-                Animal.SALMON to calculateSalmonScore(player),
-                Animal.ELK to calculateElkScore(player),
-                Animal.FOX to calculateFoxScore(player),
-                Animal.HAWK to calculateHawkScore(player)
-            )
-                , ownLongestTerrainsScores = Terrain.values().associateWith { calculateLongestTerrain(it, player) }
-                , natureTokens = player.natureToken)
+        val playersScores = game.playerList.associate { player ->
+            player.name to
+                    PlayerScore(
+                        animalsScores = mapOf(
+                            Animal.BEAR to calculateBearScore(player),
+                            Animal.SALMON to calculateSalmonScore(player),
+                            Animal.ELK to calculateElkScore(player),
+                            Animal.FOX to calculateFoxScore(player),
+                            Animal.HAWK to calculateHawkScore(player)
+                        ),
+                        ownLongestTerrainsScores = Terrain.values()
+                            .associateWith { calculateLongestTerrain(it, player) },
+                        natureTokens = player.natureToken
+                    )
         }
 
-        val terrainScoresByPlayer: Map<Player, Map<Terrain, Int>> = playersScores.mapValues { (_, playerScore) ->
-                playerScore.ownLongestTerrainsScores
-            }
+        val terrainScoresByPlayer: Map<String, Map<Terrain, Int>> = playersScores.mapValues { (_, playerScore) ->
+            playerScore.ownLongestTerrainsScores
+        }
 
         val bonus = calculateBonusScores(terrainScoresByPlayer)
 
-        return playersScores.mapValues { (player, playerScore) -> playerScore.copy(
-            longestAmongOtherPlayers = bonus[player]!!) }
+        return playersScores.mapValues { (playerName: String, playerScore: PlayerScore) ->
+            val playerBonus = checkNotNull(bonus[playerName])
+            playerScore.copy(
+                longestAmongOtherPlayers = playerBonus
+            )
+        }
     }
 
     /**
