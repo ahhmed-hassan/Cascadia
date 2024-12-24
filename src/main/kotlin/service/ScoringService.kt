@@ -43,6 +43,26 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
         }
 
         /**
+         * A class aggregating all the detailed bonus points
+         * @property animalsScores a Map for Animal, Score pairs for each animal
+         * @property ownLongestTerrainsScores a map for the longest connected [Terrain]s for each one
+         * @property natureTokens the number of nature tokens left for the player
+         * @property longestAmongOtherPlayers the bonus points the player becomes when having the longest Terrains
+         */
+        data class PlayerScore(
+            val animalsScores: Map<Animal, Int>,
+            val ownLongestTerrainsScores: Map<Terrain, Int>,
+            val natureTokens: Int = 0,
+            var longestAmongOtherPlayers: Map<Terrain, Int> =
+                Terrain.values().associateWith { 0 }.toMutableMap()
+        ) {
+            val sum: () -> Int = {
+                animalsScores.values.sum() + ownLongestTerrainsScores.values.sum() +
+                        longestAmongOtherPlayers.values.sum() + natureTokens
+            }
+        }
+
+        /**
          * Calculating the longest path starting at some coordinates
          * @param coordinate the start coordinate
          * @param graph the graph to search
@@ -77,21 +97,89 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
         return 0
     }
 
-    /**
-     *
+    /***
+     * Calculating the longest connected terrains of some type for some player
+     * @param type the wished [Terrain] type
+     * @param player The [Player] having this longest terrains
+     * @return [Int] representing the longest connected combination of [Terrain]s at this [Player.habitat]
      */
-    private fun calculateLongestTerrain(type: Terrain, player: Player): Int {
-        //ToDo
-        return 0
+    private fun calculateLongestTerrain(searchedTerrain: Terrain, player: Player): Int {
+
+        val hasAtLeastOneEdgeOfSearchedTerrain: (HabitatTile) -> Boolean = { it.terrains.any { it == searchedTerrain } }
+        val buildSearchedTerrainGraph: (Map<Pair<Int, Int>, HabitatTile>) -> Map<Pair<Int, Int>, List<Pair<Int, Int>>> =
+            { playerTiles ->
+                val searchedTerrainNodesCoordinates =
+                    playerTiles.filterValues { hasAtLeastOneEdgeOfSearchedTerrain(it) }
+                        .keys.toSet()
+
+                val graph = searchedTerrainNodesCoordinates.associateWith { coordinate ->
+                    coordinate
+                        .neighbours()
+                        .filter { neighbour -> searchedTerrainNodesCoordinates.contains(neighbour) }
+                }
+                graph
+
+            }
+        val searchedTerrainGraph = buildSearchedTerrainGraph(player.habitat)
+        val visited: MutableSet<Pair<Int, Int>> = mutableSetOf()
+        var longestConnectedComponent = 0
+        for (terrainNode in searchedTerrainGraph.keys) {
+            if (!visited.contains(terrainNode))
+                longestConnectedComponent = maxOf(
+                    longestConnectedComponent,
+                    depthFirstConnectedComponentLength(searchedTerrainGraph, visited, terrainNode)
+                )
+        }
+        return longestConnectedComponent
     }
 
+
     /**
-     *
+     *Calculates the Score resulted from the bear collection
+     * @param player the player whose score should be calculated
+     * @return [Int] representing the score resulted from the Bear combinations of this player based on
+     * the current [entity.CascadiaGame.ruleSet]
      */
     private fun calculateBearScore(player: Player): Int {
-        //ToDo
-        return 0
+        val makeBearGraph: (Map<Pair<Int, Int>, HabitatTile>) -> Map<Pair<Int, Int>, List<Pair<Int, Int>>> =
+            { habitatTiles ->
+                val bearNodesCoordinates = habitatTiles.filterValues { it.wildlifeToken?.animal == Animal.BEAR }
+                    .keys.toSet()
+
+                val graph = bearNodesCoordinates.associateWith { coordinate ->
+                    coordinate
+                        .neighbours()
+                        .filter { neighbour -> bearNodesCoordinates.contains(neighbour) }
+
+                }
+                graph
+            }
+        val bearGraph = makeBearGraph(player.habitat)
+        val visited: MutableSet<Pair<Int, Int>> = mutableSetOf()
+        val game = checkNotNull(rootService.currentGame) { "No Game started yet!" }
+        val isB = game.ruleSet[Animal.BEAR.ordinal]
+        val searchedLength = if (isB) 3 else 2
+        var connectedComponentsWithSearchedLength = 0
+
+        for (bearNode in bearGraph.keys) {
+            if (!visited.contains(bearNode)) {
+                if (depthFirstConnectedComponentLength(bearGraph, visited, bearNode) == searchedLength) {
+                    connectedComponentsWithSearchedLength++
+                }
+            }
+        }
+        if (isB)
+            return 10 * connectedComponentsWithSearchedLength
+        else
+            return when (connectedComponentsWithSearchedLength) {
+                1 -> 4
+                2 -> 11
+                3 -> 19
+                4 -> 27
+                else -> 0
+            }
     }
+
 
     /**
      *
@@ -145,12 +233,69 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
         return scoreMap.getOrDefault(maxOf(salmonRuns, maxRuns), 0)
     }
 
+
     /**
+     *Adds the Points from the foxes to the players score according to the current rule for foxes
      *
+     * @param player the player for witch the score shoud be calculated
      */
     private fun calculateFoxScore(player: Player): Int {
-        //ToDo
-        return 0
-    }
+        val foxes = mutableListOf<Pair<Int, Int>>()
+        val habitat = player.habitat
+        var points = 0
 
+        //gets all foxes
+        habitat.forEach {
+            if (it.value.wildlifeToken?.animal == Animal.FOX) {
+                foxes.add(it.key)
+            }
+        }
+
+        foxes.forEach {
+            val animals = intArrayOf(0, 0, 0, 0, 0, 0)
+            val game = rootService.currentGame
+            checkNotNull(game)
+
+            val neighbours = it.neighbours()
+
+            //counts the animals
+            neighbours.forEach { neighbour ->
+                {
+                    animals[habitat[neighbour]?.wildlifeToken?.animal?.ordinal ?: 5]++
+                }
+            }
+
+            //resets the fallback value for animals that are null
+            animals[5] = 0
+
+            if (game.ruleSet[Animal.FOX.ordinal]) {
+                //B
+                var pairs = 0
+                animals[Animal.FOX.ordinal] = 0
+                animals.forEach { animal ->
+                    {
+                        if (animal >= 2) {
+                            pairs++
+                        }
+                    }
+                }
+
+                if (pairs == 1) points += 3
+                if (pairs == 2) points += 5
+                if (pairs == 3) points += 7
+            } else {
+                //A
+                var differentAnimals = 0
+                animals.forEach { animal ->
+                    {
+                        if (animal >= 1) {
+                            differentAnimals++
+                        }
+                    }
+                }
+                points += differentAnimals
+            }
+        }
+        return points
+    }
 }
