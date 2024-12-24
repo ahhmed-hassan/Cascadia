@@ -146,9 +146,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
 
         return playerTerrainBonusMap
     }
-    /**
-     * TODO
-     */
+
 
     /**
      * Calculates the detailed scores for every player in the game
