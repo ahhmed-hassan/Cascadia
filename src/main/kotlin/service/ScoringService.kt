@@ -225,7 +225,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
 
     /***
      * Calculating the longest connected terrains of some type for some player
-     * @param type the wished [Terrain] type
+     * @param searchedTerrain the wished [Terrain] type
      * @param player The [Player] having this longest terrains
      * @return [Int] representing the longest connected combination of [Terrain]s at this [Player.habitat]
      */
@@ -363,7 +363,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
     /**
      *Adds the Points from the foxes to the players score according to the current rule for foxes
      *
-     * @param player the player for witch the score shoud be calculated
+     * @param player the player for witch the score should be calculated
      */
     private fun calculateFoxScore(player: Player): Int {
         val foxes = mutableListOf<Pair<Int, Int>>()
