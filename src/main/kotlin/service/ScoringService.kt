@@ -7,7 +7,7 @@ import entity.Terrain
 
 
 /**
- *  Service class for scoring of all players at the end of a [entity.CascadiaGame]
+ *  Service class for scoring of all players at the end of a [CascadiaGame]
  *
  *  @param [rootService] the games RootService for communication with entity layer
  */
