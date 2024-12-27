@@ -190,7 +190,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         val currentPlayer = game.currentPlayer
 
         //Check if a wildlife token is already placed on this tile
-        requireNotNull(tile.wildlifeToken) { "There is already a wildlife token on this tile!" }
+        require(tile.wildlifeToken == null) { "There is already a wildlife token on this tile!" }
 
         //Check if the wildlife token is a valid token to begin with
         require(tile.wildlifeSymbols.contains(selectedToken.animal)) { "Wildlife token cannot be placed on this tile!" }
