@@ -96,7 +96,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
 
         // if Tokenlist is empty or not enough tokens left to automatically resolve an overpopulation, end game
         if (game.wildlifeTokenList.size == 0 || game.wildlifeTokenList.size < 4) {
-            onAllRefreshables { refreshAfterGameEnd() }
+            onAllRefreshables { refreshAfterGameEnd(rootService.scoringService.calculateScore()) }
         }
 
         // perform actual token replacement
