@@ -2,6 +2,7 @@ package service
 
 
 
+import edu.udo.cs.sopra.ntf.entity.Animal
 import edu.udo.cs.sopra.ntf.entity.ScoringCards
 import entity.*
 import entity.Animal as LocalAnimal
@@ -68,45 +69,76 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         }
         updateConnectionState(ConnectionState.CONNECTED)
 
-        client?.joinGame(sessionID, "Hello!")
+        val networkClient = checkNotNull(client){"No client connected."}
+
+        networkClient.joinGame(sessionID, "Hello!")
 
         updateConnectionState(ConnectionState.GUEST_WAITING_FOR_CONFIRMATION)
     }
 
-    fun startNewHostedGame(players: List<String>) {
+    fun startNewHostedGame(orderIsRanom : Boolean, isRandomRules : Boolean, scoreRules : List<Boolean>) {
         check(connectionState == ConnectionState.WAITING_FOR_GUESTS)
         { "currently not prepared to start a new hosted game." }
-        //if( index == 0) {
-        //    updateConnectionState(ConnectionState.PLAYING_MY_TURN)
-        //}else{
-        //    updateConnectionState(ConnectionState.WAITING_FOR_OPPONENTS_TURN)
-        //}
+        val players = this.playersList
+//        val playerEntities = players.map {
+//            entity.Player(
+//                name = it,
+//                habitat = mutableMapOf(), // Initialisiert ein leeres MutableMap
+//                playerType = PlayerType.NETWORK
+//            )
+//        }.toMutableList()
+        val playerNames = players.associateWith { PlayerType.NETWORK }
+        rootService.gameService.startNewGame(
+            playerNames,
+            scoreRules,
+            //orderIsRanom,
+            //isRandomRules,
+        )
+        sendGameInitMessage()
+        val game = rootService.currentGame
+        checkNotNull(game)
+        val networkClient = checkNotNull(client)
+        val index = players.indexOf(networkClient.playerName)
+        if( index == 0) {
+            updateConnectionState(ConnectionState.PLAYING_MY_TURN)
+        } else{
+            updateConnectionState(ConnectionState.WAITING_FOR_OPPONENTS_TURN)
+        }
 
     }
     fun startNewJoinedGame(message: GameInitMessage) {
         check(connectionState == ConnectionState.WAITING_FOR_INIT) {
             "Not waiting for game init message."
         }
-
-        val players = message.playerList.map { playerName ->
-            Player(
-                name = playerName,
-                habitat = mutableMapOf(),
-                playerType = PlayerType.NETWORK
-            )
-        }.toMutableList()
-        val playerNames = players.map { it.name }
+        val playerNames = message.playerList.associateWith { PlayerType.NETWORK }
+//        val players = message.playerList.map { playerName ->
+//            Player(
+//                name = playerName,
+//                habitat = mutableMapOf(),
+//                playerType = PlayerType.NETWORK
+//            )
+//        }.toMutableList()
+//        val playerNames = players.map { it.name }
+//        val scoreRules = message.gameRules.map { (_, scoringCard) ->
+//            when (scoringCard) {
+//                ScoringCards.A -> false
+//                ScoringCards.B -> true
+//            }
+//        }
+        val startTilesOrder = message.startTiles
         val scoreRules = message.gameRules.map { (_, scoringCard) ->
-            when (scoringCard) {
-                ScoringCards.A -> false
-                ScoringCards.B -> true
-            }
+            scoringCard == ScoringCards.B
         }
-        val index = playerNames.indexOf(client!!.playerName)
+        val client = checkNotNull(client){"No client connected."}
+
+        val index = message.playerList.indexOf(client.playerName)
 
         rootService.gameService.startNewGame(
-            playerNames = players.associate { it.name to it.playerType },
-            scoreRules = scoreRules
+            playerNames = playerNames,
+            scoreRules = scoreRules,
+            // startTilesOrder = startTilesOrder,
+            //false,
+            //false,
         )
 
         rootService.currentGame?.wildlifeTokenList = message.wildlifeTokens.map { animal ->
@@ -165,10 +197,24 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         game.wildlifeTokenList = message.wildlifeTokens.map { animal ->
             WildlifeToken(LocalAnimal.valueOf(animal.name))
         }.toMutableList()
-
-        //onAllRefreshables { refreshAfterWildlifeTokenReplaced() }
     }
-
+    private fun sendGameInitMessage() {
+        val game = checkNotNull(rootService.currentGame) {"Game not found"}
+        val habitateTileIds = game.habitatTileList.map { it.id }
+        val playerNames = game.playerList.map { it.name}
+        val gameRules = Animal.values().zip(game.ruleSet.map { if (it) ScoringCards.A else ScoringCards.B }).toMap()
+        val startTiles = (1..playerNames.size).toList()
+        val wildLifeTokens = game.wildlifeTokenList.map { token -> Animal.valueOf(token.animal.name)}
+        val message = GameInitMessage(
+            habitateTileIds,
+            playerNames,
+            gameRules,
+            startTiles,
+            wildLifeTokens
+        )
+        val networkClient = checkNotNull(client) {"No network client found" }
+        networkClient.sendGameActionMessage(message)
+    }
 
     fun placedMessage(message: PlaceMessage, sender: String) {
         val game = rootService.currentGame
@@ -181,12 +227,16 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
 
         val habitatCoordinates = Pair(qCoordTile, rCoordTile)
 
-        repeat(message.tileRotation) { rootService.playerActionService.rotateTile(game.selectedTile!!) }
+        check(message.placedTile in game.shop.indices)
+        game.selectedTile = game.shop[message.placedTile].first
+        val tile = checkNotNull(game.selectedTile)
+        repeat(message.tileRotation) { rootService.playerActionService.rotateTile(tile) }
         rootService.playerActionService.addTileToHabitat(habitatCoordinates)
 
 
         //require(message.selectedToken in game.shop.indices) { "Ungültiger Token-Index: ${message.selectedToken}" }
-        //val wildlifeToken = game.shop[message.selectedToken].second
+        //game.selectedToken = game.shop[message.selectedToken].second
+        //val wildlifeToken = checkNotNull(game.selectedToken)
 
         //val targetTile = game.currentPlayer.habitat[habitatCoordinates]
         //checkNotNull(wildlifeToken)
@@ -211,17 +261,16 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
 
     fun swappedWithNatureTokenMessage(message: SwappedWithNatureTokenMessage, sender: String){
         updateConnectionState(ConnectionState.WAITING_FOR_OPPONENTS_TURN)
-        val game = rootService.currentGame
-        checkNotNull(game) { "Kein aktuelles Spiel vorhanden." }
-        if (game.currentPlayer.name != sender) {
-            throw IllegalStateException("Der Sender ist nicht der aktuelle Spieler.")
-        }
+        val game = checkNotNull(rootService.currentGame) { "Kein aktuelles Spiel vorhanden." }
+        require(game.currentPlayer.name == sender) { "Der Sender ist nicht der aktuelle Spieler." }
         message.selectedTokens.forEach { index ->
             require(index in game.shop.indices) { "Ungültiger Token-Index: $index" }
         }
         message.selectedTokens.forEachIndexed { listIndex, shopIndex ->
-            val newWildlifeToken = game.wildlifeTokenList[listIndex]
-            game.shop[shopIndex] = Pair(game.shop[shopIndex].first, newWildlifeToken)
+            val newWildlifeToken = game.wildlifeTokenList.firstOrNull()
+                ?: throw IllegalStateException("Keine weiteren Wildlife-Tokens verfügbar.")
+            game.shop[shopIndex] = game.shop[shopIndex].copy(second = newWildlifeToken)
+            game.wildlifeTokenList.remove(newWildlifeToken)
         }
 
 

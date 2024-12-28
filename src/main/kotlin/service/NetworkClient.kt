@@ -78,23 +78,27 @@ class NetworkClient (playerName: String, host: String, secret: String, val netwo
      */
     override fun onPlayerJoined(notification: PlayerJoinedNotification) {
         BoardGameApplication.runOnGUIThread {
-            check(networkService.connectionState == ConnectionState.WAITING_FOR_GUESTS )
-            { "not awaiting any guests."}
+            check(networkService.connectionState == ConnectionState.WAITING_FOR_GUESTS) {
+                "not awaiting any guests."
+            }
+
             val players = networkService.playersList
+            val maxPlayers = 4
+
+            // Überprüfen, ob Spielername bereits existiert
             if (players.contains(notification.sender)) {
                 disconnectAndError("Player names are not unique!")
             }
-            val maxPlayers = 4
 
+            // Spieler hinzufügen, sofern max. Kapazität noch nicht erreicht
             if (players.size < maxPlayers) {
                 players.add(notification.sender)
-            } else if (players.size > maxPlayers) {
-                disconnectAndError("Maximum number of players has been reached.")
             } else {
-                networkService.startNewHostedGame(players)
+                disconnectAndError("Maximum number of players has been reached.")
             }
         }
     }
+
 
     /**
      * Handle a [GameInitMessage] sent by the server.
