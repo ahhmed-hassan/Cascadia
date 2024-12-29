@@ -3,7 +3,6 @@ package service
 import entity.*
 import java.io.File
 
-
 /**
  *  Service class for all actions that must be handled by the game itself.
  *
