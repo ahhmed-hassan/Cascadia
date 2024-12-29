@@ -11,7 +11,6 @@ import tools.aqua.bgw.components.uicomponents.Button
 import tools.aqua.bgw.components.uicomponents.Label
 import tools.aqua.bgw.components.uicomponents.UIComponent
 import tools.aqua.bgw.core.BoardGameScene
-import tools.aqua.bgw.style.BorderRadius
 import tools.aqua.bgw.util.BidirectionalMap
 import tools.aqua.bgw.util.Font
 import tools.aqua.bgw.visual.ColorVisual
@@ -21,6 +20,7 @@ import tools.aqua.bgw.visual.TextVisual
 import java.awt.Color
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.math.sqrt
 
 class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Refreshables {
 
@@ -28,6 +28,8 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
     private val tokens : BidirectionalMap<WildlifeToken,HexagonView> = BidirectionalMap()
     private var selectedHabitat : HexagonView? = null
     private var selectedToken : HexagonView? = null
+    private var selectedHabitatX : Int = 0
+    private var selectedHabitatY : Int = 0
 
     private val shopHabitats = GridPane<HexagonView> (
         posX = 1400,
@@ -50,8 +52,8 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
     private val playArea = HexagonGrid<HexagonView>(
         posX = 1920/2,
         posY = 1080/2,
-        width = 40,
-        height = 40,
+        width = 0,
+        height = 0,
         coordinateSystem = HexagonGrid.CoordinateSystem.AXIAL
     ).apply {
         dropAcceptor = {dragEvent ->
@@ -63,10 +65,35 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
             }
         }
 
-        onDragDropped = {
-            rootService.playerActionService.addTileToHabitat(Pair(0,1))
+        onDragDropped = { dragEvent ->
+            //val draggedHexagon = dragEvent.draggedComponent as HexagonView
+            val x = dragEvent.draggedComponent.posX
+            val y = dragEvent.draggedComponent.posY
+            val coordinateForService = calculatePair(x,y)
+            selectedHabitatX = coordinateForService.first
+            selectedHabitatY = coordinateForService.second
+            println(coordinateForService)
+            //lookup if HexagonView is type HabitatTile
+            rootService.playerActionService.addTileToHabitat(coordinateForService)
+            //lookup if HexagonView is type AnimalToken
+            //rootService.playerActionService.addToken()
+
         }
     }
+
+    private val playableTile = GridPane<HexagonView>(
+        posX = 150,
+        posY = 600,
+        columns = 1,
+        rows = 1,
+    )
+
+    private val playableToken = GridPane<HexagonView>(
+        posX = 150,
+        posY = 800,
+        columns = 1,
+        rows = 1,
+    )
 
     private val testHabitat1 = HexagonView(
         size = 75,
@@ -85,7 +112,6 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         visual = ColorVisual(Color.GREEN)
     )
 
-
     private val testToken = HexagonView(
         size = 50,
         visual = CompoundVisual(
@@ -95,12 +121,6 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
             TextVisual("Bear")
         )
     )
-
-    /**
-    private val pick = MouseEvent(
-        button = MouseButtonType.LEFT_BUTTON,
-    )
-    */
 
     private val ruleSetOverlay = Pane<UIComponent>(
         posY = 90,
@@ -272,6 +292,8 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
             shopTokens,
             shopHabitats,
             playArea,
+            playableTile,
+            playableToken,
             ruleSetOverlay
         )
 
@@ -280,6 +302,8 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
     override fun refreshAfterGameStart() {
         //val game = rootService.currentGame
         //checkNotNull(game)
+
+        getRuleSets()
 
         ruleSetOverlay.addAll(
             closeRuleSet,
@@ -317,10 +341,95 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         //shopHabitats.isVisible = false
         //shopHabitats.isDisabled = true
 
-        playArea[0,0] = labeledHexagon1
+        //playArea[0,0] = labeledHexagon1
         playArea[0,1] = testHabitat2
         playArea[-1,1] = testHabitat3
 
+        playableTile[0,0] = labeledHexagon1.apply {
+            onMouseClicked ={
+                //works
+             //rootService.playerActionService.rotateTile()
+            }
+        }
+
+        playableToken[0,0] = testToken.apply {
+            isDraggable = true
+        }
+
+        createPossibleHexagons(listOf(Pair(0,0),Pair(1,1)))
+
+    }
+
+    override fun refreshAfterHabitatTileAdded() {
+        //Example
+        playArea[selectedHabitatX,selectedHabitatY] = labeledHexagon1.apply {
+            isDraggable = false
+        }
+
+        playableTile[0,0] = null
+
+        playableToken[0,0]?.apply {
+            isDraggable = true
+        }
+
+    }
+
+    override fun refreshAfterTileRotation() {
+        val applicableTile = playableTile[0, 0]
+        checkNotNull(applicableTile)
+
+       // get the list of terrains from Habitat
+        var sideLabels:List<String> = listOf("F", "F", "F", "E", "E", "E")
+
+        //for rotation change the order of terrains
+        for (i in 0..3){
+            sideLabels = listOf( sideLabels.last()) + sideLabels.dropLast(1)
+            println(sideLabels)
+        }
+
+        // create new Hexagon for the rotated Tile
+        val newHexagon = createLabeledHexagonView(
+            size = 75,
+            color = Color.LIGHT_GRAY,
+            labels = sideLabels
+        ).apply {
+            isDraggable = true
+        }
+
+        //missing delete the old HexagonView from the BiMap and insert the modified one?
+
+        //Put the new rotated tile to play
+        playableTile[0, 0] = newHexagon
+    }
+
+
+
+    override fun refreshAfterTokenTilePairChoosen() {
+        playableToken[0,0] = selectedToken?.apply {
+            isDraggable = true
+        }
+        playableTile[0,0] = selectedHabitat?.apply {
+            isDisabled = true
+        }
+    }
+
+    override fun refreshAfterWildlifeTokenAdded() {
+        super.refreshAfterWildlifeTokenAdded()
+    }
+
+    override fun refreshAfterWildlifeTokenReplaced() {
+        for(i in 0..3){
+            //replace all tokens with new ones
+        }
+    }
+
+    override fun refreshAfterNextTurn() {
+        playArea.clear()
+        // iterate over all elements a player has and add it to playArea
+        // change currentPlayerLabel
+        //change NatureToken
+        //fill shop with elements
+        //waiting 3 secs?
     }
 
     private fun disableAll() {
@@ -394,9 +503,51 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
 
 
     private val labeledHexagon1 = createLabeledHexagonView(
-        size = 75,
         color = Color.LIGHT_GRAY,
         labels = listOf("F", "F", "F", "E", "E", "E")
-    )
+    ).apply {
+        isDraggable = true
+    }
 
+    //calculate the coordinates based on draggedComponent coordinates
+    private fun calculatePair(posX: Double, posY: Double): Pair<Int, Int> {
+        //get Centered X and Y
+        val centeredX = posX - 960
+        val centeredY = posY - 540
+
+        //get hex width and height
+        val hexWidth = 75.0
+        val hexHeight = hexWidth
+
+        val q = (2.0 / 3.0 * centeredX / hexWidth).toInt()
+        val r = ((-1.0 / 3.0 * centeredX + sqrt(3.0) / 3.0 * centeredY) / hexHeight).toInt()
+
+        return Pair(q, r)
+    }
+
+    //for all possible Position to play the Hexagon, mark it
+    private fun createPossibleHexagons(position : List<Pair<Int,Int>>) {
+        for (i in position) {
+            val hex = HexagonView(
+                size = 75,
+                visual = ColorVisual(Color.GRAY)
+            )
+            playArea[i.first, i.second] = hex
+        }
+    }
+
+    //after tile placed, remove the possible Hexagons
+    private fun deletePossibleHexagons(position: List<Pair<Int, Int>>){
+        for (i in position){
+            val toRemove = playArea[i.first,i.second]
+            if (toRemove != null) {
+                playArea.remove(toRemove)
+            }
+        }
+    }
+
+    //get the correct images
+    private fun getRuleSets(){
+        //iterate over ruleset and update the pngs (visuals) based on
+    }
 }
