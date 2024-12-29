@@ -93,32 +93,78 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
          *
          * @return List with the coordinates of tiles in the pattern
          */
-        private fun createPattern(coordinate: Pair<Int,Int>,number: Int) : List<Pair<Int,Int>> {
-            if(number==3) {
-                return listOf(
-                    Pair(coordinate.first, coordinate.second),
-                    Pair(coordinate.first - 1, coordinate.second + 1),
-                    Pair(coordinate.first - 1, coordinate.second),
-                    Pair(coordinate.first - 2, coordinate.second + 1))
+        private fun createPattern(coordinate: Pair<Int, Int>, number: Int, rot: Int): List<Pair<Int, Int>> {
+            if (number == 3) {
+                if (rot == 0) {
+                    return listOf(
+                        Pair(coordinate.first, coordinate.second),
+                        Pair(coordinate.first - 1, coordinate.second + 1),
+                        Pair(coordinate.first - 1, coordinate.second),
+                        Pair(coordinate.first - 2, coordinate.second + 1)
+                    )
+                }
+                if (rot == 1) {
+                    return listOf(
+                        Pair(coordinate.first, coordinate.second),
+                        Pair(coordinate.first, coordinate.second + 1),
+                        Pair(coordinate.first - 1, coordinate.second + 1),
+                        Pair(coordinate.first - 1, coordinate.second + 2)
+                    )
+                }
+                if (rot == 2) {
+                    return listOf(
+                        Pair(coordinate.first, coordinate.second),
+                        Pair(coordinate.first + 1, coordinate.second),
+                        Pair(coordinate.first, coordinate.second + 1),
+                        Pair(coordinate.first + 1, coordinate.second + 1)
+                    )
+                }
             }
-            if(number==2) {
-                return listOf(
-                    Pair(coordinate.first, coordinate.second),
-                    Pair(coordinate.first - 1, coordinate.second + 1),
-                    Pair(coordinate.first - 1, coordinate.second))
+            if (number == 2) {
+                if (rot == 0) {
+                    return listOf(
+                        Pair(coordinate.first, coordinate.second),
+                        Pair(coordinate.first - 1, coordinate.second + 1),
+                        Pair(coordinate.first - 1, coordinate.second)
+                    )
+                }
+                if (rot == 1) {
+                    return listOf(
+                        Pair(coordinate.first, coordinate.second),
+                        Pair(coordinate.first, coordinate.second + 1),
+                        Pair(coordinate.first - 1, coordinate.second + 1)
+                    )
+                }
+                if (rot == 2) {
+                    return listOf(
+                        Pair(coordinate.first, coordinate.second),
+                        Pair(coordinate.first + 1, coordinate.second),
+                        Pair(coordinate.first, coordinate.second + 1)
+                    )
+                }
             }
-            if(number==1) {
-                return listOf(
-                    Pair(coordinate.first, coordinate.second),
-                    Pair(coordinate.first, coordinate.second - 1),
-                )
+            if (number == 1) {
+                if (rot == 0) {
+                    return listOf(
+                        Pair(coordinate.first, coordinate.second),
+                        Pair(coordinate.first, coordinate.second - 1),
+                    )
+                }
+                if (rot == 1) {
+                    return listOf(
+                        Pair(coordinate.first, coordinate.second),
+                        Pair(coordinate.first - 1, coordinate.second),
+                    )
+                }
+                if (rot == 2) {
+                    return listOf(
+                        Pair(coordinate.first, coordinate.second),
+                        Pair(coordinate.first - 1, coordinate.second + 1),
+                    )
+                }
             }
-            else {
-                return listOf(Pair(coordinate.first, coordinate.second))
-            }
+            return listOf(Pair(coordinate.first, coordinate.second))
         }
-
-    }
 
     /**
      * Calculates bonus points for three or more players based on their longest terrain scores.
@@ -351,73 +397,154 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
         //gets the ruleset
         val isB = checkNotNull(rootService.currentGame).ruleSet[Animal.ELK.ordinal]
 
+        val directions = listOf(
+            Pair(1, 0),
+            Pair(-1, 0),
+            Pair(1, 1),
+            Pair(-1, -1),
+            Pair(1, -1),
+            Pair(-1, 1)
+        )
+
         //ruleset A
         if(!isB) {
             for (i in 3 downTo 0) {
                 //checks for every Elk if it is in a row with i other Elks
                 for (coordinate in elkCoordinate) {
-                    val straightLine = (coordinate.second + 0..coordinate.second + i).all { y ->
-                        elkCoordinate.contains(Pair(coordinate.first, y))
-                    }
-                    //when a straight line has been found it checks which length it has and removes it from the
-                    //elkCoordinate pair
-                    if (straightLine) {
-                        if (i == 3) {
-                            player.score += 13
-                            elkCoordinate.remove(Pair(coordinate.first, coordinate.second))
-                            elkCoordinate.remove(Pair(coordinate.first, coordinate.second + 1))
-                            elkCoordinate.remove(Pair(coordinate.first, coordinate.second + 2))
-                            elkCoordinate.remove(Pair(coordinate.first, coordinate.second + 3))
-                        } else if (i == 2) {
-                            player.score += 9
-                            elkCoordinate.remove(Pair(coordinate.first, coordinate.second))
-                            elkCoordinate.remove(Pair(coordinate.first, coordinate.second + 1))
-                            elkCoordinate.remove(Pair(coordinate.first, coordinate.second + 2))
-                        } else if (i == 1) {
-                            player.score += 5
-                            elkCoordinate.remove(Pair(coordinate.first, coordinate.second))
-                            elkCoordinate.remove(Pair(coordinate.first, coordinate.second + 1))
-                        } else {
-                            player.score += 2
-                            elkCoordinate.remove(Pair(coordinate.first, coordinate.second))
+                    //checks if there is a row in each direction
+                    for (direction in directions) {
+                        val straightLine = (0..i).all { element ->
+                            elkCoordinate.contains(
+                                Pair(
+                                    coordinate.first + (element * direction.first),
+                                    coordinate.second + (element * direction.second)
+                                )
+                            )
+                        }
+                        //when a straight line has been found it checks which length it has and removes it from the
+                        //elkCoordinate pair
+                        if (straightLine) {
+                            if (i == 3) {
+                                player.score += 13
+                            } else if (i == 2) {
+                                player.score += 9
+                            } else if (i == 1) {
+                                player.score += 5
+                            } else {
+                                player.score += 2
+                            }
+
+                            //removes the Elks
+                            for (element in 0..i) {
+                                elkCoordinate.remove(
+                                    Pair(
+                                        coordinate.first + element * direction.first,
+                                        coordinate.second + element * direction.second
+                                    )
+                                )
+                            }
                         }
                     }
                 }
             }
         } else {
             for(i in 3 downTo 0) {
+                var isMatch : Boolean = false
                 for (coordinate in elkCoordinate) {
-                    //creates the pattern that fits the amount of tiles
-                    val pattern = createPattern(coordinate,i)
-                    //checks if it is an elk
-                    val isMatch = pattern.all { it in elkCoordinate }
-                    //checks which score must be given and what needs to be removed
-                    if(isMatch && i==3) {
-                        player.score += 13
-                        elkCoordinate.removeAll(pattern)
-                    }
-                    if(isMatch && i==2) {
-                        player.score += 9
-                        elkCoordinate.removeAll(pattern)
-                    }
-                    if(isMatch && i==1) {
-                        player.score += 5
-                        elkCoordinate.removeAll(pattern)
-                    }
-                    if(isMatch && i==0) {
-                        player.score += 2
-                        elkCoordinate.removeAll(pattern)
+                    //creates the pattern with every rotation
+                    for (j in 0 .. 2) {
+                        //creates the pattern that fits the amount of tiles for 3 different rotations
+                        val pattern = createPattern(coordinate, i, j)
+                        //checks if it is an elk
+                        isMatch = pattern.all { it in elkCoordinate }
+
+                        //checks which score must be given and what needs to be removed
+                        if (isMatch && i == 3) {
+                            player.score += 13
+                            elkCoordinate.removeAll(pattern)
+                        }
+                        if (isMatch && i == 2) {
+                            player.score += 9
+                            elkCoordinate.removeAll(pattern)
+                        }
+                        if (isMatch && i == 1) {
+                            player.score += 5
+                            elkCoordinate.removeAll(pattern)
+                        }
+                        if (isMatch && i == 0) {
+                            player.score += 2
+                            elkCoordinate.removeAll(pattern)
+                        }
                     }
                 }
             }
         }
     }
     /**
+     * Adds the score for the hawks to the player according to the current rule for hawks
      *
+     * @param player the person you want to add the score to
      */
-    private fun calculateHawkScore(player: Player): Int {
-        //ToDo
-        return 0
+    private fun calculateHawkScore(player : Player) {
+        //filters out all the hawks on the map
+        val hawkCoordinate = player.habitat.filterValues { it.wildlifeToken?.animal == Animal.HAWK}.keys.toMutableSet()
+        //gets the ruleset
+        val isB = checkNotNull(rootService.currentGame).ruleSet[Animal.HAWK.ordinal]
+
+        //implementing one Set of pairs for rule a
+        val notAdjacent: MutableSet<Pair<Int, Int>> = mutableSetOf()
+
+        for(coordinate in hawkCoordinate){
+            //checks for every hawk if it is not adjacent to any other hawks
+            val neighbours = getNeighbours(coordinate)
+            if (neighbours.none { it in hawkCoordinate }) {
+                notAdjacent.add(coordinate)
+            }
+        }
+
+        if(!isB) {
+            //scores for ruleset a
+            if(notAdjacent.size==1) {player.score += 2}
+            if(notAdjacent.size==2) {player.score += 5}
+            if(notAdjacent.size==3) {player.score += 8}
+            if(notAdjacent.size==4) {player.score += 11}
+            if(notAdjacent.size==5) {player.score += 14}
+            if(notAdjacent.size==6) {player.score += 18}
+            if(notAdjacent.size==7) {player.score += 22}
+            if(notAdjacent.size>=8) {player.score += 26}
+        } else {
+            //implementing one set of pairs for rule b
+            val inSight: MutableSet<Pair<Int, Int>> = mutableSetOf()
+            //checks if a hawk is also in direct sight to another hawk
+            for(coordinate in notAdjacent){
+                for(innerCoordinate in hawkCoordinate){
+                    //vertical
+                    if(coordinate.second == innerCoordinate.second){
+                        inSight.add(coordinate)
+                    }
+                    //horizontal
+                    if(coordinate.first == innerCoordinate.first){
+                        inSight.add(coordinate)
+                    }
+                    //diagonal plus
+                    if(coordinate.first - innerCoordinate.first == coordinate.second - innerCoordinate.second){
+                        inSight.add(coordinate)
+                    }
+                    //diagonal minus
+                    if(coordinate.first - innerCoordinate.first == -(coordinate.second - innerCoordinate.second)){
+                        inSight.add(coordinate)
+                    }
+                }
+            }
+            //scores for ruleset b
+            if(inSight.size==2) {player.score += 5}
+            if(inSight.size==3) {player.score += 9}
+            if(inSight.size==4) {player.score += 12}
+            if(inSight.size==5) {player.score += 16}
+            if(inSight.size==6) {player.score += 20}
+            if(inSight.size==7) {player.score += 24}
+            if(inSight.size==8) {player.score += 28}
+        }
     }
 
     /**
