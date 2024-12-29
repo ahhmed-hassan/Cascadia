@@ -11,6 +11,7 @@ import tools.aqua.bgw.components.uicomponents.Button
 import tools.aqua.bgw.components.uicomponents.Label
 import tools.aqua.bgw.components.uicomponents.UIComponent
 import tools.aqua.bgw.core.BoardGameScene
+import tools.aqua.bgw.event.MouseButtonType
 import tools.aqua.bgw.util.BidirectionalMap
 import tools.aqua.bgw.util.Font
 import tools.aqua.bgw.visual.ColorVisual
@@ -30,6 +31,7 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
     private var selectedToken : HexagonView? = null
     private var selectedHabitatX : Int = 0
     private var selectedHabitatY : Int = 0
+    private var selectedShopToken : MutableList<Int> = mutableListOf()
 
     private val shopHabitats = GridPane<HexagonView> (
         posX = 1400,
@@ -75,6 +77,7 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
             println(coordinateForService)
             //lookup if HexagonView is type HabitatTile
             rootService.playerActionService.addTileToHabitat(coordinateForService)
+            // if the playAction was incorrect, place the playable Habitat again at the selected Position
             //lookup if HexagonView is type AnimalToken
             //rootService.playerActionService.addToken()
 
@@ -97,9 +100,7 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
 
     private val testHabitat1 = HexagonView(
         size = 75,
-        visual = ColorVisual(Color.WHITE).apply {
-            //style.borderRadius = BorderRadius(10)
-        }
+        visual = ColorVisual(Color.RED)
     )
 
     private val testHabitat2 = HexagonView(
@@ -115,10 +116,32 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
     private val testToken = HexagonView(
         size = 50,
         visual = CompoundVisual(
-            ColorVisual(Color.WHITE).apply {
-                //style.borderRadius = BorderRadius(10)
-            },
+            ColorVisual(Color.WHITE),
             TextVisual("Bear")
+        )
+    )
+
+    private val testToken1 = HexagonView(
+        size = 50,
+        visual = CompoundVisual(
+            ColorVisual(Color.WHITE),
+            TextVisual("Salmon")
+        )
+    )
+
+    private val testToken2 = HexagonView(
+        size = 50,
+        visual = CompoundVisual(
+            ColorVisual(Color.WHITE),
+            TextVisual("Hawk")
+        )
+    )
+
+    private val testToken3 = HexagonView(
+        size = 50,
+        visual = CompoundVisual(
+            ColorVisual(Color.WHITE),
+            TextVisual("Eagle")
         )
     )
 
@@ -162,6 +185,29 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         visual = ColorVisual(200, 150, 255)
     ).apply {
         onMouseClicked = {
+            resetTokens()
+            disableAll()
+            shopTokens.isDisabled = false
+            confirmReplacementButton.isDisabled = false
+            for (i in 0..3){
+                shopTokens[i,0]?.onMouseClicked = { mouseEvent ->
+                    when (mouseEvent.button){
+                        MouseButtonType.LEFT_BUTTON->{
+                            shopTokens[i,0]?.apply {
+                                posY -= 25
+                            }
+                            selectedShopToken.add(i)
+                        }
+                        MouseButtonType.RIGHT_BUTTON->{
+                            shopTokens[i,0]?.apply {
+                                posY = 0.01
+                            }
+                            selectedShopToken.remove(i)
+                        }
+                        else ->{}
+                    }
+                }
+            }
         }
     }
 
@@ -170,13 +216,50 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         height = 50,
         posX = 50,
         posY = 270,
-        text = "Confirm Replacement",
+        text = "Confirm",
         font = Font(24),
         visual = ColorVisual(200, 150, 255)
     ).apply {
         onMouseClicked = {
+            println(selectedShopToken)
+            rootService.playerActionService.replaceWildlifeTokens(selectedShopToken)
         }
     }
+
+    private val chooseCustomPair = Button(
+        width = 200,
+        height = 50,
+        posX = 50,
+        posY = 340,
+        text = "CustomPair",
+        font = Font(24),
+        visual = ColorVisual(200, 150, 255)
+    ).apply {
+        onMouseClicked = {
+            for (i in 0..3) {
+                shopTokens[i,0]?.onMouseClicked = { mouseEvent ->
+                        when (mouseEvent.button) {
+                            MouseButtonType.RIGHT_BUTTON -> {
+                                shopTokens[i,0]?.apply {
+                                    posY = 0.01
+                                }
+                                enableAllTokens()
+                            }
+
+                            MouseButtonType.LEFT_BUTTON -> {
+                                shopTokens[i,0]?.apply {
+                                    posY -= 25
+                                }
+                                selectedToken = shopTokens[i,0]
+                                disableTokensExcept(checkNotNull(shopTokens[i,0]))
+                            }
+                            else -> {}
+                        }
+                    }
+                }
+            }
+        }
+
 
     private val resolveOverpopButton = Button(
         width = 200,
@@ -188,6 +271,8 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         visual = ColorVisual(200, 150, 255)
     ).apply {
         onMouseClicked = {
+            //check overpopulation
+            rootService.playerActionService.replaceWildlifeTokens(listOf(0))
         }
     }
 
@@ -201,7 +286,7 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         visual = ColorVisual(200, 150, 255)
     ).apply {
         onMouseClicked = {
-            rootService.gameService.nextTurn()
+            rootService.playerActionService.discardToken()
         }
     }
 
@@ -286,6 +371,7 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
             natureTokenLabel,
             replaceWildlifeButton,
             confirmReplacementButton,
+            chooseCustomPair,
             resolveOverpopButton,
             showRuleSetButton,
             discardToken,
@@ -324,20 +410,32 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         //TESTING HOW IT WOULD LOOK LIKE
         for (i in 0..3){
             shopHabitats[i,0] = testHabitat1
-            testHabitat1.onMouseClicked ={
+            shopHabitats[i,0]?.onMouseClicked ={ mouseEvent ->
+                if (mouseEvent.button == MouseButtonType.RIGHT_BUTTON){
                 shopHabitats[i,0]?.apply {
                     posY -= 25
                 }
                 selectedHabitat = shopHabitats[i,0]
-            }
-            shopTokens[i,0] = testToken
-            testToken.onMouseClicked = {
-                shopTokens[i,0]?.apply {
-                    posY -= 25
+                shopTokens.isDisabled = true
                 }
-                selectedToken = shopTokens[i,0]
             }
         }
+
+        shopTokens[0,0] = testToken
+        shopTokens[1,0] = testToken1
+        shopTokens[2,0] = testToken2
+        shopTokens[3,0] = testToken3
+
+        for (i in 0..3){
+            shopTokens[i,0]?.apply {
+                onMouseClicked = {
+                    selectedToken = shopTokens[i,0]
+                    selectedHabitat = shopHabitats[i,0]
+                    rootService.playerActionService.chooseTokenTilePair(i)
+                }
+            }
+        }
+
         //shopHabitats.isVisible = false
         //shopHabitats.isDisabled = true
 
@@ -367,6 +465,7 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         }
 
         playableTile[0,0] = null
+        playableTile.isDisabled = true
 
         playableToken[0,0]?.apply {
             isDraggable = true
@@ -408,6 +507,8 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         playableToken[0,0] = selectedToken?.apply {
             isDraggable = true
         }
+        playableToken.isDisabled = true
+
         playableTile[0,0] = selectedHabitat?.apply {
             isDisabled = true
         }
@@ -419,7 +520,8 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
 
     override fun refreshAfterWildlifeTokenReplaced() {
         for(i in 0..3){
-            //replace all tokens with new ones
+            //replace all tokens with new ones / reload
+            println("Replaced")
         }
     }
 
@@ -435,12 +537,10 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
     private fun disableAll() {
         // Disable all components
         listOf(
-            currentPlayerLabel,
-            natureTokenLabel,
             replaceWildlifeButton,
             confirmReplacementButton,
+            chooseCustomPair,
             resolveOverpopButton,
-            showRuleSetButton,
             discardToken,
             shopTokens,
             shopHabitats,
@@ -452,10 +552,9 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
     private fun enableAll() {
         // Disable all components
         listOf(
-            currentPlayerLabel,
-            natureTokenLabel,
             replaceWildlifeButton,
             confirmReplacementButton,
+            chooseCustomPair,
             resolveOverpopButton,
             showRuleSetButton,
             discardToken,
@@ -517,10 +616,9 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
 
         //get hex width and height
         val hexWidth = 75.0
-        val hexHeight = hexWidth
 
         val q = (2.0 / 3.0 * centeredX / hexWidth).toInt()
-        val r = ((-1.0 / 3.0 * centeredX + sqrt(3.0) / 3.0 * centeredY) / hexHeight).toInt()
+        val r = ((-1.0 / 3.0 * centeredX + sqrt(3.0) / 3.0 * centeredY) / hexWidth).toInt()
 
         return Pair(q, r)
     }
@@ -549,5 +647,27 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
     //get the correct images
     private fun getRuleSets(){
         //iterate over ruleset and update the pngs (visuals) based on
+    }
+
+    private fun resetTokens(){
+        for (i in 0..3){
+            shopTokens[i,0]?.apply {
+                posY = 0.01
+            }
+        }
+        selectedToken = null
+    }
+
+    private fun disableTokensExcept(pos : HexagonView){
+        for (i in 0..3)
+            if (shopTokens[i,0] != pos){
+                shopTokens[i,0]?.isDisabled = true
+            }
+    }
+
+    private fun enableAllTokens(){
+        for (i in 0..3){
+            shopTokens[i,0]?.isDisabled = false
+        }
     }
 }
