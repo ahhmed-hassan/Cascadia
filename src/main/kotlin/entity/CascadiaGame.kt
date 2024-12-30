@@ -27,7 +27,7 @@ class CascadiaGame(
     var hasReplacedThreeToken: Boolean,
     var hasPlayedTile: Boolean,
     var shop: MutableList<Pair<HabitatTile?,WildlifeToken?>>,
-    var discardedToken: MutableList<WildlifeToken>,
+    var discardedToken: MutableList<WildlifeToken?>,
 
     var currentPlayer: Player,
     val playerList: List<Player>,
