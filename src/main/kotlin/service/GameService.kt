@@ -84,28 +84,8 @@ class GameService(private val rootService : RootService) : AbstractRefreshingSer
             else -> throw IllegalArgumentException("Invalid number of players, player count must be between 2 and 4")
         }
 
-        val habitatTiles = mutableListOf<HabitatTile>()
-        File("tiles.csv").bufferedReader().useLines { lines ->
-            lines.drop(1) //skip the first line (header)
-                .filter { it.isNotBlank() } //exclude empty lines
-                .filterNot { it.contains("--", ignoreCase = true) } //exclude lines containing "--" (-- seite)
-                .forEach{ line ->
-                    val part = line.split(";")  //Parse data from the CSV line
-                    val id = part[0].toInt()
-                    val habitats = part[1].map { Terrain.valueOf(it.toString()) }.toMutableList()
-                    val wildlife = part[2].map { Animal.valueOf(it.toString()) }
-                    val keystone = part[3].toBoolean()
-
-                    //Add a new HabitatTile to the list
-                    habitatTiles.add(HabitatTile(
-                        id,
-                        keystone,
-                        0,
-                        wildlife,
-                        null,
-                        habitats))
-                }
-        }
+        // Load Habitat Tiles
+        val habitatTiles = getHabitatTiles().toMutableList()
         habitatTiles.shuffle()
 
         //Limit the habitatTiles list to the required number of tiles
@@ -130,35 +110,8 @@ class GameService(private val rootService : RootService) : AbstractRefreshingSer
         totalTilesInGame.removeAll(shop.map { it.first })
         wildlifeTokens.removeAll(shop.map { it.second })
 
-        val startTiles = mutableListOf<List<HabitatTile>>() //is List<List<HabitatTile>> in CascadiaGame
-        val startTileList = mutableListOf<HabitatTile>() // temp List for startTiles
-        File("start_tiles.csv").bufferedReader().useLines { lines ->
-            lines.drop(1) //skip the first line (header)
-                .forEach { line ->
-                    val parts = line.split(";")  //Parse data from the CSV line
-                    val id = parts[0].toInt()
-                    val habitats = parts[1].map { Terrain.valueOf(it.toString()) }.toMutableList()
-                    val wildlife = parts[2].map { Animal.valueOf(it.toString()) }.toMutableList()
-                    val keystone = parts[3].toBoolean()
-
-                    //Add a new HabitatTile to the list
-                    val startTile = HabitatTile(
-                        id,
-                        keystone,
-                        0,
-                        wildlife,
-                        null,
-                        habitats
-                    )
-                    startTileList.add(startTile)
-
-                    //once 3 tiles are grouped, add them to the startTiles list and clear the temporary list
-                    if(startTileList.size == 3) {
-                        startTiles.add(startTileList)
-                        startTileList.clear()
-                    }
-                }
-        }
+        // Load Start Tiles
+        val startTiles = getStartTiles().toMutableList()
         startTiles.shuffle()
 
         // Create player list
@@ -189,14 +142,19 @@ class GameService(private val rootService : RootService) : AbstractRefreshingSer
             resolveOverpopulation()
         }
 
+        // This block is only activated if the game is a network game and startTileOrder is provided.
         if (startTileOrder != null && startTileOrder.size == playerList.size) {
             for (i in playerList.indices) {
-                val tileIndex = startTileOrder[i]  // z.B. 2 => startTiles[2]
-                val player = playerList[i]         // i-ter Spieler
+                val tileIndex = startTileOrder[i]  // e.g., 2 => startTiles[2]
+                val player = playerList[i]         // i-th player
+                // Retrieve the starting tiles assigned to the player based on the tile index.
                 val playerStartTile = startTiles[tileIndex]
 
+                //Place the top tile in the player's habitat (central)
                 player.habitat[0 to 0] = playerStartTile[0]
+                //Place the lower-right tile in the player's habitat
                 player.habitat[1 to -1] = playerStartTile[1]
+                //Place the lower-left tile in the player's habitat
                 player.habitat[1 to 0] = playerStartTile[2]
             }
         } else {
@@ -219,6 +177,72 @@ class GameService(private val rootService : RootService) : AbstractRefreshingSer
 
         rootService.currentGame = game
         onAllRefreshables { refreshAfterGameStart() }
+    }
+
+    /**
+     * Reads habitat tiles from the `tiles.csv` file and returns a list of `HabitatTile` objects.
+     */
+    fun getHabitatTiles(): List<HabitatTile> {
+        val habitatTiles = mutableListOf<HabitatTile>()
+        File("tiles.csv").bufferedReader().useLines { lines ->
+            lines.drop(1) //skip the first line (header)
+                .filter { it.isNotBlank() } //exclude empty lines
+                .filterNot { it.contains("--", ignoreCase = true) } //exclude lines containing "--" (-- seite)
+                .forEach{ line ->
+                    val part = line.split(";")  //Parse data from the CSV line
+                    val id = part[0].toInt()
+                    val habitats = part[1].map { Terrain.valueOf(it.toString()) }.toMutableList()
+                    val wildlife = part[2].map { Animal.valueOf(it.toString()) }
+                    val keystone = part[3].toBoolean()
+
+                    //Add a new HabitatTile to the list
+                    habitatTiles.add(HabitatTile(
+                        id,
+                        keystone,
+                        0,
+                        wildlife,
+                        null,
+                        habitats))
+                }
+        }
+        return habitatTiles
+    }
+
+    /**
+     * Reads starting tiles for players from the `start_tiles.csv` file and returns a list of tile groups.
+     */
+    fun getStartTiles(): List<List<HabitatTile>> {
+        val startTiles = mutableListOf<List<HabitatTile>>() //is List<List<HabitatTile>> in CascadiaGame
+        val startTileList = mutableListOf<HabitatTile>() // temp List for startTiles
+
+        File("start_tiles.csv").bufferedReader().useLines { lines ->
+            lines.drop(1) //skip the first line (header)
+                .forEach { line ->
+                    val parts = line.split(";")  //Parse data from the CSV line
+                    val id = parts[0].toInt()
+                    val habitats = parts[1].map { Terrain.valueOf(it.toString()) }.toMutableList()
+                    val wildlife = parts[2].map { Animal.valueOf(it.toString()) }.toMutableList()
+                    val keystone = parts[3].toBoolean()
+
+                    //Add a new HabitatTile to the list
+                    val startTile = HabitatTile(
+                        id,
+                        keystone,
+                        0,
+                        wildlife,
+                        null,
+                        habitats
+                    )
+                    startTileList.add(startTile)
+
+                    //once 3 tiles are grouped, add them to the startTiles list and clear the temporary list
+                    if(startTileList.size == 3) {
+                        startTiles.add(startTileList)
+                        startTileList.clear()
+                    }
+                }
+        }
+        return startTiles
     }
 
     /**
