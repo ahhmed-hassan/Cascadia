@@ -85,21 +85,180 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
             return connectedComponentLength
 
         }
+
+        /**
+         * creates the pattern needed for ruleset B
+         * @param coordinate coordinate of the highest tile in the pattern
+         * @param number the amount of tiles you want to have in the pattern
+         *
+         * @return List with the coordinates of tiles in the pattern
+         */
+        private fun createPattern(coordinate: Pair<Int,Int>,number: Int) : List<Pair<Int,Int>> {
+            if(number==3) {
+                return listOf(
+                    Pair(coordinate.first, coordinate.second),
+                    Pair(coordinate.first - 1, coordinate.second + 1),
+                    Pair(coordinate.first - 1, coordinate.second),
+                    Pair(coordinate.first - 2, coordinate.second + 1))
+            }
+            if(number==2) {
+                return listOf(
+                    Pair(coordinate.first, coordinate.second),
+                    Pair(coordinate.first - 1, coordinate.second + 1),
+                    Pair(coordinate.first - 1, coordinate.second))
+            }
+            if(number==1) {
+                return listOf(
+                    Pair(coordinate.first, coordinate.second),
+                    Pair(coordinate.first, coordinate.second - 1),
+                )
+            }
+            else {
+                return listOf(Pair(coordinate.first, coordinate.second))
+            }
+        }
+
     }
 
     /**
+     * Calculates bonus points for three or more players based on their longest terrain scores.
      *
+     * @param playersLongestTerrain A map containing each player and their terrain-specific scores.
+     * @return A map where each player is mapped to their bonus points for each terrain.
      */
-    fun calculateScore(player: Player): Int {
-        //ToDo
+    private fun calculateBonusForThreeOrMorePlayers(playersLongestTerrain: Map<String, Map<Terrain, Int>>)
+            : Map<String, Map<Terrain, Int>> {
+        val makeTerrainPlayerBonusMap: () -> Map<Terrain, Map<String, Int>> = {
+            Terrain.values().associateWith { terrain ->
+                val terrainsScores = playersLongestTerrain.mapValues {
+                    val terrainValue = checkNotNull(it.value[terrain])
+                    terrainValue
+                }
 
-        onAllRefreshables { /*ToDo*/ }
-        return 0
+                val sortedPlayerScores: List<Pair<String, Int>> = terrainsScores.toList()
+                    .sortedByDescending { terrainsScores[it.first] }
+
+                val bonuses = mutableMapOf<String, Int>()
+                val largestScore = sortedPlayerScores.first().second
+                val secondLargestScore =
+                    sortedPlayerScores.dropWhile { it.second == largestScore }.firstOrNull()?.second
+
+                val playersWithLargestScore = sortedPlayerScores.filter { it.second == largestScore }.map { it.first }
+                val largestScoreBonusBasedOnNumberOfPlayersAchieved = mapOf(1 to 3, 2 to 2)
+                playersWithLargestScore.forEach { player ->
+                    bonuses[player] = largestScoreBonusBasedOnNumberOfPlayersAchieved.getOrDefault(
+                        playersWithLargestScore.size, 1
+                    )
+                }
+
+                if (secondLargestScore != null) {
+                    val playersWithSecondLargestScore: List<String> = sortedPlayerScores
+                        .filter { it.second == secondLargestScore }
+                        .map { it.first }
+                    playersWithSecondLargestScore.forEach { player ->
+                        bonuses[player] = if (playersWithSecondLargestScore.size == 1) 1 else 0
+                    }
+                }
+                bonuses
+            }
+        }
+        val terrainBonusScore = makeTerrainPlayerBonusMap()
+        val playerTerrainBonusMap: Map<String, Map<Terrain, Int>> =
+            terrainBonusScore.entries.flatMap { (terrain, playerMap) ->
+                playerMap.entries.map { (player, bonus) -> player to (terrain to bonus) }
+            }
+                .groupBy(/*keySelector*/{ (player, _) -> player },
+                    /**Value transformer
+                     * Without this we would have a map from the player to a  List<Pair<Player, Pair<Terrain, Int>>>
+                     * which what we basically after flatMap call have
+                     */
+                    { it.second })
+                /**
+                 * Here we are transforming the list of pairs to map
+                 */
+                .mapValues { (_, terrainBonusList) -> terrainBonusList.toMap() }
+
+        return playerTerrainBonusMap
+    }
+
+
+    /**
+     * Calculates the detailed scores for every player in the game
+     * returns a map from each player to the [PlayerScore] object having all the infos for the scoring boards
+     */
+    fun calculateBonusScores(playersLongestTerrainMap: Map<String, Map<Terrain, Int>>): Map<String, Map<Terrain, Int>> {
+        val game = checkNotNull(rootService.currentGame) { "No game started yet" }
+
+        if (game.playerList.size > 2) {
+            return calculateBonusForThreeOrMorePlayers(playersLongestTerrainMap)
+        }
+
+        val (firstPlayer, secondPlayer) = playersLongestTerrainMap.keys.toList()
+
+
+        val firstPlayerLongestTerrains = checkNotNull(playersLongestTerrainMap[firstPlayer])
+        val secondPlayerLongestTerrains = checkNotNull(playersLongestTerrainMap[secondPlayer])
+
+        val firstPlayerBonusMap = Terrain.values().associateWith {
+            if (checkNotNull(firstPlayerLongestTerrains[it]) > checkNotNull(secondPlayerLongestTerrains[it])) 2
+            else if (checkNotNull(firstPlayerLongestTerrains[it]) == checkNotNull(secondPlayerLongestTerrains[it])) 1
+            else 0
+        }
+        val secondPlayerBonusMap = Terrain.values().associateWith {
+            if (checkNotNull(secondPlayerLongestTerrains[it]) > checkNotNull(firstPlayerLongestTerrains[it])) 2
+            else if (checkNotNull(secondPlayerLongestTerrains[it]) == checkNotNull(firstPlayerLongestTerrains[it])) 1
+            else 0
+        }
+
+        return mapOf(firstPlayer to firstPlayerBonusMap, secondPlayer to secondPlayerBonusMap)
+    }
+
+    /**
+     * Calculates all the scores for each player, including individual animal scores, longest terrain scores,
+     * nature tokens, and bonus scores for having the longest terrains among all players.
+     *
+     * @return A map where the keys are player names and the values are `PlayerScore` objects containing the
+     * detailed breakdown of their scores.
+     *
+     * @throws IllegalStateException if no game has been started.
+     */
+    fun calculateScore(): Map<String, PlayerScore> {
+        val game = rootService.currentGame
+        checkNotNull(game) { "No game started yet" }
+
+        val playersScores = game.playerList.associate { player ->
+            player.name to
+                    PlayerScore(
+                        animalsScores = mapOf(
+                            Animal.BEAR to calculateBearScore(player),
+                            Animal.SALMON to calculateSalmonScore(player),
+                            Animal.ELK to calculateElkScore(player),
+                            Animal.FOX to calculateFoxScore(player),
+                            Animal.HAWK to calculateHawkScore(player)
+                        ),
+                        ownLongestTerrainsScores = Terrain.values()
+                            .associateWith { calculateLongestTerrain(it, player) },
+                        natureTokens = player.natureToken
+                    )
+        }
+
+        val terrainScoresByPlayer: Map<String, Map<Terrain, Int>> = playersScores.mapValues { (_, playerScore) ->
+            playerScore.ownLongestTerrainsScores
+        }
+
+        val bonus = calculateBonusScores(terrainScoresByPlayer)
+
+        return playersScores.mapValues { (playerName: String, playerScore: PlayerScore) ->
+            val playerBonus = checkNotNull(bonus[playerName])
+            playerScore.copy(
+                longestAmongOtherPlayers = playerBonus
+            )
+        }
     }
 
     /***
      * Calculating the longest connected terrains of some type for some player
-     * @param type the wished [Terrain] type
+     * @param searchedTerrain the wished [Terrain] type
      * @param player The [Player] having this longest terrains
      * @return [Int] representing the longest connected combination of [Terrain]s at this [Player.habitat]
      */
@@ -182,19 +341,142 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
 
 
     /**
+     * Adds the Points from the elk to the players score according to the current rule for elks
      *
+     * @param player the person you want to add the score to
      */
-    private fun calculateElkScore(player: Player): Int {
-        //ToDo
-        return 0
-    }
+    private fun calculateElkScore(player : Player) {
+        //filters out all the elks on the map
+        val elkCoordinate = player.habitat.filterValues { it.wildlifeToken?.animal == Animal.ELK }.keys.toMutableSet()
+        //gets the ruleset
+        val isB = checkNotNull(rootService.currentGame).ruleSet[Animal.ELK.ordinal]
 
+        //ruleset A
+        if(!isB) {
+            for (i in 3 downTo 0) {
+                //checks for every Elk if it is in a row with i other Elks
+                for (coordinate in elkCoordinate) {
+                    val straightLine = (coordinate.second + 0..coordinate.second + i).all { y ->
+                        elkCoordinate.contains(Pair(coordinate.first, y))
+                    }
+                    //when a straight line has been found it checks which length it has and removes it from the
+                    //elkCoordinate pair
+                    if (straightLine) {
+                        if (i == 3) {
+                            player.score += 13
+                            elkCoordinate.remove(Pair(coordinate.first, coordinate.second))
+                            elkCoordinate.remove(Pair(coordinate.first, coordinate.second + 1))
+                            elkCoordinate.remove(Pair(coordinate.first, coordinate.second + 2))
+                            elkCoordinate.remove(Pair(coordinate.first, coordinate.second + 3))
+                        } else if (i == 2) {
+                            player.score += 9
+                            elkCoordinate.remove(Pair(coordinate.first, coordinate.second))
+                            elkCoordinate.remove(Pair(coordinate.first, coordinate.second + 1))
+                            elkCoordinate.remove(Pair(coordinate.first, coordinate.second + 2))
+                        } else if (i == 1) {
+                            player.score += 5
+                            elkCoordinate.remove(Pair(coordinate.first, coordinate.second))
+                            elkCoordinate.remove(Pair(coordinate.first, coordinate.second + 1))
+                        } else {
+                            player.score += 2
+                            elkCoordinate.remove(Pair(coordinate.first, coordinate.second))
+                        }
+                    }
+                }
+            }
+        } else {
+            for(i in 3 downTo 0) {
+                for (coordinate in elkCoordinate) {
+                    //creates the pattern that fits the amount of tiles
+                    val pattern = createPattern(coordinate,i)
+                    //checks if it is an elk
+                    val isMatch = pattern.all { it in elkCoordinate }
+                    //checks which score must be given and what needs to be removed
+                    if(isMatch && i==3) {
+                        player.score += 13
+                        elkCoordinate.removeAll(pattern)
+                    }
+                    if(isMatch && i==2) {
+                        player.score += 9
+                        elkCoordinate.removeAll(pattern)
+                    }
+                    if(isMatch && i==1) {
+                        player.score += 5
+                        elkCoordinate.removeAll(pattern)
+                    }
+                    if(isMatch && i==0) {
+                        player.score += 2
+                        elkCoordinate.removeAll(pattern)
+                    }
+                }
+            }
+        }
+    }
     /**
+     * Adds the score for the hawks to the player according to the current rule for hawks
      *
+     * @param player the person you want to add the score to
      */
-    private fun calculateHawkScore(player: Player): Int {
-        //ToDo
-        return 0
+    private fun calculateHawkScore(player : Player) {
+        //filters out all the hawks on the map
+        val hawkCoordinate = player.habitat.filterValues { it.wildlifeToken?.animal == Animal.HAWK}.keys.toMutableSet()
+        //gets the ruleset
+        val isB = checkNotNull(rootService.currentGame).ruleSet[Animal.HAWK.ordinal]
+
+        //implementing one Set of pairs for rule a
+        val notAdjacent: MutableSet<Pair<Int, Int>> = mutableSetOf()
+
+        for(coordinate in hawkCoordinate){
+            //checks for every hawk if it is not adjacent to any other hawks
+            val neighbours = getNeighbours(coordinate)
+            if (neighbours.none { it in hawkCoordinate }) {
+                notAdjacent.add(coordinate)
+            }
+        }
+
+        if(!isB) {
+            //scores for ruleset a
+            if(notAdjacent.size==1) {player.score += 2}
+            if(notAdjacent.size==2) {player.score += 5}
+            if(notAdjacent.size==3) {player.score += 8}
+            if(notAdjacent.size==4) {player.score += 11}
+            if(notAdjacent.size==5) {player.score += 14}
+            if(notAdjacent.size==6) {player.score += 18}
+            if(notAdjacent.size==7) {player.score += 22}
+            if(notAdjacent.size>=8) {player.score += 26}
+        } else {
+            //implementing one set of pairs for rule b
+            val inSight: MutableSet<Pair<Int, Int>> = mutableSetOf()
+            //checks if a hawk is also in direct sight to another hawk
+            for(coordinate in notAdjacent){
+                for(innerCoordinate in hawkCoordinate){
+                    //vertical
+                    if(coordinate.second == innerCoordinate.second){
+                        inSight.add(coordinate)
+                    }
+                    //horizontal
+                    if(coordinate.first == innerCoordinate.first){
+                        inSight.add(coordinate)
+                    }
+                    //diagonal plus
+                    if(coordinate.first - innerCoordinate.first == coordinate.second - innerCoordinate.second){
+                        inSight.add(coordinate)
+                    }
+                    //diagonal minus
+                    if(coordinate.first - innerCoordinate.first == -(coordinate.second - innerCoordinate.second)){
+                        inSight.add(coordinate)
+                    }
+                }
+            }
+            //scores for ruleset b
+            if(inSight.size==2) {player.score += 5}
+            if(inSight.size==3) {player.score += 9}
+            if(inSight.size==4) {player.score += 12}
+            if(inSight.size==5) {player.score += 16}
+            if(inSight.size==6) {player.score += 20}
+            if(inSight.size==7) {player.score += 24}
+            if(inSight.size==8) {player.score += 28}
+        }
     }
 
     /**
@@ -237,7 +519,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
     /**
      *Adds the Points from the foxes to the players score according to the current rule for foxes
      *
-     * @param player the player for witch the score shoud be calculated
+     * @param player the player for witch the score should be calculated
      */
     private fun calculateFoxScore(player: Player): Int {
         val foxes = mutableListOf<Pair<Int, Int>>()
