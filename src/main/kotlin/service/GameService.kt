@@ -153,9 +153,13 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
      *
      * @param [tokenIndices] is a list of indices of the tile-token pairs in [shop] whose token shall be replaced.
      * @param networkReplacement is a boolean to flag replacements done by other network players.
+     * @param natureTokenUsed is a boolean to flag the usage of nature token
+     * as this requires different handling of discarded tokens.
      *
      */
-    fun executeTokenReplacement(tokenIndices : List<Int>, networkReplacement : Boolean = false) {
+    fun executeTokenReplacement(tokenIndices : List<Int>,
+                                networkReplacement : Boolean = false,
+                                natureTokenUsed : Boolean = false) {
 
         //check for existing game
         val game = checkNotNull(rootService.currentGame)
@@ -167,13 +171,8 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
                 game.wildlifeTokenList.removeLast())
         }
 
-        // resolve possible overpopulation of four
-        if (checkForSameAnimal() && !networkReplacement) {
-            resolveOverpopulation()
-        }
-
-        // return discarded wildlifeTokens
-        else {
+        if (natureTokenUsed) {
+            // return discarded wildlifeTokens
             for (token in game.discardedToken) {
                 checkNotNull(token)
                 game.wildlifeTokenList.add(token)
@@ -183,6 +182,26 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
                 game.wildlifeTokenList.shuffle()
             }
 
+            // resolve possible overpopulation of four
+            if (checkForSameAnimal() && !networkReplacement) {
+                resolveOverpopulation()
+            }
+        } else {
+            // resolve possible overpopulation of four
+            if (checkForSameAnimal() && !networkReplacement) {
+                resolveOverpopulation()
+            }
+            // return discarded wildlifeTokens
+            else {
+                for (token in game.discardedToken) {
+                    checkNotNull(token)
+                    game.wildlifeTokenList.add(token)
+                }
+                game.discardedToken = mutableListOf()
+                if (!networkReplacement) {
+                    game.wildlifeTokenList.shuffle()
+                }
+            }
         }
 
         // refresh GUI Elements
