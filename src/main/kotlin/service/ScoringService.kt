@@ -76,7 +76,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
             if (visited.contains(coordinate) || !graph.containsKey(coordinate)) return 0
             var connectedComponentLength: Int = 1
             visited.add(coordinate)
-            val neighbours = graph.getOrDefault(coordinate, listOf())
+            val neighbours = graph[coordinate] ?: listOf()
 
 
             for (neighbour in neighbours) {
