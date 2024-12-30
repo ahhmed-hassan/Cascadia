@@ -73,10 +73,11 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
             visited: MutableSet<Pair<Int, Int>>,
             coordinate: Pair<Int, Int>
         ): Int {
-            if (visited.contains(coordinate)) return 0
+            if (visited.contains(coordinate) || !graph.containsKey(coordinate)) return 0
             var connectedComponentLength: Int = 1
             visited.add(coordinate)
-            val neighbours = coordinate.neighbours()
+            val neighbours = graph.getOrDefault(coordinate, listOf())
+
 
             for (neighbour in neighbours) {
                 if (!visited.contains(neighbour))
@@ -103,13 +104,10 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
      * @param player The [Player] having this longest terrains
      * @return [Int] representing the longest connected combination of [Terrain]s at this [Player.habitat]
      */
-    private fun calculateLongestTerrain(searchedTerrain: Terrain, player: Player): Int {
+    fun calculateLongestTerrain(searchedTerrain: Terrain, player: Player): Int {
         data class TileAndCoordinate(val tile: HabitatTile, val coordinate: Pair<Int, Int>) {
-            val searchedTerrainEdgesIndices = tile.terrains.mapIndexedNotNull { index, terrain ->
-                if (terrain == searchedTerrain) index else null
-            }
-            val oppositeSearchedTerrainEdgesIndices = searchedTerrainEdgesIndices.map { (it + 3).mod(6) }
-            val hasSearchedTerrain: Boolean = searchedTerrainEdgesIndices.isNotEmpty()
+
+            val hasSearchedTerrain: Boolean = tile.terrains.any { it == searchedTerrain }
 
             /**Checking if this tileAndCoordinate is connected with  the other TileAndCoordinate
              * and that the corresponding edges in both tileAndCoordinates refers to searchedTerrainEdges
@@ -119,9 +117,17 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
              */
             val youAndMeHaveConnectingSearchedTerrainEdge: (another: TileAndCoordinate) -> Boolean =
                 { anotherTileAndCoordinate ->
-                    this.searchedTerrainEdgesIndices.any { myTerrainIndex ->
-                        anotherTileAndCoordinate.oppositeSearchedTerrainEdgesIndices.contains(myTerrainIndex)
-                    }
+                    val hisRelativePlace = Pair(
+                        anotherTileAndCoordinate.coordinate.first - this.coordinate.first,
+                        anotherTileAndCoordinate.coordinate.second - this.coordinate.second
+                    )
+                    val hisEdge = directionsPairsAndCorrespondingEdges[hisRelativePlace]
+                    checkNotNull(hisEdge)
+
+                    val result = anotherTileAndCoordinate.tile.terrains[hisEdge] == searchedTerrain &&
+                            this.tile.terrains[(hisEdge + 3).mod(6)] == searchedTerrain
+
+                    result
                 }
         }
 
