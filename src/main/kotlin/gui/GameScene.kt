@@ -32,6 +32,7 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
     private var selectedHabitatX : Int = 0
     private var selectedHabitatY : Int = 0
     private var selectedShopToken : MutableList<Int> = mutableListOf()
+    private var custom : Boolean = false
 
     private val shopHabitats = GridPane<HexagonView> (
         posX = 1400,
@@ -102,7 +103,6 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         size = 75,
         visual = ColorVisual(Color.RED)
     )
-
     private val testHabitat2 = HexagonView(
         size = 75,
         visual = ColorVisual(Color.BLUE)
@@ -221,8 +221,11 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         visual = ColorVisual(200, 150, 255)
     ).apply {
         onMouseClicked = {
-            println(selectedShopToken)
-            rootService.playerActionService.replaceWildlifeTokens(selectedShopToken)
+            if (custom) {
+                rootService.playerActionService.chooseCustomPair(0, 0)
+            }else {
+                rootService.playerActionService.replaceWildlifeTokens(selectedShopToken)
+            }
         }
     }
 
@@ -236,6 +239,7 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         visual = ColorVisual(200, 150, 255)
     ).apply {
         onMouseClicked = {
+            custom = true
             for (i in 0..3) {
                 shopTokens[i,0]?.onMouseClicked = { mouseEvent ->
                         when (mouseEvent.button) {
@@ -255,10 +259,31 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
                             }
                             else -> {}
                         }
+                }
+
+                shopHabitats[i,0]?.onMouseClicked = { mouseEvent ->
+                    when (mouseEvent.button) {
+                        MouseButtonType.RIGHT_BUTTON -> {
+                            shopHabitats[i,0]?.apply {
+                                posY = 0.01
+                            }
+                            enableAllHabitats()
+                        }
+
+                        MouseButtonType.LEFT_BUTTON -> {
+                            shopHabitats[i,0]?.apply {
+                                posY -= 25
+                            }
+                            selectedHabitat = shopHabitats[i,0]
+                            disableHabitatsExcept(checkNotNull(shopHabitats[i,0]))
+                        }
+                        else -> {}
                     }
                 }
             }
         }
+
+    }
 
 
     private val resolveOverpopButton = Button(
@@ -300,7 +325,6 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         visual = ColorVisual(200, 150, 255)
     ).apply {
         onMouseClicked = {
-            disableAll()
             ruleSetOverlay.isDisabled = false
             ruleSetOverlay.isVisible = true
         }
@@ -316,7 +340,6 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         visual = ColorVisual(200, 150, 255)
     ).apply {
         onMouseClicked = {
-            enableAll()
             ruleSetOverlay.isDisabled = true
             ruleSetOverlay.isVisible = false
         }
@@ -407,24 +430,15 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
          */
 
 
-        //TESTING HOW IT WOULD LOOK LIKE
-        for (i in 0..3){
-            shopHabitats[i,0] = testHabitat1
-            shopHabitats[i,0]?.onMouseClicked ={ mouseEvent ->
-                if (mouseEvent.button == MouseButtonType.RIGHT_BUTTON){
-                shopHabitats[i,0]?.apply {
-                    posY -= 25
-                }
-                selectedHabitat = shopHabitats[i,0]
-                shopTokens.isDisabled = true
-                }
-            }
-        }
-
         shopTokens[0,0] = testToken
         shopTokens[1,0] = testToken1
         shopTokens[2,0] = testToken2
         shopTokens[3,0] = testToken3
+
+        shopHabitats[0,0] = labeledHexagon1
+        shopHabitats[1,0] = labeledHexagon2
+        shopHabitats[2,0] = labeledHexagon3
+        shopHabitats[3,0] = labeledHexagon4
 
         for (i in 0..3){
             shopTokens[i,0]?.apply {
@@ -434,43 +448,33 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
                     rootService.playerActionService.chooseTokenTilePair(i)
                 }
             }
-        }
-
-        //shopHabitats.isVisible = false
-        //shopHabitats.isDisabled = true
-
-        //playArea[0,0] = labeledHexagon1
-        playArea[0,1] = testHabitat2
-        playArea[-1,1] = testHabitat3
-
-        playableTile[0,0] = labeledHexagon1.apply {
-            onMouseClicked ={
-                //works
-             //rootService.playerActionService.rotateTile()
+            shopHabitats[i,0]?.apply {
+                onMouseClicked = {
+                    selectedToken = shopTokens[i,0]
+                    selectedHabitat = shopHabitats[i,0]
+                    rootService.playerActionService.chooseTokenTilePair(i)
+                }
             }
         }
 
-        playableToken[0,0] = testToken.apply {
-            isDraggable = true
-        }
+        playArea[0,0] = testHabitat1
+        playArea[0,1] = testHabitat2
+        playArea[-1,1] = testHabitat3
 
-        createPossibleHexagons(listOf(Pair(0,0),Pair(1,1)))
+        createPossibleHexagons(listOf(Pair(1,1),Pair(-1,0),Pair(1,-2)))
 
     }
 
     override fun refreshAfterHabitatTileAdded() {
         //Example
-        playArea[selectedHabitatX,selectedHabitatY] = labeledHexagon1.apply {
+        playArea[selectedHabitatX,selectedHabitatY] = checkNotNull(selectedHabitat).apply {
             isDraggable = false
         }
 
         playableTile[0,0] = null
         playableTile.isDisabled = true
 
-        playableToken[0,0]?.apply {
-            isDraggable = true
-        }
-
+        playableToken.isDisabled = false
     }
 
     override fun refreshAfterTileRotation() {
@@ -483,7 +487,6 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         //for rotation change the order of terrains
         for (i in 0..3){
             sideLabels = listOf( sideLabels.last()) + sideLabels.dropLast(1)
-            println(sideLabels)
         }
 
         // create new Hexagon for the rotated Tile
@@ -504,13 +507,24 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
 
 
     override fun refreshAfterTokenTilePairChoosen() {
+        //disableAll()
+        shopTokens.isVisible = false
+        shopHabitats.isVisible = false
+        playArea.isDisabled = false
+        playableTile.isDisabled = false
+
+
         playableToken[0,0] = selectedToken?.apply {
             isDraggable = true
         }
         playableToken.isDisabled = true
 
         playableTile[0,0] = selectedHabitat?.apply {
-            isDisabled = true
+            onMouseClicked = {
+                //rootService.playerActionService.rotateTile()
+            }
+            isDraggable = true
+            isDisabled = false
         }
     }
 
@@ -527,6 +541,7 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
 
     override fun refreshAfterNextTurn() {
         playArea.clear()
+        custom = false
         // iterate over all elements a player has and add it to playArea
         // change currentPlayerLabel
         //change NatureToken
@@ -549,21 +564,21 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         ).forEach { it.isDisabled = true }
     }
 
-    private fun enableAll() {
-        // Disable all components
-        listOf(
-            replaceWildlifeButton,
-            confirmReplacementButton,
-            chooseCustomPair,
-            resolveOverpopButton,
-            showRuleSetButton,
-            discardToken,
-            shopTokens,
-            shopHabitats,
-            playArea,
-            ruleSetOverlay
-        ).forEach { it.isDisabled = false }
-    }
+//    private fun enableAll() {
+//        // Disable all components
+//        listOf(
+//            replaceWildlifeButton,
+//            confirmReplacementButton,
+//            chooseCustomPair,
+//            resolveOverpopButton,
+//            showRuleSetButton,
+//            discardToken,
+//            shopTokens,
+//            shopHabitats,
+//            playArea,
+//            ruleSetOverlay
+//        ).forEach { it.isDisabled = false }
+//    }
 
     private fun createLabeledHexagonView(size: Int = 75, color: Color, labels: List<String>): HexagonView {
         require(labels.size == 6) { "There must be exactly 6 labels for the hexagon sides." }
@@ -595,7 +610,8 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
             size = size,
             visual = CompoundVisual(
                 ColorVisual(color), // Background color of the hexagon
-                *textVisuals.toTypedArray() // Spread operator to include all text visuals
+                *textVisuals.toTypedArray(), // Spread operator to include all text visuals
+                //TextVisual("Salmon")
             )
         )
     }
@@ -604,10 +620,22 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
     private val labeledHexagon1 = createLabeledHexagonView(
         color = Color.LIGHT_GRAY,
         labels = listOf("F", "F", "F", "E", "E", "E")
-    ).apply {
-        isDraggable = true
-    }
+    )
 
+    private val labeledHexagon2 = createLabeledHexagonView(
+        color = Color.LIGHT_GRAY,
+        labels = listOf("A", "F", "F", "E", "E", "E")
+    )
+
+    private val labeledHexagon3 = createLabeledHexagonView(
+        color = Color.LIGHT_GRAY,
+        labels = listOf("B", "F", "F", "E", "E", "E")
+    )
+
+    private val labeledHexagon4 = createLabeledHexagonView(
+        color = Color.LIGHT_GRAY,
+        labels = listOf("D", "F", "F", "E", "E", "E")
+    )
     //calculate the coordinates based on draggedComponent coordinates
     private fun calculatePair(posX: Double, posY: Double): Pair<Int, Int> {
         //get Centered X and Y
@@ -630,7 +658,7 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
                 size = 75,
                 visual = ColorVisual(Color.GRAY)
             )
-            playArea[i.first, i.second] = hex
+            playArea[i.second, i.first] = hex
         }
     }
 
@@ -665,9 +693,22 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
             }
     }
 
+    private fun disableHabitatsExcept(pos :HexagonView){
+        for (i in 0..3)
+            if (shopHabitats[i,0] != pos){
+                shopHabitats[i,0]?.isDisabled = true
+            }
+    }
+
     private fun enableAllTokens(){
         for (i in 0..3){
             shopTokens[i,0]?.isDisabled = false
+        }
+    }
+
+    private fun enableAllHabitats(){
+        for (i in 0..3){
+            shopHabitats[i,0]?.isDisabled = false
         }
     }
 }
