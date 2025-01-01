@@ -19,6 +19,7 @@ import tools.aqua.bgw.visual.CompoundVisual
 import tools.aqua.bgw.visual.ImageVisual
 import tools.aqua.bgw.visual.TextVisual
 import java.awt.Color
+import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -58,32 +59,7 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         width = 0,
         height = 0,
         coordinateSystem = HexagonGrid.CoordinateSystem.AXIAL
-    ).apply {
-        dropAcceptor = {dragEvent ->
-            when (dragEvent.draggedComponent){
-                is HexagonView -> {
-                    true
-                }
-                else -> false
-            }
-        }
-
-        onDragDropped = { dragEvent ->
-            //val draggedHexagon = dragEvent.draggedComponent as HexagonView
-            val x = dragEvent.draggedComponent.posX
-            val y = dragEvent.draggedComponent.posY
-            val coordinateForService = calculatePair(x,y)
-            selectedHabitatX = coordinateForService.first
-            selectedHabitatY = coordinateForService.second
-            println(coordinateForService)
-            //lookup if HexagonView is type HabitatTile
-            rootService.playerActionService.addTileToHabitat(coordinateForService)
-            // if the playAction was incorrect, place the playable Habitat again at the selected Position
-            //lookup if HexagonView is type AnimalToken
-            //rootService.playerActionService.addToken()
-
-        }
-    }
+    )
 
     private val playableTile = GridPane<HexagonView>(
         posX = 150,
@@ -461,12 +437,11 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         playArea[0,1] = testHabitat2
         playArea[-1,1] = testHabitat3
 
-        createPossibleHexagons(listOf(Pair(1,1),Pair(-1,0),Pair(1,-2)))
-
     }
 
     override fun refreshAfterHabitatTileAdded() {
         //Example
+        selectedHabitat?.removeFromParent()
         playArea[selectedHabitatX,selectedHabitatY] = checkNotNull(selectedHabitat).apply {
             isDraggable = false
         }
@@ -512,6 +487,8 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         shopHabitats.isVisible = false
         playArea.isDisabled = false
         playableTile.isDisabled = false
+
+        createPossibleHexagons(listOf(Pair(1,1),Pair(-1,0),Pair(1,-2),Pair(-2,1),Pair(2,-1),Pair(0,1),Pair(0,-1)))
 
 
         playableToken[0,0] = selectedToken?.apply {
@@ -636,20 +613,6 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         color = Color.LIGHT_GRAY,
         labels = listOf("D", "F", "F", "E", "E", "E")
     )
-    //calculate the coordinates based on draggedComponent coordinates
-    private fun calculatePair(posX: Double, posY: Double): Pair<Int, Int> {
-        //get Centered X and Y
-        val centeredX = posX - 960
-        val centeredY = posY - 540
-
-        //get hex width and height
-        val hexWidth = 75.0
-
-        val q = (2.0 / 3.0 * centeredX / hexWidth).toInt()
-        val r = ((-1.0 / 3.0 * centeredX + sqrt(3.0) / 3.0 * centeredY) / hexWidth).toInt()
-
-        return Pair(q, r)
-    }
 
     //for all possible Position to play the Hexagon, mark it
     private fun createPossibleHexagons(position : List<Pair<Int,Int>>) {
@@ -658,17 +621,21 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
                 size = 75,
                 visual = ColorVisual(Color.GRAY)
             )
-            playArea[i.second, i.first] = hex
+            playArea[i.second, i.first] = hex.apply {
+                onMouseClicked = {
+                    selectedHabitatX = i.second
+                    selectedHabitatY = i.first
+                    rootService.playerActionService.addTileToHabitat(i)
+                    disablePossibleHexagons(position)
+                }
+            }
         }
     }
 
     //after tile placed, remove the possible Hexagons
-    private fun deletePossibleHexagons(position: List<Pair<Int, Int>>){
+    private fun disablePossibleHexagons(position: List<Pair<Int, Int>>){
         for (i in position){
-            val toRemove = playArea[i.first,i.second]
-            if (toRemove != null) {
-                playArea.remove(toRemove)
-            }
+                playArea[i.second,i.first]?.isDisabled = true
         }
     }
 
