@@ -3,14 +3,17 @@ package gui
 import entity.HabitatTile
 import entity.WildlifeToken
 import service.RootService
+import tools.aqua.bgw.components.ComponentView
 import tools.aqua.bgw.components.container.HexagonGrid
 import tools.aqua.bgw.components.gamecomponentviews.HexagonView
+import tools.aqua.bgw.components.layoutviews.CameraPane
 import tools.aqua.bgw.components.layoutviews.GridPane
 import tools.aqua.bgw.components.layoutviews.Pane
 import tools.aqua.bgw.components.uicomponents.Button
 import tools.aqua.bgw.components.uicomponents.Label
 import tools.aqua.bgw.components.uicomponents.UIComponent
 import tools.aqua.bgw.core.BoardGameScene
+import tools.aqua.bgw.event.KeyCode
 import tools.aqua.bgw.event.MouseButtonType
 import tools.aqua.bgw.util.BidirectionalMap
 import tools.aqua.bgw.util.Font
@@ -19,10 +22,8 @@ import tools.aqua.bgw.visual.CompoundVisual
 import tools.aqua.bgw.visual.ImageVisual
 import tools.aqua.bgw.visual.TextVisual
 import java.awt.Color
-import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
-import kotlin.math.sqrt
 
 class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Refreshables {
 
@@ -34,6 +35,8 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
     private var selectedHabitatY : Int = 0
     private var selectedShopToken : MutableList<Int> = mutableListOf()
     private var custom : Boolean = false
+    private var currentXCamera = 0
+    private var currentYCamera = 0
 
     private val shopHabitats = GridPane<HexagonView> (
         posX = 1400,
@@ -73,6 +76,13 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         posY = 800,
         columns = 1,
         rows = 1,
+    )
+
+    private val targetLayout = Pane<ComponentView> (width = 1920, height = 1080)
+    private val cameraPane = CameraPane(
+        width = 1920,
+        height = 1080,
+        target = targetLayout
     )
 
     private val testHabitat1 = HexagonView(
@@ -365,7 +375,46 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
     init {
         background = ColorVisual(240, 240, 180)
 
+        onKeyPressed = {
+            //go left with camera
+            if (it.keyCode == KeyCode.A){
+                println("Pressed A")
+                currentXCamera += -100
+                cameraPane.reposition(currentXCamera,currentYCamera)
+            }
+
+            //go up with camera
+            if (it.keyCode == KeyCode.W){
+                println("Pressed W")
+                currentYCamera += -100
+                cameraPane.reposition(currentXCamera,currentYCamera)
+            }
+
+            //go right with camera
+            if (it.keyCode == KeyCode.D){
+                println("Pressed D")
+                currentXCamera += 100
+                cameraPane.reposition(currentXCamera,currentYCamera)
+            }
+
+            //go down with camera
+            if (it.keyCode == KeyCode.S){
+                println("Pressed S")
+                currentYCamera += 100
+                cameraPane.reposition(currentXCamera,currentYCamera)
+            }
+
+            //reset the pane to original position
+            if (it.keyCode == KeyCode.R){
+                println("Pressed R")
+                cameraPane.reposition(0,0)
+                currentXCamera = 0
+                currentYCamera = 0
+            }
+        }
+
         addComponents(
+            cameraPane,
             currentPlayerLabel,
             natureTokenLabel,
             replaceWildlifeButton,
@@ -376,7 +425,7 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
             discardToken,
             shopTokens,
             shopHabitats,
-            playArea,
+            //playArea,
             playableTile,
             playableToken,
             ruleSetOverlay
@@ -387,6 +436,8 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
     override fun refreshAfterGameStart() {
         //val game = rootService.currentGame
         //checkNotNull(game)
+
+        targetLayout.add(playArea)
 
         getRuleSets()
 
