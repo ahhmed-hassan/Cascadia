@@ -80,13 +80,6 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         check(connectionState == ConnectionState.WAITING_FOR_GUESTS)
         { "currently not prepared to start a new hosted game." }
         val players = this.playersList
-//        val playerEntities = players.map {
-//            entity.Player(
-//                name = it,
-//                habitat = mutableMapOf(), // Initialisiert ein leeres MutableMap
-//                playerType = PlayerType.NETWORK
-//            )
-//        }.toMutableList()
         val playerNames = players.associateWith { PlayerType.NETWORK }
         rootService.gameService.startNewGame(
             playerNames,
@@ -111,20 +104,6 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
             "Not waiting for game init message."
         }
         val playerNames = message.playerList.associateWith { PlayerType.NETWORK }
-//        val players = message.playerList.map { playerName ->
-//            Player(
-//                name = playerName,
-//                habitat = mutableMapOf(),
-//                playerType = PlayerType.NETWORK
-//            )
-//        }.toMutableList()
-//        val playerNames = players.map { it.name }
-//        val scoreRules = message.gameRules.map { (_, scoringCard) ->
-//            when (scoringCard) {
-//                ScoringCards.A -> false
-//                ScoringCards.B -> true
-//            }
-//        }
         val startTilesOrder = message.startTiles
         val scoreRules = message.gameRules.map { (_, scoringCard) ->
             scoringCard == ScoringCards.B
@@ -136,9 +115,9 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         rootService.gameService.startNewGame(
             playerNames = playerNames,
             scoreRules = scoreRules,
-            // startTilesOrder = startTilesOrder,
             //false,
             //false,
+            //startTilesOrder = startTilesOrder,
         )
 
         rootService.currentGame?.wildlifeTokenList = message.wildlifeTokens.map { animal ->
@@ -152,6 +131,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         }
 
     }
+
     fun resolvedOverPopulationMessage(message: ResolveOverpopulationMessage, sender: String) {
 
         val game = rootService.currentGame
@@ -177,7 +157,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
                     val indices = shopTokens
                         .mapIndexedNotNull { index, token -> if (token?.animal == animal) index else null }
                         .take(3)
-                    //rootService.gameService.executeTokenReplacement(indices, true)
+                    //rootService.gameService.executeTokenReplacement(indices, true, false)
                 }
             }
         }
@@ -202,7 +182,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         val game = checkNotNull(rootService.currentGame) {"Game not found"}
         val habitateTileIds = game.habitatTileList.map { it.id }
         val playerNames = game.playerList.map { it.name}
-        val gameRules = Animal.values().zip(game.ruleSet.map { if (it) ScoringCards.A else ScoringCards.B }).toMap()
+        val gameRules = Animal.values().zip(game.ruleSet.map { if (it) ScoringCards.B else ScoringCards.A }).toMap()
         val startTiles = (1..playerNames.size).toList()
         val wildLifeTokens = game.wildlifeTokenList.map { token -> Animal.valueOf(token.animal.name)}
         val message = GameInitMessage(
@@ -228,30 +208,41 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         val habitatCoordinates = Pair(qCoordTile, rCoordTile)
 
         check(message.placedTile in game.shop.indices)
-        game.selectedTile = game.shop[message.placedTile].first
-        val tile = checkNotNull(game.selectedTile)
-        repeat(message.tileRotation) { rootService.playerActionService.rotateTile(tile) }
-        rootService.playerActionService.addTileToHabitat(habitatCoordinates)
 
-        // if (message.selectedToken != null)
-        //require(message.selectedToken in game.shop.indices) { "Ungültiger Token-Index: ${message.selectedToken}" }
-        //game.selectedToken = game.shop[message.selectedToken].second
-        //val wildlifeToken = checkNotNull(game.selectedToken)
 
-        //val targetTile = game.currentPlayer.habitat[habitatCoordinates]
-        //checkNotNull(wildlifeToken)
-        //checkNotNull(targetTile)
-        //rootService.playerActionService.addToken(wildlifeToken, targetTile)
+//        if (message.selectedToken != null) {
+//            check(message.selectedToken in game.shop.indices)
+//
+//            val qCoordToken = requireNotNull(message.qCoordToken) { "qCoordTile darf nicht null sein" }
+//            val rCoordToken = requireNotNull(message.rCoordToken) { "rCoordTile darf nicht null sein" }
+//
+//            val wildlifeTokenCoordinates = Pair(qCoordToken, rCoordToken)
+//
+//            if (message.usedNatureToken) {
+//                rootService.playerActionService.chooseCustomPair(message.placedTile, message.selectedToken)
+//                repeat(message.tileRotation) { rootService.playerActionService.rotateTile() }
+//                rootService.playerActionService.addTileToHabitat(habitatCoordinates)
+//                rootService.playerActionService.addToken(wildlifeTokenCoordinates)
+//            } else {
+//                rootService.playerActionService.chooseTokenTilePair(message.placedTile)
+//                repeat(message.tileRotation) { rootService.playerActionService.rotateTile() }
+//                rootService.playerActionService.addTileToHabitat(habitatCoordinates)
+//                rootService.playerActionService.addToken(wildlifeTokenCoordinates)
+//            }
+//        } else {
+//            rootService.playerActionService.chooseTokenTilePair(message.placedTile)
+//            repeat(message.tileRotation) { rootService.playerActionService.rotateTile() }
+//            rootService.playerActionService.addTileToHabitat(habitatCoordinates)
+//            rootService.playerActionService.discardToken()
+//        }
 
-        //game.shop.removeAt(message.selectedToken)
 
         game.wildlifeTokenList = message.wildlifeToken.map { animal ->
            WildlifeToken(LocalAnimal.valueOf(animal.name))
         }.toMutableList()
-        if(message.usedNatureToken) {
-            game.currentPlayer.natureToken -= 1
-        }
+
         rootService.gameService.nextTurn()
+
         if (client?.playerName == game.currentPlayer.name) {
             updateConnectionState(ConnectionState.PLAYING_MY_TURN)
         } else {
@@ -266,13 +257,8 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         message.selectedTokens.forEach { index ->
             require(index in game.shop.indices) { "Ungültiger Token-Index: $index" }
         }
-        message.selectedTokens.forEachIndexed { listIndex, shopIndex ->
-            val newWildlifeToken = game.wildlifeTokenList.firstOrNull()
-                ?: throw IllegalStateException("Keine weiteren Wildlife-Tokens verfügbar.")
-            game.shop[shopIndex] = game.shop[shopIndex].copy(second = newWildlifeToken)
-            game.wildlifeTokenList.remove(newWildlifeToken)
-        }
-        //rootService.gameService.executeTokenReplacement(message.selectedTokens, false)
+
+        //rootService.gameService.executeTokenReplacement(message.selectedTokens, true, true)
 
 
         //game.wildlifeTokenList = message.wildlifeTokens.map { animal ->
