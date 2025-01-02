@@ -233,7 +233,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         repeat(message.tileRotation) { rootService.playerActionService.rotateTile(tile) }
         rootService.playerActionService.addTileToHabitat(habitatCoordinates)
 
-
+        // if (message.selectedToken != null)
         //require(message.selectedToken in game.shop.indices) { "Ungültiger Token-Index: ${message.selectedToken}" }
         //game.selectedToken = game.shop[message.selectedToken].second
         //val wildlifeToken = checkNotNull(game.selectedToken)
@@ -272,6 +272,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
             game.shop[shopIndex] = game.shop[shopIndex].copy(second = newWildlifeToken)
             game.wildlifeTokenList.remove(newWildlifeToken)
         }
+        //rootService.gameService.executeTokenReplacement(message.selectedTokens, false)
 
 
         //game.wildlifeTokenList = message.wildlifeTokens.map { animal ->
@@ -348,6 +349,11 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
             true
         } else {
             false
+        }
+    }
+    fun refreshPlayerList(playerList : MutableList<String>) {
+        onAllRefreshables {
+            //refreshAfterPlayerJoined(playerList)
         }
     }
 

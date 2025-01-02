@@ -19,7 +19,7 @@ import tools.aqua.bgw.net.common.response.*
  */
 
 class NetworkClient (playerName: String, host: String, secret: String, val networkService: NetworkService,
-                     val playerType: PlayerType): BoardGameClient(playerName, host, secret, NetworkLogging.VERBOSE) {
+                     val playerType: PlayerType): BoardGameClient(playerName, host, secret, NetworkLogging.VERBOSE)  {
 
     /** the identifier of this game session; can be null if no session started yet. */
     var sessionID: String? = null
@@ -93,6 +93,7 @@ class NetworkClient (playerName: String, host: String, secret: String, val netwo
             // Spieler hinzufügen, sofern max. Kapazität noch nicht erreicht
             if (players.size < maxPlayers) {
                 players.add(notification.sender)
+                networkService.refreshPlayerList(players)
             } else {
                 disconnectAndError("Maximum number of players has been reached.")
             }
