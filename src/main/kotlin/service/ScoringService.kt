@@ -484,7 +484,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
      * @param player the [Player] to calculate its runs.
      * @return an [Int] of salmon score for the given [Player] based on the current [entity.CascadiaGame.ruleSet]
      */
-    private fun calculateSalmonScore(player: Player): Int {
+     fun calculateSalmonScore(player: Player): Int {
         val hasSalmonToken: (HabitatTile) -> Boolean = { it.wildlifeToken?.animal == Animal.SALMON }
         val makeSalmonGraph: (Map<Pair<Int, Int>, HabitatTile>) -> Map<Pair<Int, Int>, List<Pair<Int, Int>>> =
             { habitatTile ->
