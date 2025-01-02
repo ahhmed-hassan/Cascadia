@@ -171,10 +171,7 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         visual = ColorVisual(200, 150, 255)
     ).apply {
         onMouseClicked = {
-            resetTokens()
-            disableAll()
-            shopTokens.isDisabled = false
-            confirmReplacementButton.isDisabled = false
+            updateButtonStates("replaceWildlife")
             for (i in 0..3){
                 shopTokens[i,0]?.onMouseClicked = { mouseEvent ->
                     when (mouseEvent.button){
@@ -212,6 +209,7 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
             }else {
                 rootService.playerActionService.replaceWildlifeTokens(selectedShopToken)
             }
+            updateButtonStates("default")
         }
     }
 
@@ -225,6 +223,8 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         visual = ColorVisual(200, 150, 255)
     ).apply {
         onMouseClicked = {
+            updateButtonStates("chooseCustomPair")
+
             custom = true
             for (i in 0..3) {
                 shopTokens[i,0]?.onMouseClicked = { mouseEvent ->
@@ -488,22 +488,30 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         playArea[0,1] = testHabitat2
         playArea[-1,1] = testHabitat3
 
+        discardToken.isDisabled = true
+
+         //if , ob resolveOverpopulation possible or already used
+         //if , ob replacement oder chooseCustom possible ist
     }
 
     override fun refreshAfterHabitatTileAdded() {
-        //Example
+        //val game = rootService.currentGame
+        //checkNotNull(game)
+
         selectedHabitat?.removeFromParent()
-        playArea[selectedHabitatX,selectedHabitatY] = checkNotNull(selectedHabitat).apply {
-            isDraggable = false
-        }
+        playArea[selectedHabitatX,selectedHabitatY] = checkNotNull(selectedHabitat)
 
         playableTile[0,0] = null
-        playableTile.isDisabled = true
+        playableTile[0,0]?.isDisabled = true
 
         playableToken.isDisabled = false
+        discardToken.isDisabled = false
     }
 
     override fun refreshAfterTileRotation() {
+        //val game = rootService.currentGame
+        //checkNotNull(game)
+
         val applicableTile = playableTile[0, 0]
         checkNotNull(applicableTile)
 
@@ -533,34 +541,47 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
 
 
     override fun refreshAfterTokenTilePairChoosen() {
-        //disableAll()
+        //val game = rootService.currentGame
+        //checkNotNull(game)
+
         shopTokens.isVisible = false
         shopHabitats.isVisible = false
         playArea.isDisabled = false
         playableTile.isDisabled = false
+        confirmReplacementButton.isDisabled = true
+        resolveOverpopButton.isDisabled = true
+        chooseCustomPair.isDisabled = true
+        discardToken.isDisabled = true
+        replaceWildlifeButton.isDisabled = true
 
+        //call method getAllPossibleCoordinatesForTilePlacing in createPossibleHexagons
         createPossibleHexagons(listOf(Pair(1,1),Pair(-1,0),Pair(1,-2),Pair(-2,1),Pair(2,-1),Pair(0,1),Pair(0,-1)))
 
 
-        playableToken[0,0] = selectedToken?.apply {
-            isDraggable = true
-        }
+        playableToken[0,0] = selectedToken
+        playableToken[0,0]?.onMouseClicked = null
+
         playableToken.isDisabled = true
 
         playableTile[0,0] = selectedHabitat?.apply {
             onMouseClicked = {
                 //rootService.playerActionService.rotateTile()
             }
-            isDraggable = true
             isDisabled = false
         }
     }
 
     override fun refreshAfterWildlifeTokenAdded() {
+        //val game = rootService.currentGame
+        //checkNotNull(game)
+
         super.refreshAfterWildlifeTokenAdded()
     }
 
     override fun refreshAfterWildlifeTokenReplaced() {
+        //val game = rootService.currentGame
+        //checkNotNull(game)
+
         for(i in 0..3){
             //replace all tokens with new ones / reload
             println("Replaced")
@@ -568,7 +589,11 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
     }
 
     override fun refreshAfterNextTurn() {
+        //val game = rootService.currentGame
+        //checkNotNull(game)
+
         playArea.clear()
+        enableAll()
         custom = false
         // iterate over all elements a player has and add it to playArea
         // change currentPlayerLabel
@@ -577,36 +602,34 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         //waiting 3 secs?
     }
 
-    private fun disableAll() {
-        // Disable all components
-        listOf(
-            replaceWildlifeButton,
-            confirmReplacementButton,
-            chooseCustomPair,
-            resolveOverpopButton,
-            discardToken,
-            shopTokens,
-            shopHabitats,
-            playArea,
-            ruleSetOverlay
-        ).forEach { it.isDisabled = true }
-    }
-
-//    private fun enableAll() {
+//    private fun disableAll() {
 //        // Disable all components
 //        listOf(
 //            replaceWildlifeButton,
 //            confirmReplacementButton,
 //            chooseCustomPair,
 //            resolveOverpopButton,
-//            showRuleSetButton,
-//            discardToken,
 //            shopTokens,
 //            shopHabitats,
 //            playArea,
-//            ruleSetOverlay
-//        ).forEach { it.isDisabled = false }
+//        ).forEach { it.isDisabled = true }
 //    }
+
+    private fun enableAll() {
+        // Disable all components
+        listOf(
+            replaceWildlifeButton,
+            confirmReplacementButton,
+            chooseCustomPair,
+            resolveOverpopButton,
+            showRuleSetButton,
+            discardToken,
+            shopTokens,
+            shopHabitats,
+            playArea,
+            ruleSetOverlay
+        ).forEach { it.isDisabled = false }
+    }
 
     private fun createLabeledHexagonView(size: Int = 75, color: Color, labels: List<String>): HexagonView {
         require(labels.size == 6) { "There must be exactly 6 labels for the hexagon sides." }
@@ -634,10 +657,16 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
             )
         }
 
+        val color1 = if (color == Color.RED) {
+            Color.WHITE
+        } else {
+            Color.LIGHT_GRAY
+        }
+
         return HexagonView(
             size = size,
             visual = CompoundVisual(
-                ColorVisual(color), // Background color of the hexagon
+                ColorVisual(color1), // Background color of the hexagon
                 *textVisuals.toTypedArray(), // Spread operator to include all text visuals
                 //TextVisual("Salmon")
             )
@@ -692,18 +721,16 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
 
     //get the correct images
     private fun getRuleSets(){
+        //val game = rootService.currentGame
+        //checkNotNull(game)
+
         //iterate over ruleset and update the pngs (visuals) based on
     }
 
-    private fun resetTokens(){
-        for (i in 0..3){
-            shopTokens[i,0]?.apply {
-                posY = 0.01
-            }
-        }
-        selectedToken = null
-    }
-
+    /**
+     * [disableTokensExcept] disables all other Tokens except the chosen one
+     * in the shop
+     */
     private fun disableTokensExcept(pos : HexagonView){
         for (i in 0..3)
             if (shopTokens[i,0] != pos){
@@ -711,6 +738,10 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
             }
     }
 
+    /**
+     * [disableHabitatsExcept] disables all other Habitats except the chosen one
+     * in the shop
+     */
     private fun disableHabitatsExcept(pos :HexagonView){
         for (i in 0..3)
             if (shopHabitats[i,0] != pos){
@@ -718,15 +749,51 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
             }
     }
 
+    /**
+     * [enableAllTokens] enable all Tokens to be chosen
+     * in the shop
+     */
     private fun enableAllTokens(){
         for (i in 0..3){
             shopTokens[i,0]?.isDisabled = false
         }
     }
 
+    /**
+     * [enableAllHabitats] enable all Habitats to be chosen
+     * in the shop
+     */
     private fun enableAllHabitats(){
         for (i in 0..3){
             shopHabitats[i,0]?.isDisabled = false
         }
     }
+
+    private fun updateButtonStates(action: String) {
+        when (action) {
+            "replaceWildlife" -> {
+                replaceWildlifeButton.isDisabled = true
+                chooseCustomPair.isDisabled = true
+                resolveOverpopButton.isDisabled = true
+                shopTokens.isDisabled = false
+                confirmReplacementButton.isDisabled = false
+            }
+
+            "chooseCustomPair" -> {
+                replaceWildlifeButton.isDisabled = true
+                chooseCustomPair.isDisabled = true
+                resolveOverpopButton.isDisabled = true
+                shopTokens.isDisabled = false
+            }
+
+            "default" -> {
+                replaceWildlifeButton.isDisabled = true
+                chooseCustomPair.isDisabled = true
+                resolveOverpopButton.isDisabled = true
+                shopTokens.isDisabled = true
+                confirmReplacementButton.isDisabled = true
+            }
+        }
+    }
+
 }
