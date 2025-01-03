@@ -416,8 +416,11 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
      * Adds the score for the hawks to the player according to the current rule for hawks
      *
      * @param player the person you want to add the score to
+     *
+     * @return an [Int] of hawk score for the given [Player] based on the current [entity.CascadiaGame.ruleSet]
      */
-    private fun calculateHawkScore(player : Player) {
+    private fun calculateHawkScore(player : Player): Int {
+        var points = 0;
         //filters out all the hawks on the map
         val hawkCoordinate = player.habitat.filterValues { it.wildlifeToken?.animal == Animal.HAWK}.keys.toMutableSet()
         //gets the ruleset
@@ -436,14 +439,14 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
 
         if(!isB) {
             //scores for ruleset a
-            if(notAdjacent.size==1) {player.score += 2}
-            if(notAdjacent.size==2) {player.score += 5}
-            if(notAdjacent.size==3) {player.score += 8}
-            if(notAdjacent.size==4) {player.score += 11}
-            if(notAdjacent.size==5) {player.score += 14}
-            if(notAdjacent.size==6) {player.score += 18}
-            if(notAdjacent.size==7) {player.score += 22}
-            if(notAdjacent.size>=8) {player.score += 26}
+            if(notAdjacent.size==1) {points += 2}
+            if(notAdjacent.size==2) {points += 5}
+            if(notAdjacent.size==3) {points += 8}
+            if(notAdjacent.size==4) {points += 11}
+            if(notAdjacent.size==5) {points += 14}
+            if(notAdjacent.size==6) {points += 18}
+            if(notAdjacent.size==7) {points += 22}
+            if(notAdjacent.size>=8) {points += 26}
         } else {
             //implementing one set of pairs for rule b
             val inSight: MutableSet<Pair<Int, Int>> = mutableSetOf()
@@ -469,14 +472,15 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
                 }
             }
             //scores for ruleset b
-            if(inSight.size==2) {player.score += 5}
-            if(inSight.size==3) {player.score += 9}
-            if(inSight.size==4) {player.score += 12}
-            if(inSight.size==5) {player.score += 16}
-            if(inSight.size==6) {player.score += 20}
-            if(inSight.size==7) {player.score += 24}
-            if(inSight.size==8) {player.score += 28}
+            if(inSight.size==2) {points += 5}
+            if(inSight.size==3) {points += 9}
+            if(inSight.size==4) {points += 12}
+            if(inSight.size==5) {points += 16}
+            if(inSight.size==6) {points += 20}
+            if(inSight.size==7) {points += 24}
+            if(inSight.size==8) {points += 28}
         }
+        return points
     }
 
     /**
