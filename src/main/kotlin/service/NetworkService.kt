@@ -118,7 +118,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
             scoreRules = scoreRules,
             false,
             false,
-            startTilesOrder = startTilesOrder,
+            startTileOrder = startTilesOrder,
         )
 
         rootService.currentGame?.wildlifeTokenList = message.initWildlifeTokens.map { animal ->
@@ -224,12 +224,16 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
                 rootService.playerActionService.chooseCustomPair(message.placedTile, message.selectedToken)
                 repeat(message.tileRotation) { rootService.playerActionService.rotateTile() }
                 rootService.playerActionService.addTileToHabitat(habitatCoordinates)
-                rootService.playerActionService.addToken(wildlifeTokenCoordinates)
+                val targettile = game.currentPlayer.habitat.get(wildlifeTokenCoordinates)
+                checkNotNull(targettile)
+                rootService.playerActionService.addToken(targettile)
             } else {
                 rootService.playerActionService.chooseTokenTilePair(message.placedTile)
                 repeat(message.tileRotation) { rootService.playerActionService.rotateTile() }
                 rootService.playerActionService.addTileToHabitat(habitatCoordinates)
-                rootService.playerActionService.addToken(wildlifeTokenCoordinates)
+                val targettile = game.currentPlayer.habitat.get(habitatCoordinates)
+                checkNotNull(targettile)
+                rootService.playerActionService.addToken(targettile)
             }
         } else {
             rootService.playerActionService.chooseTokenTilePair(message.placedTile)
@@ -260,7 +264,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
             require(index in game.shop.indices) { "Ungültiger Token-Index: $index" }
         }
 
-        rootService.gameService.executeTokenReplacement(message.selectedTokens, true, true)
+        rootService.gameService.executeTokenReplacement(message.swappedSelectedTokens, true, true)
 
 
         game.wildlifeTokenList = message.swappedWildlifeTokens.map { animal ->
