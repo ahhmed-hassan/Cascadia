@@ -18,61 +18,61 @@ interface Refreshables {
     /**
      *
      */
-    fun refreshAfterHotSeatConfigurationChosen(){}
+    fun refreshAfterHotSeatConfigurationChosen() {}
 
     /**
      *
      */
-    fun refreshAfterNetworkConfigurationMenuChosen(){}
+    fun refreshAfterNetworkConfigurationMenuChosen() {}
 
     /**
      *
      */
-    fun refreshAfterNetworkJoinMenuChosen(){}
+    fun refreshAfterNetworkJoinMenuChosen() {}
 
     /**
      *
      */
-    fun refreshAfterNetworkJoin(){}
+    fun refreshAfterNetworkJoin() {}
 
     /**
      *
      */
-    fun refreshAfterGameStart(){}
+    fun refreshAfterGameStart() {}
 
     /**
      *
      */
-    fun refreshAfterWildlifeTokenReplaced(){}
+    fun refreshAfterWildlifeTokenReplaced() {}
 
     /**
      *
      */
-    fun refreshAfterTokenTilePairChosen(){}
+    fun refreshAfterTokenTilePairChosen() {}
 
     /**
      *
      */
-    fun refreshAfterHabitatTileAdded(){}
+    fun refreshAfterHabitatTileAdded() {}
 
     /**
      *
      */
-    fun refreshAfterWildlifeTokenAdded(){}
+    fun refreshAfterWildlifeTokenAdded() {}
 
     /**
      *
      */
-    fun refreshAfterNextTurn(){}
+    fun refreshAfterNextTurn() {}
 
     /**
      *
      */
-    fun refreshAfterGameEnd(scores : Map<String, PlayerScore>){}
+    fun refreshAfterGameEnd(scores: Map<String, PlayerScore>) {}
 
     /**
      *
      */
-    fun refreshAfterTileRotation(){}
+    fun refreshAfterTileRotation() {}
 
 }
