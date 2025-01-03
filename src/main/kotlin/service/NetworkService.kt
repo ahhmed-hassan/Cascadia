@@ -115,12 +115,12 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         rootService.gameService.startNewGame(
             playerNames = playerNames,
             scoreRules = scoreRules,
-            //false,
-            //false,
-            //startTilesOrder = startTilesOrder,
+            false,
+            false,
+            startTilesOrder = startTilesOrder,
         )
 
-        rootService.currentGame?.wildlifeTokenList = message.wildlifeTokens.map { animal ->
+        rootService.currentGame?.wildlifeTokenList = message.initWildlifeTokens.map { animal ->
             WildlifeToken(LocalAnimal.valueOf(animal.name))
         }.toMutableList()
 
@@ -174,7 +174,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
             throw IllegalStateException("Der Sender ist nicht der aktuelle Spieler.")
         }
 
-        game.wildlifeTokenList = message.wildlifeTokens.map { animal ->
+        game.wildlifeTokenList = message.shuffledWildlifeTokens.map { animal ->
             WildlifeToken(LocalAnimal.valueOf(animal.name))
         }.toMutableList()
     }
@@ -202,42 +202,43 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         if (game.currentPlayer.name != sender) {
             throw IllegalStateException("Der Sender ist nicht der aktuelle Spieler.")
         }
-        val qCoordTile = requireNotNull(message.qCoordTile) { "qCoordTile darf nicht null sein" }
-        val rCoordTile = requireNotNull(message.rCoordTile) { "rCoordTile darf nicht null sein" }
+
+        val qCoordTile = requireNotNull(message.qcoordTile) { "qCoordTile darf nicht null sein" }
+        val rCoordTile = requireNotNull(message.rcoordTile) { "rCoordTile darf nicht null sein" }
 
         val habitatCoordinates = Pair(qCoordTile, rCoordTile)
 
         check(message.placedTile in game.shop.indices)
 
 
-//        if (message.selectedToken != null) {
-//            check(message.selectedToken in game.shop.indices)
-//
-//            val qCoordToken = requireNotNull(message.qCoordToken) { "qCoordTile darf nicht null sein" }
-//            val rCoordToken = requireNotNull(message.rCoordToken) { "rCoordTile darf nicht null sein" }
-//
-//            val wildlifeTokenCoordinates = Pair(qCoordToken, rCoordToken)
-//
-//            if (message.usedNatureToken) {
-//                rootService.playerActionService.chooseCustomPair(message.placedTile, message.selectedToken)
-//                repeat(message.tileRotation) { rootService.playerActionService.rotateTile() }
-//                rootService.playerActionService.addTileToHabitat(habitatCoordinates)
-//                rootService.playerActionService.addToken(wildlifeTokenCoordinates)
-//            } else {
-//                rootService.playerActionService.chooseTokenTilePair(message.placedTile)
-//                repeat(message.tileRotation) { rootService.playerActionService.rotateTile() }
-//                rootService.playerActionService.addTileToHabitat(habitatCoordinates)
-//                rootService.playerActionService.addToken(wildlifeTokenCoordinates)
-//            }
-//        } else {
-//            rootService.playerActionService.chooseTokenTilePair(message.placedTile)
-//            repeat(message.tileRotation) { rootService.playerActionService.rotateTile() }
-//            rootService.playerActionService.addTileToHabitat(habitatCoordinates)
-//            rootService.playerActionService.discardToken()
-//        }
+        if (message.selectedToken != null) {
+            check(message.selectedToken in game.shop.indices)
+
+            val qCoordToken = requireNotNull(message.qcoordToken) { "qCoordTile darf nicht null sein" }
+            val rCoordToken = requireNotNull(message.rcoordToken) { "rCoordTile darf nicht null sein" }
+
+            val wildlifeTokenCoordinates = Pair(qCoordToken, rCoordToken)
+
+            if (message.usedNatureToken) {
+                rootService.playerActionService.chooseCustomPair(message.placedTile, message.selectedToken)
+                repeat(message.tileRotation) { rootService.playerActionService.rotateTile() }
+                rootService.playerActionService.addTileToHabitat(habitatCoordinates)
+                rootService.playerActionService.addToken(wildlifeTokenCoordinates)
+            } else {
+                rootService.playerActionService.chooseTokenTilePair(message.placedTile)
+                repeat(message.tileRotation) { rootService.playerActionService.rotateTile() }
+                rootService.playerActionService.addTileToHabitat(habitatCoordinates)
+                rootService.playerActionService.addToken(wildlifeTokenCoordinates)
+            }
+        } else {
+            rootService.playerActionService.chooseTokenTilePair(message.placedTile)
+            repeat(message.tileRotation) { rootService.playerActionService.rotateTile() }
+            rootService.playerActionService.addTileToHabitat(habitatCoordinates)
+            rootService.playerActionService.discardToken()
+        }
 
 
-        game.wildlifeTokenList = message.wildlifeToken.map { animal ->
+        game.wildlifeTokenList = message.wildlifeTokens.map { animal ->
            WildlifeToken(LocalAnimal.valueOf(animal.name))
         }.toMutableList()
 
@@ -254,16 +255,16 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         updateConnectionState(ConnectionState.WAITING_FOR_OPPONENTS_TURN)
         val game = checkNotNull(rootService.currentGame) { "Kein aktuelles Spiel vorhanden." }
         require(game.currentPlayer.name == sender) { "Der Sender ist nicht der aktuelle Spieler." }
-        message.selectedTokens.forEach { index ->
+        message.swappedSelectedTokens.forEach { index ->
             require(index in game.shop.indices) { "Ungültiger Token-Index: $index" }
         }
 
-        //rootService.gameService.executeTokenReplacement(message.selectedTokens, true, true)
+        rootService.gameService.executeTokenReplacement(message.selectedTokens, true, true)
 
 
-        //game.wildlifeTokenList = message.wildlifeTokens.map { animal ->
-        //    WildlifeToken(entity.Animal.valueOf(animal.name))
-        //}.toMutableList()
+        game.wildlifeTokenList = message.swappedWildlifeTokens.map { animal ->
+            WildlifeToken(entity.Animal.valueOf(animal.name))
+        }.toMutableList()
 
     }
     fun sendPlacedMessage() {
