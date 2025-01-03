@@ -84,8 +84,9 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         rootService.gameService.startNewGame(
             playerNames,
             scoreRules,
-            //orderIsRanom,
-            //isRandomRules,
+            orderIsRanom,
+            isRandomRules,
+            null,
         )
         sendGameInitMessage()
         val game = rootService.currentGame
