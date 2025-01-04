@@ -24,4 +24,13 @@ enum class Terrain(val abbreviation : Char) {
                 ?:throw IllegalArgumentException("Invalid Terrain: $abbreviation")
         }
     }
+
+    override fun toString(): String = when (this) {
+        FOREST -> "F"
+        MOUNTAIN -> "M"
+        PRAIRIE -> "P"
+        RIVER -> "R"
+        WETLAND -> "W"
+    }
+
 }

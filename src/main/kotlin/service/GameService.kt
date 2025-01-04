@@ -187,8 +187,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
                     val id = part[0].toInt()
                     val habitats = part[1].map { Terrain.fromAbbreviation(it) }.toMutableList()
                     val wildlife = part[2].map { Animal.fromAbbreviation(it) }
-                    val keystone = part[3].toBoolean()
-
+                    val keystone = part[3] == "yes"
                     //Add a new HabitatTile to the list
                     habitatTiles.add(HabitatTile(
                         id,
@@ -241,11 +240,11 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
 
     /**
      *  End a turn of a [CascadiaGame] by refilling the shop
-     *  and switching the [currentPlayer] to the next player in [PlayerList].
-     *  Resolve all occurring overpopulations of four that appear during the shop refill.
-     *  Call a GUI-refresh afterwards.
+     *  and switching the [CascadiaGame.currentPlayer] to the next player in [CascadiaGame.playerList].
+     *  Resolve all occurring overpopulation's of four that appear during the shop refill.
+     *  Call a GUI-refresh afterward.
      *
-     *  If the [habitatTileStack] is empty prior to the shop refill
+     *  If the [CascadiaGame.habitatTileList] is empty prior to the shop refill
      *  [nextTurn] will end the game by calling a GUI-refresh.
      *
      *  @throws IllegalStateException if player has not yet added a tile to his habitat
@@ -327,11 +326,11 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
     }
 
     /**
-     * Check whether the token in the game [shop] at the given indices have the same animal value.
+     * Check whether the token in the game [CascadiaGame.shop] at the given indices have the same animal value.
      *
      * @param tokenIndices is list of indices for wildLifeToken in the game shop. Default is list of all four indices.
      *
-     * @return [true] if all token in shop at the indices in [tokenIndices] have the same animal value, [false] if not.
+     * @return True if all token in shop at the indices in [tokenIndices] have the same animal value, False if not.
      *
      * @throws IllegalArgumentException if indices out of bound for shop, not mutually distinct
      * or number of indices is either too big or too small.
@@ -367,12 +366,12 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
     }
 
     /**
-     * Perform the actual replacement of tokens in the shop and trigger GUI update afterwards.
+     * Perform the actual replacement of tokens in the shop and trigger GUI update afterward.
      * Usage of this function assumes that there either is an overpopulation of three the player can resolve
      * for free or that the player want's to replace an arbitrary number of tokens by using a nature token.
      * Used for this purposes in [replaceWildlifeTokens] and [resolveOverpopulation].
      *
-     * @param [tokenIndices] is a list of indices of the tile-token pairs in [shop] whose token shall be replaced.
+     * @param [tokenIndices] is a list of indices of the tile-token pairs in [CascadiaGame.shop] whose token shall be replaced.
      * @param networkReplacement is a boolean to flag replacements done by other network players.
      *
      */

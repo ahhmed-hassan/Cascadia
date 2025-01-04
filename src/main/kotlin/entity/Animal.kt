@@ -24,4 +24,12 @@ enum class Animal(val abbreviation : Char) {
                 ?:throw IllegalArgumentException("Invalid Terrain: $abbreviation")
         }
     }
+
+    override fun toString(): String = when (this) {
+        BEAR -> "B"
+        ELK -> "E"
+        FOX -> "F"
+        HAWK -> "H"
+        SALMON -> "S"
+    }
 }

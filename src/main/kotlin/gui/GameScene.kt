@@ -1,7 +1,6 @@
 package gui
 
 import entity.HabitatTile
-import entity.WildlifeToken
 import service.RootService
 import tools.aqua.bgw.components.ComponentView
 import tools.aqua.bgw.components.container.HexagonGrid
@@ -28,7 +27,6 @@ import kotlin.math.sin
 class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Refreshables {
 
     private val habitats : BidirectionalMap<HabitatTile,HexagonView> = BidirectionalMap()
-    private val tokens : BidirectionalMap<WildlifeToken,HexagonView> = BidirectionalMap()
     private var selectedHabitat : HexagonView? = null
     private var selectedToken : HexagonView? = null
     private var selectedHabitatX : Int = 0
@@ -83,52 +81,6 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         width = 1920,
         height = 1080,
         target = targetLayout
-    )
-
-    private val testHabitat1 = HexagonView(
-        size = 75,
-        visual = ColorVisual(Color.RED)
-    )
-    private val testHabitat2 = HexagonView(
-        size = 75,
-        visual = ColorVisual(Color.BLUE)
-    )
-
-    private val testHabitat3 = HexagonView(
-        size = 75,
-        visual = ColorVisual(Color.GREEN)
-    )
-
-    private val testToken = HexagonView(
-        size = 50,
-        visual = CompoundVisual(
-            ColorVisual(Color.WHITE),
-            TextVisual("Bear")
-        )
-    )
-
-    private val testToken1 = HexagonView(
-        size = 50,
-        visual = CompoundVisual(
-            ColorVisual(Color.WHITE),
-            TextVisual("Salmon")
-        )
-    )
-
-    private val testToken2 = HexagonView(
-        size = 50,
-        visual = CompoundVisual(
-            ColorVisual(Color.WHITE),
-            TextVisual("Hawk")
-        )
-    )
-
-    private val testToken3 = HexagonView(
-        size = 50,
-        visual = CompoundVisual(
-            ColorVisual(Color.WHITE),
-            TextVisual("Eagle")
-        )
     )
 
     private val ruleSetOverlay = Pane<UIComponent>(
@@ -335,40 +287,35 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         posX = 50,
         posY = 50,
         width = 420,
-        height = 270,
-        visual = ImageVisual("Bear_A.png")
+        height = 270
     )
 
     private val elkRule = Label(
         posX = 520,
         posY = 50,
         width = 420,
-        height = 270,
-        visual = ImageVisual("Elk_A.png")
+        height = 270
     )
 
     private val foxRule = Label(
         posX = 990,
         posY = 50,
         width = 420,
-        height = 270,
-        visual = ImageVisual("Fox_A.png")
+        height = 270
     )
 
     private val hawkRule = Label(
         posX = 50,
         posY = 370,
         width = 420,
-        height = 270,
-        visual = ImageVisual("Hawk_A.png")
+        height = 270
     )
 
     private val salmonRule = Label(
         posX = 520,
         posY = 370,
         width = 420,
-        height = 270,
-        visual = ImageVisual("Salmon_A.png")
+        height = 270
     )
 
 
@@ -434,8 +381,8 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
     }
 
     override fun refreshAfterGameStart() {
-        //val game = rootService.currentGame
-        //checkNotNull(game)
+        val game = rootService.currentGame
+        checkNotNull(game)
 
         targetLayout.add(playArea)
 
@@ -449,49 +396,75 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
             hawkRule,
             salmonRule)
 
-        /**
-         *  Missing:
-         *  Initialize the BidirectionalMaps (habitats,tokens)
-         *  Initialize the Shop with the elements
-         *  Initialize the playHexagon based on players StartTile
-         */
+        //create a HexagonView for each tile
+        for (habitat in game.habitatTileList)
+            habitats[habitat] = createLabeledHexagonView(
+                color = habitat.isKeystoneTile,
+                labels = habitat.terrains.map { it.abbreviation.toString() }
+            )
 
+        //create a HexagonView for each shopTile
+        for (habitat in game.shop){
+            val habitate = checkNotNull(habitat.first)
+            habitats[habitate] = createLabeledHexagonView(
+                color = habitate.isKeystoneTile,
+                labels = habitate.terrains.map { it.abbreviation.toString() }
+            )
+        }
 
-        shopTokens[0,0] = testToken
-        shopTokens[1,0] = testToken1
-        shopTokens[2,0] = testToken2
-        shopTokens[3,0] = testToken3
+        //create a HexagonView for each starter Tile
+        for (player in game.startTileList) {
+            for (habitate in player) {
+                habitats[habitate] = createLabeledHexagonView(
+                    color = habitate.isKeystoneTile,
+                    labels = habitate.terrains.map { it.abbreviation.toString() }
+                )
+            }
+        }
 
-        shopHabitats[0,0] = labeledHexagon1
-        shopHabitats[1,0] = labeledHexagon2
-        shopHabitats[2,0] = labeledHexagon3
-        shopHabitats[3,0] = labeledHexagon4
+        //add the views to the shop
+        for (i in 0..3){
+            shopHabitats[i,0] = habitats[game.shop[i].first!!] as HexagonView
+            //create HexagonViews for the Token
+            shopTokens[i,0] = game.shop[i].second?.animal?.let { createTokens(it.name) }
+        }
 
+        //If player Clicks on any Habitat or Token that vertical pair is chosen
         for (i in 0..3){
             shopTokens[i,0]?.apply {
                 onMouseClicked = {
-                    selectedToken = shopTokens[i,0]
-                    selectedHabitat = shopHabitats[i,0]
                     rootService.playerActionService.chooseTokenTilePair(i)
                 }
             }
             shopHabitats[i,0]?.apply {
                 onMouseClicked = {
-                    selectedToken = shopTokens[i,0]
-                    selectedHabitat = shopHabitats[i,0]
                     rootService.playerActionService.chooseTokenTilePair(i)
                 }
             }
         }
 
-        playArea[0,0] = testHabitat1
-        playArea[0,1] = testHabitat2
-        playArea[-1,1] = testHabitat3
+        //add all habitats for the starting player to the playField
+        for (habitat in game.currentPlayer.habitat){
+            playArea[habitat.key.second,habitat.key.first] = habitats[habitat.value] as HexagonView
+        }
 
         discardToken.isDisabled = true
 
-         //if , ob resolveOverpopulation possible or already used
-         //if , ob replacement oder chooseCustom possible ist
+        //Update Labels for name and NatureToken
+        natureTokenLabel.apply { text = "NatureToken: " + game.currentPlayer.natureToken.toString() }
+        currentPlayerLabel.apply { text = game.currentPlayer.name }
+
+        //Disable resolveOverpopulation if already done or not possible
+        if (game.hasReplacedThreeToken || !rootService.gameService.checkForSameAnimal()){
+            resolveOverpopButton.isDisabled = true
+        }
+
+        //Disable Buttons for action with NatureToken if player has none
+        if (game.currentPlayer.natureToken == 0){
+            chooseCustomPair.isDisabled = true
+            replaceWildlifeButton.isDisabled = true
+            confirmReplacementButton.isDisabled = true
+        }
     }
 
     override fun refreshAfterHabitatTileAdded() {
@@ -524,18 +497,17 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         }
 
         // create new Hexagon for the rotated Tile
-        val newHexagon = createLabeledHexagonView(
-            size = 75,
-            color = Color.LIGHT_GRAY,
-            labels = sideLabels
-        ).apply {
-            isDraggable = true
-        }
+//        val newHexagon = createLabeledHexagonView(
+//            size = 75,
+//            labels = sideLabels
+//        ).apply {
+//            isDraggable = true
+//        }
 
         //missing delete the old HexagonView from the BiMap and insert the modified one?
 
         //Put the new rotated tile to play
-        playableTile[0, 0] = newHexagon
+//        playableTile[0, 0] = newHexagon
     }
 
 
@@ -631,9 +603,9 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         ).forEach { it.isDisabled = false }
     }
 
-    private fun createLabeledHexagonView(size: Int = 75, color: Color, labels: List<String>): HexagonView {
-        require(labels.size == 6) { "There must be exactly 6 labels for the hexagon sides." }
+    private fun createLabeledHexagonView(color: Boolean = true, labels: List<String>): HexagonView {
 
+        val size = 75
         // Helper: Calculate the position for the middle of each side
         fun calculateSidePosition(index: Int): Pair<Double, Double> {
             val startAngle = Math.toRadians(60.0 * index - 90.0) // Start at the top side
@@ -657,7 +629,7 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
             )
         }
 
-        val color1 = if (color == Color.RED) {
+        val color1 = if (color) {
             Color.WHITE
         } else {
             Color.LIGHT_GRAY
@@ -673,26 +645,15 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         )
     }
 
-
-    private val labeledHexagon1 = createLabeledHexagonView(
-        color = Color.LIGHT_GRAY,
-        labels = listOf("F", "F", "F", "E", "E", "E")
-    )
-
-    private val labeledHexagon2 = createLabeledHexagonView(
-        color = Color.LIGHT_GRAY,
-        labels = listOf("A", "F", "F", "E", "E", "E")
-    )
-
-    private val labeledHexagon3 = createLabeledHexagonView(
-        color = Color.LIGHT_GRAY,
-        labels = listOf("B", "F", "F", "E", "E", "E")
-    )
-
-    private val labeledHexagon4 = createLabeledHexagonView(
-        color = Color.LIGHT_GRAY,
-        labels = listOf("D", "F", "F", "E", "E", "E")
-    )
+    private fun createTokens(animal : String): HexagonView {
+        return HexagonView(
+            size = 50,
+            visual = CompoundVisual(
+                ColorVisual(Color.yellow),
+                TextVisual(animal)
+            )
+        )
+    }
 
     //for all possible Position to play the Hexagon, mark it
     private fun createPossibleHexagons(position : List<Pair<Int,Int>>) {
@@ -719,12 +680,37 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         }
     }
 
-    //get the correct images
+    /**
+     * [getRuleSets] loads the correct images for ruleSets
+     */
     private fun getRuleSets(){
-        //val game = rootService.currentGame
-        //checkNotNull(game)
+        val game = rootService.currentGame
+        checkNotNull(game)
 
-        //iterate over ruleset and update the pngs (visuals) based on
+        if (!game.ruleSet[0]){
+            bearRule.visual = ImageVisual("Bear_A.png")
+        } else
+            bearRule.visual = ImageVisual("Bear_B.png")
+
+        if (!game.ruleSet[1]){
+            elkRule.visual = ImageVisual("Elk_A.png")
+        } else
+            elkRule.visual = ImageVisual("Elk_B.png")
+
+        if (!game.ruleSet[2]){
+            foxRule.visual = ImageVisual("Fox_A.png")
+        } else
+            foxRule.visual = ImageVisual("Fox_B.png")
+
+        if (!game.ruleSet[3]){
+            hawkRule.visual = ImageVisual("Hawk_A.png")
+        } else
+            hawkRule.visual = ImageVisual("Hawk_B.png")
+
+        if (!game.ruleSet[4]){
+            salmonRule.visual = ImageVisual("Salmon_A.png")
+        } else
+            salmonRule.visual = ImageVisual("Salmon_B.png")
     }
 
     /**
