@@ -1,5 +1,7 @@
 package gui
 
+import service.AbstractRefreshingService
+
 /**
  * This interface provides a mechanism for the service layer classes to communicate
  * (usually to the view classes) that certain changes have been made to the entity
@@ -8,24 +10,69 @@ package gui
  * Default (empty) implementations are provided for all methods, so that implementing
  * UI classes only need to react to events relevant to them.
  *
- * @see service.AbstractRefreshingService
+ * @see AbstractRefreshingService
  *
  */
 interface Refreshables {
 
-    fun refreshAfterGameStart() {}
+    /**
+     *
+     */
+    fun refreshAfterHotSeatConfigurationChosen(){}
 
-    fun refreshAfterGameEnds() {}
+    /**
+     *
+     */
+    fun refreshAfterNetworkConfigurationMenuChosen(){}
 
-    fun refreshAfterNextTurn() {}
+    /**
+     *
+     */
+    fun refreshAfterNetworkJoinMenuChosen(){}
 
-    fun refreshAfterTokenTilePairChoosen() {}
+    /**
+     *
+     */
+    fun refreshAfterNetworkJoin(){}
 
-    fun refreshAfterWildlifeTokenReplaced() {}
+    /**
+     *
+     */
+    fun refreshAfterGameStart(){}
 
-    fun refreshAfterWildlifeTokenAdded() {}
+    /**
+     *
+     */
+    fun refreshAfterWildlifeTokenReplaced(){}
 
-    fun refreshAfterHabitatTileAdded() {}
+    /**
+     *
+     */
+    fun refreshAfterTokenTilePairChosen(){}
 
-    fun refreshAfterTileRotation() {}
+    /**
+     *
+     */
+    fun refreshAfterHabitatTileAdded(){}
+
+    /**
+     *
+     */
+    fun refreshAfterWildlifeTokenAdded(){}
+
+    /**
+     *
+     */
+    fun refreshAfterNextTurn(){}
+
+    /**
+     *
+     */
+    fun refreshAfterGameEnd(scores : Map<String, PlayerScore>){}
+
+    /**
+     *
+     */
+    fun refreshAfterTileRotation(){}
+
 }
