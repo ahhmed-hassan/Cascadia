@@ -97,7 +97,9 @@ class NetworkService(private val rootService: RootService) : AbstractRefreshingS
 
         rootService.gameService.startNewGame(
             playerNames = players.associate { it.name to it.playerType },
-            scoreRules = scoreRules
+            scoreRules = scoreRules,
+            orderIsRandom = false,
+            isRandomRules = false
         )
 
         if (index == 0) {

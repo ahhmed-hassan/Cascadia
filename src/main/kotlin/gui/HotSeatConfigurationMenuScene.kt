@@ -330,7 +330,12 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             if (randomOrderToggle.isSelected) { randomOrder = true }
             if (randomOrderToggle.isSelected) { randomRule = true}
             //missing parameter randomOrder, randomRule
-            rootService.gameService.startNewGame(playerNames = param, scoreRules = rules)
+            rootService.gameService.startNewGame(
+                playerNames = param,
+                scoreRules = rules,
+                orderIsRandom = randomOrder,
+                isRandomRules = randomRule
+            )
             rules.clear()
         }
     }

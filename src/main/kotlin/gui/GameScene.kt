@@ -540,7 +540,7 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
 
 
 
-    override fun refreshAfterTokenTilePairChoosen() {
+    override fun refreshAfterTokenTilePairChosen() {
         //val game = rootService.currentGame
         //checkNotNull(game)
 

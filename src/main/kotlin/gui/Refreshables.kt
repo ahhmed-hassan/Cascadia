@@ -68,7 +68,8 @@ interface Refreshables {
     /**
      *
      */
-    fun refreshAfterGameEnd(scores : Map<String, PlayerScore>){}
+    //fun refreshAfterGameEnd(scores : Map<String, PlayerScore>){}
+    fun refreshAfterGameEnd(){}
 
     /**
      *

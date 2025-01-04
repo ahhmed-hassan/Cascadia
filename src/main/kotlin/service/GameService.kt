@@ -52,10 +52,10 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
 
         //There is exactly one local player in a network game
         //Count the number of players with type "LOCAL"
-        val localPlayers = playerNames.values.count { it == PlayerType.LOCAL }
-        if(localPlayers != 1) {
-            throw IllegalArgumentException("In a network game must be exactly one local player.")
-        }
+//        val localPlayers = playerNames.values.count { it == PlayerType.LOCAL }
+//        if(localPlayers != 1) {
+//            throw IllegalArgumentException("In a network game must be exactly one local player.")
+//        }
 
         //Ensure that no network players exist if the game connection state indicates Hotseat mode
         val networkService = NetworkService(rootService)
@@ -265,7 +265,8 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
 
         // check for game end and if so, calculate score and update GUI
         if (game.habitatTileList.size == 0) {
-            onAllRefreshables { refreshAfterGameEnd(rootService.scoringService.calculateScore()) }
+            //onAllRefreshables { refreshAfterGameEnd(rootService.scoringService.calculateScore()) }
+            onAllRefreshables { refreshAfterGameEnd() }
             return
         }
 
@@ -316,7 +317,8 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
 
         // if Tokenlist is empty or not enough tokens left to automatically resolve an overpopulation, end game
         if (game.wildlifeTokenList.size == 0 || game.wildlifeTokenList.size < 4) {
-            onAllRefreshables { refreshAfterGameEnd(rootService.scoringService.calculateScore()) }
+            //onAllRefreshables { refreshAfterGameEnd(rootService.scoringService.calculateScore()) }
+            onAllRefreshables { refreshAfterGameEnd() }
         }
 
         // perform actual token replacement

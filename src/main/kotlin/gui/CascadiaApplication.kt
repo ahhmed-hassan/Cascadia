@@ -58,7 +58,7 @@ class CascadiaApplication : BoardGameApplication("Cascadia Game"), Refreshables 
         this.showMenuScene(mainMenuScene, 0)
     }
 
-    override fun refreshAfterGameEnds() {
+    override fun refreshAfterGameEnd() {
         this.showMenuScene(winningMenuScene)
     }
 
