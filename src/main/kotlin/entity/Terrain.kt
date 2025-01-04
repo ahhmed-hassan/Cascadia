@@ -1,5 +1,7 @@
 package entity
 
+import entity.CardSuit.*
+
 /**
  * Enum [Terrain] representing the different terrain types in the Cascadia game.
  * Each terrain type is associated with specific habitat tiles.
@@ -17,4 +19,29 @@ enum class Terrain {
     RIVER,
     WETLAND,
     ;
+
+    override fun toString() = when(this) {
+        FOREST -> "F"
+        MOUNTAIN -> "M"
+        PRAIRIE -> "P"
+        RIVER -> "R"
+        WETLAND -> "W"
+    }
+
+    companion object {
+        fun fromValue(value : String) : Terrain {
+            return when(value) {
+                "F" ->  FOREST
+                "M" ->  MOUNTAIN
+                "P" ->  PRAIRIE
+                "R" ->  RIVER
+                else ->  WETLAND
+            }
+        }
+    }
+
+
+
+
+
 }

@@ -15,10 +15,21 @@ class CalculateSalmonScoreTest {
     fun testScoreCalculationA() {
 
         // set up test object
-        val testScoringService = ScoringService(RootService())
+        val testRootService = RootService()
+        val testScoringService = ScoringService(testRootService)
+        val testGameService = GameService(testRootService)
 
-        // create test player
-        val testPlayer = createTestPlayer()
+        testGameService.startNewGame(mapOf(Pair("testPlayer", PlayerType.LOCAL), Pair("testPlayer2", PlayerType.EASY)),
+            scoreRules = listOf(false, false, false, false, false),
+            orderIsRandom = false, isRandomRules = false)
+
+        val testGame = testRootService.currentGame
+        checkNotNull(testGame)
+        val testPlayer = testGame.playerList[0]
+        setUpHabitat(testPlayer)
+
+        // test with no salmon run
+        assertEquals(0, testScoringService.calculateSalmonScore(testPlayer))
 
         // test run of one
         var changeTile = checkNotNull(testPlayer.habitat[Pair(0,0)])
@@ -38,7 +49,7 @@ class CalculateSalmonScoreTest {
 
         assertEquals(8, testScoringService.calculateSalmonScore(testPlayer))
 
-        // test insularity of triangular run of three
+        // test insularity of triangular run
         changeTile = checkNotNull(testPlayer.habitat[Pair(1,1)])
         changeTile.wildlifeToken = WildlifeToken(Animal.SALMON)
 
@@ -87,10 +98,18 @@ class CalculateSalmonScoreTest {
     @Test
     fun testScoreCalculationB() {
         // set up test object
-        val testScoringService = ScoringService(RootService())
+        val testRootService = RootService()
+        val testScoringService = ScoringService(testRootService)
+        val testGameService = GameService(testRootService)
 
-        // create player
-        val testPlayer = createTestPlayer()
+        testGameService.startNewGame(mapOf(Pair("testPlayer1", PlayerType.LOCAL), Pair("testPlayer2", PlayerType.EASY)),
+            scoreRules = listOf(true, true, true, true, true),
+            orderIsRandom = false, isRandomRules = false, )
+
+        val testGame = testRootService.currentGame
+        checkNotNull(testGame)
+        val testPlayer = testGame.playerList[0]
+        setUpHabitat(testPlayer)
 
         // test with no salmon run
         assertEquals(0, testScoringService.calculateSalmonScore(testPlayer))
@@ -99,7 +118,7 @@ class CalculateSalmonScoreTest {
         var changeTile = checkNotNull(testPlayer.habitat[Pair(0,0)])
         changeTile.wildlifeToken = WildlifeToken(Animal.SALMON)
 
-        assertEquals(2, testScoringService.calculateSalmonScore(testPlayer))
+        assertEquals(16, testScoringService.calculateSalmonScore(testPlayer))
 
         // test run of two
         changeTile = checkNotNull(testPlayer.habitat[Pair(1,-1)])
@@ -153,7 +172,7 @@ class CalculateSalmonScoreTest {
      *
      *  @return an instance of [Player] with a test habitat
      */
-    private fun createTestPlayer() : Player {
+    private fun setUpHabitat(testPlayer : Player) {
 
         // create tiles
         val testTiles = mutableListOf<HabitatTile>()
@@ -171,21 +190,17 @@ class CalculateSalmonScoreTest {
                     Terrain.WETLAND,)))
         }
 
-        // create habitat
-        val testHabitat = mutableMapOf<Pair<Int, Int>, HabitatTile>()
-        testHabitat[Pair(0, 0)] = testTiles[0]
-        testHabitat[Pair(1,-1)] = testTiles[1]
-        testHabitat[Pair(1, 0)] = testTiles[2]
-        testHabitat[Pair(1, 1)] = testTiles[3]
-        testHabitat[Pair(1, 2)] = testTiles[4]
-        testHabitat[Pair(1, 3)] = testTiles[5]
-        testHabitat[Pair(1, 4)] = testTiles[6]
-        testHabitat[Pair(1, 5)] = testTiles[7]
-        testHabitat[Pair(1, 6)] = testTiles[8]
-
-        return Player(name= "testPlayer",
-            habitat= testHabitat,
-            playerType= PlayerType.LOCAL)
+        // set up custom habitat
+        testPlayer.habitat.clear()
+        testPlayer.habitat[Pair(0, 0)] = testTiles[0]
+        testPlayer.habitat[Pair(1,-1)] = testTiles[1]
+        testPlayer.habitat[Pair(1, 0)] = testTiles[2]
+        testPlayer.habitat[Pair(1, 1)] = testTiles[3]
+        testPlayer.habitat[Pair(1, 2)] = testTiles[4]
+        testPlayer.habitat[Pair(1, 3)] = testTiles[5]
+        testPlayer.habitat[Pair(1, 4)] = testTiles[6]
+        testPlayer.habitat[Pair(1, 5)] = testTiles[7]
+        testPlayer.habitat[Pair(1, 6)] = testTiles[8]
 
     }
 

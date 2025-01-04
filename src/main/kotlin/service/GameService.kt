@@ -135,6 +135,8 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
             wildlifeTokens
         )
 
+        rootService.currentGame = game
+
         // Resolve overpopulation of four in the shop after game created
         if(checkForSameAnimal()) {
             resolveOverpopulation()
@@ -165,7 +167,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
                 val playerStartTile = startTiles[i]
 
                 //Place the top tile in the player's habitat (central)
-                player.habitat[0 to 0] = playerStartTile[0]
+                 player.habitat[0 to 0] = playerStartTile[0]
                 //Place the lower-right tile in the player's habitat
                 player.habitat[1 to -1] = playerStartTile[1]
                 //Place the lower-left tile in the player's habitat
@@ -173,21 +175,23 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
             }
 
         }
-        rootService.currentGame = game
+
         onAllRefreshables { refreshAfterGameStart() }
     }
 
     fun getHabitatTiles(): List<HabitatTile> {
         val habitatTiles = mutableListOf<HabitatTile>()
-        File("tiles.csv").bufferedReader().useLines { lines ->
+        val resource = this::class.java.classLoader.getResource("tiles.csv")
+            ?: throw IllegalArgumentException("tiles.csv not found in resources")
+        File(resource.toURI()).bufferedReader().useLines { lines ->
             lines.drop(1) //skip the first line (header)
                 .filter { it.isNotBlank() } //exclude empty lines
                 .filterNot { it.contains("--", ignoreCase = true) } //exclude lines containing "--" (-- seite)
                 .forEach{ line ->
                     val part = line.split(";")  //Parse data from the CSV line
                     val id = part[0].toInt()
-                    val habitats = part[1].map { Terrain.valueOf(it.toString()) }.toMutableList()
-                    val wildlife = part[2].map { Animal.valueOf(it.toString()) }
+                    val habitats = part[1].map { Terrain.fromValue(it.toString()) }.toMutableList()
+                    val wildlife = part[2].map { Animal.fromValue(it.toString()) }
                     val keystone = part[3].toBoolean()
 
                     //Add a new HabitatTile to the list
@@ -209,14 +213,15 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
     fun getStartTiles(): List<List<HabitatTile>> {
         val startTiles = mutableListOf<List<HabitatTile>>() //is List<List<HabitatTile>> in CascadiaGame
         val startTileList = mutableListOf<HabitatTile>() // temp List for startTiles
-
-        File("start_tiles.csv").bufferedReader().useLines { lines ->
+        val resource = this::class.java.classLoader.getResource("start_tiles.csv")
+            ?: throw IllegalArgumentException("tiles.csv not found in resources")
+        File(resource.toURI()).bufferedReader().useLines { lines ->
             lines.drop(1) //skip the first line (header)
                 .forEach { line ->
                     val parts = line.split(";")  //Parse data from the CSV line
                     val id = parts[0].toInt()
-                    val habitats = parts[1].map { Terrain.valueOf(it.toString()) }.toMutableList()
-                    val wildlife = parts[2].map { Animal.valueOf(it.toString()) }.toMutableList()
+                    val habitats = parts[1].map { Terrain.fromValue(it.toString()) }.toMutableList()
+                    val wildlife = parts[2].map { Animal.fromValue(it.toString()) }
                     val keystone = parts[3].toBoolean()
 
                     //Add a new HabitatTile to the list
@@ -232,7 +237,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
 
                     //once 3 tiles are grouped, add them to the startTiles list and clear the temporary list
                     if(startTileList.size == 3) {
-                        startTiles.add(startTileList)
+                        startTiles.add(startTileList.toList())
                         startTileList.clear()
                     }
                 }
