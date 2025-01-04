@@ -10,11 +10,18 @@ package entity
  * RIVER, Represents a river terrain.
  * WETLAND, Represents a wetland terrain.
  */
-enum class Terrain {
-    FOREST,
-    MOUNTAIN,
-    PRAIRIE,
-    RIVER,
-    WETLAND,
+enum class Terrain(val abbreviation : Char) {
+    FOREST('F'),
+    MOUNTAIN('M'),
+    PRAIRIE('P'),
+    RIVER('R'),
+    WETLAND('W'),
     ;
+
+    companion object{
+        fun fromAbbreviation (abbreviation: Char) : Terrain {
+            return values().find { it.abbreviation == abbreviation }
+                ?:throw IllegalArgumentException("Invalid Terrain: $abbreviation")
+        }
+    }
 }

@@ -135,11 +135,6 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
             wildlifeTokens
         )
 
-        // Resolve overpopulation of four in the shop after game created
-        if(checkForSameAnimal()) {
-            resolveOverpopulation()
-        }
-
         // This block is only activated if the game is a network game and startTileOrder is provided.
         if (startTileOrder != null && startTileOrder.size == playerList.size) {
             for (i in playerList.indices) {
@@ -174,20 +169,24 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
 
         }
         rootService.currentGame = game
+        // Resolve overpopulation of four in the shop after game created
+        if(checkForSameAnimal()) {
+            resolveOverpopulation()
+        }
         onAllRefreshables { refreshAfterGameStart() }
     }
 
     fun getHabitatTiles(): List<HabitatTile> {
         val habitatTiles = mutableListOf<HabitatTile>()
-        File("tiles.csv").bufferedReader().useLines { lines ->
+        File("src/main/resources/tiles.csv").bufferedReader().useLines { lines ->
             lines.drop(1) //skip the first line (header)
                 .filter { it.isNotBlank() } //exclude empty lines
                 .filterNot { it.contains("--", ignoreCase = true) } //exclude lines containing "--" (-- seite)
                 .forEach{ line ->
                     val part = line.split(";")  //Parse data from the CSV line
                     val id = part[0].toInt()
-                    val habitats = part[1].map { Terrain.valueOf(it.toString()) }.toMutableList()
-                    val wildlife = part[2].map { Animal.valueOf(it.toString()) }
+                    val habitats = part[1].map { Terrain.fromAbbreviation(it) }.toMutableList()
+                    val wildlife = part[2].map { Animal.fromAbbreviation(it) }
                     val keystone = part[3].toBoolean()
 
                     //Add a new HabitatTile to the list
@@ -210,13 +209,13 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         val startTiles = mutableListOf<List<HabitatTile>>() //is List<List<HabitatTile>> in CascadiaGame
         val startTileList = mutableListOf<HabitatTile>() // temp List for startTiles
 
-        File("start_tiles.csv").bufferedReader().useLines { lines ->
+        File("src/main/resources/start_tiles.csv").bufferedReader().useLines { lines ->
             lines.drop(1) //skip the first line (header)
                 .forEach { line ->
                     val parts = line.split(";")  //Parse data from the CSV line
                     val id = parts[0].toInt()
-                    val habitats = parts[1].map { Terrain.valueOf(it.toString()) }.toMutableList()
-                    val wildlife = parts[2].map { Animal.valueOf(it.toString()) }.toMutableList()
+                    val habitats = parts[1].map { Terrain.fromAbbreviation(it) }.toMutableList()
+                    val wildlife = parts[2].map { Animal.fromAbbreviation(it) }.toMutableList()
                     val keystone = parts[3].toBoolean()
 
                     //Add a new HabitatTile to the list
@@ -232,7 +231,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
 
                     //once 3 tiles are grouped, add them to the startTiles list and clear the temporary list
                     if(startTileList.size == 3) {
-                        startTiles.add(startTileList)
+                        startTiles.add(startTileList.toList())
                         startTileList.clear()
                     }
                 }

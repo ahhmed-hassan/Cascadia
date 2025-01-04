@@ -10,11 +10,18 @@ package entity
  * HAWK, Represents a hawk in the game.
  * SALMON, Represents a salmon in the game.
  */
-enum class Animal {
-    BEAR,
-    ELK,
-    FOX,
-    HAWK,
-    SALMON,
+enum class Animal(val abbreviation : Char) {
+    BEAR('B'),
+    ELK('E'),
+    FOX('F'),
+    HAWK('H'),
+    SALMON('S'),
     ;
+
+    companion object{
+        fun fromAbbreviation (abbreviation: Char) : Animal {
+            return Animal.values().find { it.abbreviation == abbreviation }
+                ?:throw IllegalArgumentException("Invalid Terrain: $abbreviation")
+        }
+    }
 }
