@@ -292,7 +292,8 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         }
 
         // switch current player
-        val nextPlayerIndex = game.playerList.indexOf(game.currentPlayer)+1 % game.playerList.size
+        val nextPlayerIndex = (game.playerList.indexOf(game.currentPlayer)+1).mod(game.playerList.size)
+
         game.currentPlayer = game.playerList[nextPlayerIndex]
 
         game.hasPlayedTile = false

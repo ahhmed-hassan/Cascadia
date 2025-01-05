@@ -472,8 +472,8 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         checkNotNull(game)
 
         playableTile[0,0] = null
-        //playArea[selectedHabitatX,selectedHabitatY] = habitats[game.selectedTile!!] as HexagonView
         playArea.clear()
+
         //add all habitats for current Player to the playField
         for (habitat in game.currentPlayer.habitat){
             playArea[habitat.key.second,habitat.key.first] = habitats[habitat.value] as HexagonView
@@ -567,56 +567,73 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
     }
 
     override fun refreshAfterWildlifeTokenReplaced() {
-        //val game = rootService.currentGame
-        //checkNotNull(game)
+        val game = rootService.currentGame
+        checkNotNull(game)
 
-        for(i in 0..3){
-            //replace all tokens with new ones / reload
-            println("Replaced")
+        //add the views to the shop
+        for (i in 0..3){
+            shopTokens[i,0] = null
+            //create HexagonViews for the Token
+            shopTokens[i,0] = game.shop[i].second?.animal?.let { createTokens(it.name) }
         }
     }
 
     override fun refreshAfterNextTurn() {
-        //val game = rootService.currentGame
-        //checkNotNull(game)
+        val game = rootService.currentGame
+        checkNotNull(game)
+
+        shopTokens.isDisabled = false
+        shopHabitats.isDisabled = false
+        shopTokens.isVisible = true
+        shopHabitats.isVisible = true
+
+        playableToken[0,0] = null
+
+        //add the views to the shop
+        for (i in 0..3){
+            shopHabitats[i,0] = habitats[game.shop[i].first!!] as HexagonView
+            //create HexagonViews for the Token
+            shopTokens[i,0] = game.shop[i].second?.animal?.let { createTokens(it.name) }
+        }
+
+        //If player Clicks on any Habitat or Token that vertical pair is chosen
+        for (i in 0..3){
+            shopTokens[i,0]?.apply {
+                onMouseClicked = {
+                    rootService.playerActionService.chooseTokenTilePair(i)
+                }
+            }
+            shopHabitats[i,0]?.apply {
+                onMouseClicked = {
+                    rootService.playerActionService.chooseTokenTilePair(i)
+                }
+            }
+        }
 
         playArea.clear()
-        enableAll()
-        custom = false
-        // iterate over all elements a player has and add it to playArea
-        // change currentPlayerLabel
-        //change NatureToken
-        //fill shop with elements
-        //waiting 3 secs?
-    }
 
-//    private fun disableAll() {
-//        // Disable all components
-//        listOf(
-//            replaceWildlifeButton,
-//            confirmReplacementButton,
-//            chooseCustomPair,
-//            resolveOverpopButton,
-//            shopTokens,
-//            shopHabitats,
-//            playArea,
-//        ).forEach { it.isDisabled = true }
-//    }
+        //add all habitats for the starting player to the playField
+        for (habitat in game.currentPlayer.habitat){
+            playArea[habitat.key.second,habitat.key.first] = habitats[habitat.value] as HexagonView
+        }
 
-    private fun enableAll() {
-        // Disable all components
-        listOf(
-            replaceWildlifeButton,
-            confirmReplacementButton,
-            chooseCustomPair,
-            resolveOverpopButton,
-            showRuleSetButton,
-            discardToken,
-            shopTokens,
-            shopHabitats,
-            playArea,
-            ruleSetOverlay
-        ).forEach { it.isDisabled = false }
+        discardToken.isDisabled = true
+
+        //Update Labels for name and NatureToken
+        natureTokenLabel.apply { text = "NatureToken: " + game.currentPlayer.natureToken.toString() }
+        currentPlayerLabel.apply { text = game.currentPlayer.name }
+
+        //Disable resolveOverpopulation if already done or not possible
+        if (game.hasReplacedThreeToken || !rootService.gameService.checkForSameAnimal()){
+            resolveOverpopButton.isDisabled = true
+        }
+
+        //Disable Buttons for action with NatureToken if player has none
+        if (game.currentPlayer.natureToken == 0){
+            chooseCustomPair.isDisabled = true
+            replaceWildlifeButton.isDisabled = true
+            confirmReplacementButton.isDisabled = true
+        }
     }
 
     private fun createLabeledHexagonView(color: Boolean = true, labels: List<String>): HexagonView {
@@ -797,5 +814,4 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
             }
         }
     }
-
 }

@@ -14,27 +14,6 @@ import service.AbstractRefreshingService
  *
  */
 interface Refreshables {
-
-    /**
-     *
-     */
-    fun refreshAfterHotSeatConfigurationChosen(){}
-
-    /**
-     *
-     */
-    fun refreshAfterNetworkConfigurationMenuChosen(){}
-
-    /**
-     *
-     */
-    fun refreshAfterNetworkJoinMenuChosen(){}
-
-    /**
-     *
-     */
-    fun refreshAfterNetworkJoin(){}
-
     /**
      *
      */
