@@ -12,7 +12,7 @@ package entity
  * @property wildlifeToken The wildlife token currently placed on this tile. Nullable as not all tiles may have tokens.
  * @property terrains Mutable list of the terrain type(s) represented on the tile.
  */
-class HabitatTile(
+data class HabitatTile(
     val id: Int,
     val isKeystoneTile: Boolean,
     var rotationOffset: Int,
