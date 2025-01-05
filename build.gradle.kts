@@ -38,6 +38,7 @@ dependencies {
     implementation(group = "tools.aqua", name = "bgw-net-common", version = "0.9")
     implementation(group = "tools.aqua", name = "bgw-net-client", version = "0.9")
     implementation(group = "edu.udo.cs.sopra", name = "ntf", version = "1.0")
+    implementation(group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version = "1.7.3")
 }
 
 tasks.distZip {
@@ -124,17 +125,18 @@ gradle.buildFinished {
         val applicationPIDs = file("build/application.pid").readText().split(",").map { it.toLong() }.toSet()
         println("Created JCEF_Helper PIDs: $applicationPIDs")
         killJcefHelperProcesses(applicationPIDs)
-    } catch (e: Exception) {}
+    } catch (e: Exception) {
+    }
 }
 
 // Function to kill JCEF helper processes
 fun killJcefHelperProcesses(pids: Set<Long>) {
-  pids.forEach { pid ->
-      ProcessHandle.of(pid).ifPresent {
-          println("Killing process $pid")
-          it.destroy()
-      }
-  }
+    pids.forEach { pid ->
+        ProcessHandle.of(pid).ifPresent {
+            println("Killing process $pid")
+            it.destroy()
+        }
+    }
 }
 
 fun Node.parseTestSuite(): TestSuite? {
