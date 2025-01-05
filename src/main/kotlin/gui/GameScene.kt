@@ -468,13 +468,17 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
     }
 
     override fun refreshAfterHabitatTileAdded() {
-        //val game = rootService.currentGame
-        //checkNotNull(game)
-
-        selectedHabitat?.removeFromParent()
-        playArea[selectedHabitatX,selectedHabitatY] = checkNotNull(selectedHabitat)
+        val game = rootService.currentGame
+        checkNotNull(game)
 
         playableTile[0,0] = null
+        //playArea[selectedHabitatX,selectedHabitatY] = habitats[game.selectedTile!!] as HexagonView
+        playArea.clear()
+        //add all habitats for current Player to the playField
+        for (habitat in game.currentPlayer.habitat){
+            playArea[habitat.key.second,habitat.key.first] = habitats[habitat.value] as HexagonView
+        }
+
         playableTile[0,0]?.isDisabled = true
 
         playableToken.isDisabled = false
@@ -482,39 +486,45 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
     }
 
     override fun refreshAfterTileRotation() {
-        //val game = rootService.currentGame
-        //checkNotNull(game)
+        val game = rootService.currentGame
+        checkNotNull(game)
 
-        val applicableTile = playableTile[0, 0]
-        checkNotNull(applicableTile)
+        val rotateTile = game.selectedTile
+        checkNotNull(rotateTile)
 
        // get the list of terrains from Habitat
-        var sideLabels:List<String> = listOf("F", "F", "F", "E", "E", "E")
+        val sideLabels = rotateTile.terrains.map { it.abbreviation.toString() }
 
-        //for rotation change the order of terrains
-        for (i in 0..3){
-            sideLabels = listOf( sideLabels.last()) + sideLabels.dropLast(1)
-        }
 
-        // create new Hexagon for the rotated Tile
-//        val newHexagon = createLabeledHexagonView(
-//            size = 75,
-//            labels = sideLabels
-//        ).apply {
-//            isDraggable = true
+        //Do we want to change the Position of terrain in PlayerActionService ?
+//        val rotation = game.selectedTile?.rotationOffset
+//        checkNotNull(rotation)
+
+
+//        //for rotation change the order of terrains
+//        for (i in 0...rotation){
+//            sideLabels = listOf( sideLabels.last()) + sideLabels.dropLast(1)
 //        }
 
-        //missing delete the old HexagonView from the BiMap and insert the modified one?
+        // create new Hexagon for the rotated Tile
+        val newHexagon = createLabeledHexagonView(
+            labels = sideLabels,
+            color = rotateTile.isKeystoneTile
+        ).apply {
+            onMouseClicked = {
+                rootService.playerActionService.rotateTile()
+            }
+        }
 
-        //Put the new rotated tile to play
-//        playableTile[0, 0] = newHexagon
+        habitats[rotateTile] = newHexagon
+
+        playableTile[0,0] = null
+        playableTile[0,0] = habitats[rotateTile] as HexagonView
     }
 
-
-
     override fun refreshAfterTokenTilePairChosen() {
-        //val game = rootService.currentGame
-        //checkNotNull(game)
+        val game = rootService.currentGame
+        checkNotNull(game)
 
         shopTokens.isVisible = false
         shopHabitats.isVisible = false
@@ -527,17 +537,23 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         replaceWildlifeButton.isDisabled = true
 
         //call method getAllPossibleCoordinatesForTilePlacing in createPossibleHexagons
-        createPossibleHexagons(listOf(Pair(1,1),Pair(-1,0),Pair(1,-2),Pair(-2,1),Pair(2,-1),Pair(0,1),Pair(0,-1)))
+        createPossibleHexagons(rootService.gameService.getAllPossibleCoordinatesForTilePlacing())
 
+        val tokenToPlay = game.selectedToken
+        checkNotNull(tokenToPlay)
 
-        playableToken[0,0] = selectedToken
+        //put the selected Token to left Bottom
+        playableToken[0,0] = createTokens(tokenToPlay.animal.name)
         playableToken[0,0]?.onMouseClicked = null
 
         playableToken.isDisabled = true
 
-        playableTile[0,0] = selectedHabitat?.apply {
+        //put the selected Habitat to the left Bottom
+        val tileToPlay = game.selectedTile
+        checkNotNull(tileToPlay)
+        playableTile[0,0] = (habitats[tileToPlay] as HexagonView).apply {
             onMouseClicked = {
-                //rootService.playerActionService.rotateTile()
+                rootService.playerActionService.rotateTile()
             }
             isDisabled = false
         }

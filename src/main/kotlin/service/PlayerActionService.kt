@@ -117,7 +117,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         checkNotNull(game)
 
         // check if argument contains any indices
-        require(tokenIndices.size > 0 || tokenIndices.size < 5) { "number of indices must be between 0 and 5" }
+        require(tokenIndices.size in 0..4) { "number of indices must be between 0 and 4" }
 
         //check whether indices are not the same
         require(tokenIndices.distinct().size == tokenIndices.size) { "All indices must be different" }
@@ -172,6 +172,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         ) { "A habitat tile shall only be placed to an already placed one" }
         game.currentPlayer.habitat[habitatCoordinates] = selectedTile
         game.selectedTile = null
+        game.hasPlayedTile = true
         onAllRefreshables { refreshAfterHabitatTileAdded() }
     }
 

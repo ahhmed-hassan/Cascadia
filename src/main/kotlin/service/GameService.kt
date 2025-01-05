@@ -123,16 +123,16 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
             scoreRules,
             0.3f,
             25,
-            false,
-            false,
-            shop,
-            mutableListOf(),
-            playerList.first(),
-            playerList,
-            totalTilesInGame,
-            null,
-            null,
-            wildlifeTokens
+            hasReplacedThreeToken = false,
+            hasPlayedTile = false,
+            shop = shop,
+            discardedToken = mutableListOf(),
+            currentPlayer = playerList.first(),
+            playerList = playerList,
+            habitatTileList = totalTilesInGame,
+            selectedTile = null,
+            selectedToken = null,
+            wildlifeTokenList = wildlifeTokens
         )
 
         // This block is only activated if the game is a network game and startTileOrder is provided.
@@ -295,6 +295,8 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         val nextPlayerIndex = game.playerList.indexOf(game.currentPlayer)+1 % game.playerList.size
         game.currentPlayer = game.playerList[nextPlayerIndex]
 
+        game.hasPlayedTile = false
+
         // refresh GUI
         onAllRefreshables { refreshAfterNextTurn() }
     }
@@ -313,7 +315,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         checkNotNull(game)
 
 
-        // if Tokenlist is empty or not enough tokens left to automatically resolve an overpopulation, end game
+        // if TokenList is empty or not enough tokens left to automatically resolve an overpopulation, end game
         if (game.wildlifeTokenList.size == 0 || game.wildlifeTokenList.size < 4) {
             //onAllRefreshables { refreshAfterGameEnd(rootService.scoringService.calculateScore()) }
             onAllRefreshables { refreshAfterGameEnd() }
