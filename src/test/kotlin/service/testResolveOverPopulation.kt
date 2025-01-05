@@ -14,7 +14,10 @@ class testResolveOverPopulation {
         val gameService = GameService(rootService)
         gameService.startNewGame(
             mapOf("Alice" to PlayerType.LOCAL),
-            listOf(true, false, true, false, true)
+            listOf(true, false, true, false, true),
+            false,
+            false,
+            null
         )
         val game = rootService.currentGame
         checkNotNull(game)
@@ -54,7 +57,10 @@ class testResolveOverPopulation {
         val gameService = GameService(rootService)
         gameService.startNewGame(
             mapOf("Alice" to PlayerType.LOCAL),
-            listOf(true, false, true, false, true)
+            listOf(true, false, true, false, true),
+            false,
+            false,
+            null
         )
 
         val game = rootService.currentGame
@@ -107,7 +113,10 @@ class testResolveOverPopulation {
 
         gameService.startNewGame(
             mapOf("Alice" to PlayerType.LOCAL),
-            listOf(true, false, true, false, true)
+            listOf(true, false, true, false, true),
+            false,
+            false,
+            null
         )
 
         val game = rootService.currentGame
