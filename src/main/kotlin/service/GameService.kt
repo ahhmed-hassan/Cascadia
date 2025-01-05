@@ -30,16 +30,16 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
      * @throws IllegalArgumentException if it is a network game, there has to be exactly one local player
      */
     fun startNewGame(
-        playerNames : Map<String,PlayerType>,
-        scoreRules : List<Boolean>,
+        playerNames: Map<String, PlayerType>,
+        scoreRules: List<Boolean>,
         orderIsRandom: Boolean,
         isRandomRules: Boolean,
         startTileOrder: List<Int>? = null
     ) {
-        require(playerNames.size in 2 .. 4) { "The number of players must be between 2 and 4" }
+        require(playerNames.size in 2..4) { "The number of players must be between 2 and 4" }
 
         //Check the size of the rules and determine if they are randomized or provided by the user
-        if(isRandomRules) {
+        if (isRandomRules) {
             require(scoreRules.size == 5) { "The scoring rules must be 5" }
         } else {
             // true is 1 (Cards B), false is 0 (Cards A)
@@ -53,13 +53,13 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         //There is exactly one local player in a network game
         //Count the number of players with type "LOCAL"
         val localPlayers = playerNames.values.count { it == PlayerType.LOCAL }
-        if(localPlayers != 1) {
+        if (localPlayers != 1) {
             throw IllegalArgumentException("In a network game must be exactly one local player.")
         }
 
         //Ensure that no network players exist if the game connection state indicates Hotseat mode
         val networkService = NetworkService(rootService)
-        if(networkService.connectionState == ConnectionState.DISCONNECTED) {
+        if (networkService.connectionState == ConnectionState.DISCONNECTED) {
             val networkPlayers = playerNames.values.count { it == PlayerType.NETWORK }
             if (networkPlayers > 0) {
                 throw IllegalArgumentException("In a Hotseat game, no player can be of type NETWORK.")
@@ -67,7 +67,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         }
 
         //Determine the player order based on the orderIsRandom parameter
-        val playerOrder = if(orderIsRandom) {
+        val playerOrder = if (orderIsRandom) {
             playerNames.keys.shuffled()
         } else {
             playerNames.keys.toList()
@@ -136,7 +136,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         )
 
         // Resolve overpopulation of four in the shop after game created
-        if(checkForSameAnimal()) {
+        if (checkForSameAnimal()) {
             resolveOverpopulation()
         }
 
@@ -156,7 +156,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
                 player.habitat[1 to 0] = playerStartTile[2]
             }
         } else {
-            for(i in playerList.indices) {
+            for (i in playerList.indices) {
                 //Retrieve the player's name based on the pre-determined player order.
                 //then, find the corresponding Player object from the player list
                 //and retrieve the associated starting habitat tiles for this player.
@@ -183,7 +183,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
             lines.drop(1) //skip the first line (header)
                 .filter { it.isNotBlank() } //exclude empty lines
                 .filterNot { it.contains("--", ignoreCase = true) } //exclude lines containing "--" (-- seite)
-                .forEach{ line ->
+                .forEach { line ->
                     val part = line.split(";")  //Parse data from the CSV line
                     val id = part[0].toInt()
                     val habitats = part[1].map { Terrain.valueOf(it.toString()) }.toMutableList()
@@ -191,13 +191,16 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
                     val keystone = part[3].toBoolean()
 
                     //Add a new HabitatTile to the list
-                    habitatTiles.add(HabitatTile(
-                        id,
-                        keystone,
-                        0,
-                        wildlife,
-                        null,
-                        habitats))
+                    habitatTiles.add(
+                        HabitatTile(
+                            id,
+                            keystone,
+                            0,
+                            wildlife,
+                            null,
+                            habitats
+                        )
+                    )
                 }
         }
         return habitatTiles
@@ -231,7 +234,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
                     startTileList.add(startTile)
 
                     //once 3 tiles are grouped, add them to the startTiles list and clear the temporary list
-                    if(startTileList.size == 3) {
+                    if (startTileList.size == 3) {
                         startTiles.add(startTileList)
                         startTileList.clear()
                     }
@@ -270,11 +273,11 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         }
 
         // refill shop
-        val newHabitatTile = game.habitatTileList[game.habitatTileList.size-1]
-        val newWildlifeToken = game.wildlifeTokenList[game.wildlifeTokenList.size-1]
+        val newHabitatTile = game.habitatTileList[game.habitatTileList.size - 1]
+        val newWildlifeToken = game.wildlifeTokenList[game.wildlifeTokenList.size - 1]
         for (i in 0 until game.shop.size) {
             // refill missing pair
-            if(game.shop[i].first == null && game.shop[i].second == null) {
+            if (game.shop[i].first == null && game.shop[i].second == null) {
                 game.shop[i] = Pair(newHabitatTile, newWildlifeToken)
             }
             // refill missing habitatTile from custom pair
@@ -288,12 +291,12 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         }
 
         // check for and resolve possible overpopulation of four
-        if(checkForSameAnimal()) {
+        if (checkForSameAnimal()) {
             resolveOverpopulation()
         }
 
         // switch current player
-        val nextPlayerIndex = game.playerList.indexOf(game.currentPlayer)+1 % game.playerList.size
+        val nextPlayerIndex = game.playerList.indexOf(game.currentPlayer) + 1 % game.playerList.size
         game.currentPlayer = game.playerList[nextPlayerIndex]
 
         // refresh GUI
@@ -320,7 +323,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         }
 
         // perform actual token replacement
-        executeTokenReplacement(listOf(0,1,2,3))
+        executeTokenReplacement(listOf(0, 1, 2, 3))
 
 
     }
@@ -336,20 +339,20 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
      * or number of indices is either too big or too small.
      *
      */
-    fun checkForSameAnimal( tokenIndices : List<Int> = listOf(0,1,2,3) ): Boolean {
+    fun checkForSameAnimal(tokenIndices: List<Int> = listOf(0, 1, 2, 3)): Boolean {
 
         // check for existing game
         val game = rootService.currentGame
         checkNotNull(game)
 
         // check if argument contains any indices
-        require(tokenIndices.size in 1..4) {"number of indices must be between 0 and 5"}
+        require(tokenIndices.size in 1..4) { "number of indices must be between 0 and 5" }
 
         //check whether indices are not the same
-        require(tokenIndices.distinct().size == tokenIndices.size) {"All indices must be different"}
+        require(tokenIndices.distinct().size == tokenIndices.size) { "All indices must be different" }
 
         // check if indices in argument in range
-        tokenIndices.forEach { require(it in 0 .. 3) {"Indices for tokens must be between 0 and 3"} }
+        tokenIndices.forEach { require(it in 0..3) { "Indices for tokens must be between 0 and 3" } }
 
         // check for same animal in all tokens at given indices in game shop
         val firstToken = game.shop[tokenIndices[0]].second
@@ -358,7 +361,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         for (i in 1..3) {
             val currentToken = game.shop[tokenIndices[i]].second
             checkNotNull(currentToken)
-            if(currentToken.animal != firstAnimal) {
+            if (currentToken.animal != firstAnimal) {
                 return false
             }
         }
@@ -375,7 +378,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
      * @param networkReplacement is a boolean to flag replacements done by other network players.
      *
      */
-    fun executeTokenReplacement(tokenIndices : List<Int>, networkReplacement : Boolean = false) {
+    fun executeTokenReplacement(tokenIndices: List<Int>, networkReplacement: Boolean = false) {
 
         //check for existing game
         val game = checkNotNull(rootService.currentGame)
@@ -383,8 +386,10 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         // perform replacement
         tokenIndices.forEach {
             game.discardedToken.add(game.shop[it].second)
-            game.shop[it] = Pair(game.shop[it].first,
-                game.wildlifeTokenList.removeLast())
+            game.shop[it] = Pair(
+                game.shop[it].first,
+                game.wildlifeTokenList.removeLast()
+            )
         }
 
         // resolve possible overpopulation of four
@@ -415,10 +420,10 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
      *
      * @return List<Pair<Int,Int>>
      */
-    fun getAllPossibleCoordinatesForTilePlacing(): List<Pair<Int, Int>> {
+    fun getAllPossibleCoordinatesForTilePlacing(
+        habitat: MutableMap<Pair<Int, Int>, HabitatTile>
+    ): List<Pair<Int, Int>> {
         val coordinates = hashSetOf<Pair<Int, Int>>()
-        val habitat = rootService.currentGame?.currentPlayer?.habitat
-        checkNotNull(habitat)
 
         habitat.forEach {
             val key = it.key
@@ -468,10 +473,10 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
      * @param animal the animal Type
      * @return List<HabitatTile>
      */
-    fun getAllPossibleTilesForWildlife(animal: Animal): List<HabitatTile> {
-        val habitat = rootService.currentGame?.currentPlayer?.habitat
-        checkNotNull(habitat)
-
+    fun getAllPossibleTilesForWildlife(
+        animal: Animal,
+        habitat: MutableMap<Pair<Int, Int>, HabitatTile>
+    ): List<HabitatTile> {
         return habitat.values.filter { it.wildlifeToken == null && it.wildlifeSymbols.contains(animal) }
     }
 }
