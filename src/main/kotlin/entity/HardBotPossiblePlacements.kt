@@ -7,7 +7,7 @@ class HardBotPossiblePlacements(
     val wildlifeToken: WildlifeToken? = null,
     val wildlifePlacement: HabitatTile? = null,
     val customPair: Pair<Int, Int>? = null,
-    val replacedWildlife: IntArray? = null,
+    val replacedWildlife: BooleanArray? = null,
     val wildLifeChance: Number? = null,
     val usedNaturalToken: Boolean
 ) {
