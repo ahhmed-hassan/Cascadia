@@ -27,8 +27,8 @@ import kotlin.math.sin
 class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Refreshables {
 
     private val habitats : BidirectionalMap<HabitatTile,HexagonView> = BidirectionalMap()
-    private var selectedHabitat : HexagonView? = null
-    private var selectedToken : HexagonView? = null
+    private var selectedHabitat : Int = 0
+    private var selectedToken : Int = 0
     private var selectedHabitatX : Int = 0
     private var selectedHabitatY : Int = 0
     private var selectedShopToken : MutableList<Int> = mutableListOf()
@@ -55,8 +55,8 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
     )
 
     private val playArea = HexagonGrid<HexagonView>(
-        posX = 1920/2,
-        posY = 1080/2,
+        posX = 1920/2-100,
+        posY = 1080/2-100,
         width = 0,
         height = 0,
         coordinateSystem = HexagonGrid.CoordinateSystem.AXIAL
@@ -157,9 +157,13 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
     ).apply {
         onMouseClicked = {
             if (custom) {
-                rootService.playerActionService.chooseCustomPair(0, 0)
+                rootService.playerActionService.chooseCustomPair(selectedHabitat, selectedToken)
+                enableAllHabitats()
+                println("ConfirmCustom")
             }else {
                 rootService.playerActionService.replaceWildlifeTokens(selectedShopToken)
+                println("Confirm Replace")
+
             }
             updateButtonStates("default")
         }
@@ -192,7 +196,7 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
                                 shopTokens[i,0]?.apply {
                                     posY -= 25
                                 }
-                                selectedToken = shopTokens[i,0]
+                                selectedToken = i
                                 disableTokensExcept(checkNotNull(shopTokens[i,0]))
                             }
                             else -> {}
@@ -212,7 +216,7 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
                             shopHabitats[i,0]?.apply {
                                 posY -= 25
                             }
-                            selectedHabitat = shopHabitats[i,0]
+                            selectedHabitat = i
                             disableHabitatsExcept(checkNotNull(shopHabitats[i,0]))
                         }
                         else -> {}
@@ -325,35 +329,30 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         onKeyPressed = {
             //go left with camera
             if (it.keyCode == KeyCode.A){
-                println("Pressed A")
                 currentXCamera += -100
                 cameraPane.reposition(currentXCamera,currentYCamera)
             }
 
             //go up with camera
             if (it.keyCode == KeyCode.W){
-                println("Pressed W")
                 currentYCamera += -100
                 cameraPane.reposition(currentXCamera,currentYCamera)
             }
 
             //go right with camera
             if (it.keyCode == KeyCode.D){
-                println("Pressed D")
                 currentXCamera += 100
                 cameraPane.reposition(currentXCamera,currentYCamera)
             }
 
             //go down with camera
             if (it.keyCode == KeyCode.S){
-                println("Pressed S")
                 currentYCamera += 100
                 cameraPane.reposition(currentXCamera,currentYCamera)
             }
 
             //reset the pane to original position
             if (it.keyCode == KeyCode.R){
-                println("Pressed R")
                 cameraPane.reposition(0,0)
                 currentXCamera = 0
                 currentYCamera = 0
@@ -400,7 +399,8 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         for (habitat in game.habitatTileList)
             habitats[habitat] = createLabeledHexagonView(
                 color = habitat.isKeystoneTile,
-                labels = habitat.terrains.map { it.abbreviation.toString() }
+                labels = habitat.terrains.map { it.shortCut.toString() },
+                tokens = habitat.wildlifeSymbols.map { it.shortCut.toString() }
             )
 
         //create a HexagonView for each shopTile
@@ -408,7 +408,8 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
             val habitate = checkNotNull(habitat.first)
             habitats[habitate] = createLabeledHexagonView(
                 color = habitate.isKeystoneTile,
-                labels = habitate.terrains.map { it.abbreviation.toString() }
+                labels = habitate.terrains.map { it.shortCut.toString() },
+                tokens = habitate.wildlifeSymbols.map { it.shortCut.toString() }
             )
         }
 
@@ -417,7 +418,8 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
             for (habitate in player) {
                 habitats[habitate] = createLabeledHexagonView(
                     color = habitate.isKeystoneTile,
-                    labels = habitate.terrains.map { it.abbreviation.toString() }
+                    labels = habitate.terrains.map { it.shortCut.toString() },
+                    tokens = habitate.wildlifeSymbols.map { it.shortCut.toString() }
                 )
             }
         }
@@ -476,13 +478,30 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
 
         //add all habitats for current Player to the playField
         for (habitat in game.currentPlayer.habitat){
-            playArea[habitat.key.second,habitat.key.first] = habitats[habitat.value] as HexagonView
+            playArea[habitat.key.second,habitat.key.first] = (habitats[habitat.value] as HexagonView).apply {
+                onMouseClicked = null
+            }
         }
 
         playableTile[0,0]?.isDisabled = true
 
         playableToken.isDisabled = false
         discardToken.isDisabled = false
+
+        val tokenHabitate = game.selectedToken?.let { rootService.gameService.getAllPossibleTilesForWildlife(it.animal) }
+
+        for (habitat in game.currentPlayer.habitat){
+            if (tokenHabitate != null) {
+                if (habitat.value in tokenHabitate) {
+                    playArea[habitat.key.second, habitat.key.first] = (habitats[habitat.value] as HexagonView).apply {
+                        isDisabled = false
+                        onMouseClicked = {
+                            rootService.playerActionService.addToken(habitat.value)
+                        }
+                    }
+                }
+            }
+        }
     }
 
     override fun refreshAfterTileRotation() {
@@ -493,7 +512,7 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         checkNotNull(rotateTile)
 
        // get the list of terrains from Habitat
-        val sideLabels = rotateTile.terrains.map { it.abbreviation.toString() }
+        val sideLabels = rotateTile.terrains.map { it.shortCut.toString() }
 
 
         //Do we want to change the Position of terrain in PlayerActionService ?
@@ -509,7 +528,8 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         // create new Hexagon for the rotated Tile
         val newHexagon = createLabeledHexagonView(
             labels = sideLabels,
-            color = rotateTile.isKeystoneTile
+            color = rotateTile.isKeystoneTile,
+            tokens = rotateTile.wildlifeSymbols.map { it.shortCut.toString() }
         ).apply {
             onMouseClicked = {
                 rootService.playerActionService.rotateTile()
@@ -528,6 +548,8 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
 
         shopTokens.isVisible = false
         shopHabitats.isVisible = false
+        shopTokens.isDisabled = true
+        shopHabitats.isDisabled = true
         playArea.isDisabled = false
         playableTile.isDisabled = false
         confirmReplacementButton.isDisabled = true
@@ -559,28 +581,45 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         }
     }
 
-    override fun refreshAfterWildlifeTokenAdded() {
-        //val game = rootService.currentGame
-        //checkNotNull(game)
+    override fun refreshAfterWildlifeTokenAdded(habitatTile: HabitatTile) {
+        val game = rootService.currentGame
+        checkNotNull(game)
 
-        super.refreshAfterWildlifeTokenAdded()
+        playableToken[0,0] = null
+        habitats[habitatTile] = createLabeledHexagonView(
+            color = habitatTile.isKeystoneTile,
+            labels = habitatTile.terrains.map { it.shortCut.toString() },
+            token = habitatTile.wildlifeToken?.animal.toString()
+        )
     }
 
     override fun refreshAfterWildlifeTokenReplaced() {
         val game = rootService.currentGame
         checkNotNull(game)
 
+
         //add the views to the shop
         for (i in 0..3){
-            shopTokens[i,0] = null
+            //shopTokens[i,0]?.onMouseClicked = null
             //create HexagonViews for the Token
             shopTokens[i,0] = game.shop[i].second?.animal?.let { createTokens(it.name) }
+            shopTokens[i,0]?.apply {
+                onMouseClicked = {
+                    rootService.playerActionService.chooseTokenTilePair(i)
+                }
+            }
         }
+        selectedShopToken.clear()
     }
 
     override fun refreshAfterNextTurn() {
         val game = rootService.currentGame
         checkNotNull(game)
+
+        //reset the camera to original position
+        cameraPane.reposition(0,0)
+        currentXCamera = 0
+        currentYCamera = 0
 
         shopTokens.isDisabled = false
         shopHabitats.isDisabled = false
@@ -633,10 +672,19 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
             chooseCustomPair.isDisabled = true
             replaceWildlifeButton.isDisabled = true
             confirmReplacementButton.isDisabled = true
+        } else{
+            chooseCustomPair.isDisabled = false
+            replaceWildlifeButton.isDisabled = false
+            confirmReplacementButton.isDisabled = false
         }
     }
 
-    private fun createLabeledHexagonView(color: Boolean = true, labels: List<String>): HexagonView {
+    private fun createLabeledHexagonView(
+        color: Boolean,
+        labels: List<String>,
+        tokens : List<String> = emptyList(),
+        token : String = ""
+    ): HexagonView {
 
         val size = 75
         // Helper: Calculate the position for the middle of each side
@@ -668,12 +716,15 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
             Color.LIGHT_GRAY
         }
 
+        val tokenText = token.ifEmpty {
+            tokens.toString()
+        }
         return HexagonView(
             size = size,
             visual = CompoundVisual(
                 ColorVisual(color1), // Background color of the hexagon
                 *textVisuals.toTypedArray(), // Spread operator to include all text visuals
-                //TextVisual("Salmon")
+                TextVisual(tokenText)
             )
         )
     }
@@ -700,16 +751,8 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
                     selectedHabitatX = i.second
                     selectedHabitatY = i.first
                     rootService.playerActionService.addTileToHabitat(i)
-                    disablePossibleHexagons(position)
                 }
             }
-        }
-    }
-
-    //after tile placed, remove the possible Hexagons
-    private fun disablePossibleHexagons(position: List<Pair<Int, Int>>){
-        for (i in position){
-                playArea[i.second,i.first]?.isDisabled = true
         }
     }
 
@@ -809,7 +852,7 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
                 replaceWildlifeButton.isDisabled = true
                 chooseCustomPair.isDisabled = true
                 resolveOverpopButton.isDisabled = true
-                shopTokens.isDisabled = true
+                //shopTokens.isDisabled = true
                 confirmReplacementButton.isDisabled = true
             }
         }

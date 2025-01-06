@@ -1,5 +1,6 @@
 package gui
 
+import entity.HabitatTile
 import service.AbstractRefreshingService
 
 /**
@@ -37,7 +38,7 @@ interface Refreshables {
     /**
      *
      */
-    fun refreshAfterWildlifeTokenAdded(){}
+    fun refreshAfterWildlifeTokenAdded(habitatTile: HabitatTile){}
 
     /**
      *

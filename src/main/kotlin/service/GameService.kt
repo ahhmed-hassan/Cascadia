@@ -185,8 +185,8 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
                 .forEach{ line ->
                     val part = line.split(";")  //Parse data from the CSV line
                     val id = part[0].toInt()
-                    val habitats = part[1].map { Terrain.fromAbbreviation(it) }.toMutableList()
-                    val wildlife = part[2].map { Animal.fromAbbreviation(it) }
+                    val habitats = part[1].map { Terrain.fromShortCut(it) }.toMutableList()
+                    val wildlife = part[2].map { Animal.fromShortCut(it) }
                     val keystone = part[3] == "yes"
                     //Add a new HabitatTile to the list
                     habitatTiles.add(HabitatTile(
@@ -213,8 +213,8 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
                 .forEach { line ->
                     val parts = line.split(";")  //Parse data from the CSV line
                     val id = parts[0].toInt()
-                    val habitats = parts[1].map { Terrain.fromAbbreviation(it) }.toMutableList()
-                    val wildlife = parts[2].map { Animal.fromAbbreviation(it) }.toMutableList()
+                    val habitats = parts[1].map { Terrain.fromShortCut(it) }.toMutableList()
+                    val wildlife = parts[2].map { Animal.fromShortCut(it) }.toMutableList()
                     val keystone = parts[3].toBoolean()
 
                     //Add a new HabitatTile to the list
@@ -270,7 +270,9 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
 
         // refill shop
         val newHabitatTile = game.habitatTileList[game.habitatTileList.size-1]
+        game.habitatTileList.remove(newHabitatTile)
         val newWildlifeToken = game.wildlifeTokenList[game.wildlifeTokenList.size-1]
+        game.wildlifeTokenList.remove(newWildlifeToken)
         for (i in 0 until game.shop.size) {
             // refill missing pair
             if(game.shop[i].first == null && game.shop[i].second == null) {

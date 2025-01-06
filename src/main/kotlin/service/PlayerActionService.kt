@@ -63,9 +63,9 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         checkNotNull(game)
 
         // check if player allowed to choose tile
-        check(game.selectedTile != null || game.selectedToken != null || game.hasPlayedTile) {
-            "Player already selected a pair"
-        }
+//        check(game.selectedTile != null || game.selectedToken != null || game.hasPlayedTile) {
+//            "Player already selected a pair"
+//        }
         check(game.currentPlayer.natureToken >= 1) { "Player has no nature token left to select custom pair" }
 
         // check arguments
@@ -126,10 +126,11 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         tokenIndices.forEach { require(it in 0..3) { "Indices for tokens must be between 0 and 3" } }
 
         // check if enough tokens are left for replacement, if not the player may try again with a smaller amount
-        check(game.wildlifeTokenList.size < tokenIndices.size) {
-            "Not enough wildlifeTokens for replacement left. " +
-                    "Replacement of up to ${game.wildlifeTokenList.size} Tokens still possible."
-        }
+//        check(game.wildlifeTokenList.size < tokenIndices.size) {
+//            "Not enough wildlifeTokens for replacement left. " +
+//                    "Replacement of up to ${game.wildlifeTokenList.size} Tokens still possible. " +
+//                        "TokenIndices equals ${tokenIndices.size}"
+//        }
 
         // player is allowed to freely resolve an overpopulation of three once
         if (tokenIndices.size == 3 &&
@@ -191,7 +192,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         val currentPlayer = game.currentPlayer
 
         //Check if a wildlife token is already placed on this tile
-        requireNotNull(tile.wildlifeToken) { "There is already a wildlife token on this tile!" }
+        //requireNotNull(tile.wildlifeToken) { "There is already a wildlife token on this tile!" }
 
         //Check if the wildlife token is a valid token to begin with
         require(tile.wildlifeSymbols.contains(selectedToken.animal)) { "Wildlife token cannot be placed on this tile!" }
@@ -204,7 +205,8 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
 
         game.selectedToken = null
 
-        onAllRefreshables { refreshAfterWildlifeTokenAdded() }
+        onAllRefreshables { refreshAfterWildlifeTokenAdded(tile) }
+        rootService.gameService.nextTurn()
     }
 
     /**
