@@ -101,7 +101,6 @@ class NetworkClient (playerName: String, host: String, secret: String, val netwo
         }
     }
 
-
     /**
      * Handle a [GameInitMessage] sent by the server.
      * @throws IllegalStateException when the player is not waiting for [GameInitMessage]
