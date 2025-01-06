@@ -18,8 +18,8 @@ class RotateTester {
     @BeforeTest
     fun setup() {
         rootService.gameService.startNewGame(
-            mapOf("Ahmed" to PlayerType.NORMAL, "Hello" to PlayerType.NORMAL),
-            listOf(true, true, true, true)
+            mapOf("Ahmed" to PlayerType.LOCAL, "Hello" to PlayerType.EASY),
+            listOf(true, true, true, true, true)
         )
     }
 
