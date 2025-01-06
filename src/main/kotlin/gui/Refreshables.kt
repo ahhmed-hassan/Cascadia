@@ -1,6 +1,7 @@
 package gui
 
 import service.AbstractRefreshingService
+import service.ScoringService
 
 /**
  * This interface provides a mechanism for the service layer classes to communicate
@@ -18,61 +19,61 @@ interface Refreshables {
     /**
      *
      */
-    fun refreshAfterHotSeatConfigurationChosen(){}
+    fun refreshAfterHotSeatConfigurationChosen() {}
 
     /**
      *
      */
-    fun refreshAfterNetworkConfigurationMenuChosen(){}
+    fun refreshAfterNetworkConfigurationMenuChosen() {}
 
     /**
      *
      */
-    fun refreshAfterNetworkJoinMenuChosen(){}
+    fun refreshAfterNetworkJoinMenuChosen() {}
 
     /**
      *
      */
-    fun refreshAfterNetworkJoin(){}
+    fun refreshAfterNetworkJoin() {}
 
     /**
      *
      */
-    fun refreshAfterGameStart(){}
+    fun refreshAfterGameStart() {}
 
     /**
      *
      */
-    fun refreshAfterWildlifeTokenReplaced(){}
+    fun refreshAfterWildlifeTokenReplaced() {}
 
     /**
      *
      */
-    fun refreshAfterTokenTilePairChosen(){}
+    fun refreshAfterTokenTilePairChosen() {}
 
     /**
      *
      */
-    fun refreshAfterHabitatTileAdded(){}
+    fun refreshAfterHabitatTileAdded() {}
 
     /**
      *
      */
-    fun refreshAfterWildlifeTokenAdded(){}
+    fun refreshAfterWildlifeTokenAdded() {}
 
     /**
      *
      */
-    fun refreshAfterNextTurn(){}
+    fun refreshAfterNextTurn() {}
 
     /**
      *
      */
-    fun refreshAfterGameEnd(){}
+    fun refreshAfterGameEnd(scores: Map<String, ScoringService.Companion.PlayerScore>) {}
 
     /**
      *
      */
-    fun refreshAfterTileRotation(){}
+    fun refreshAfterTileRotation() {}
 
 }
