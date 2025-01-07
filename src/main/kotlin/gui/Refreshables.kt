@@ -1,7 +1,8 @@
 package gui
 
-import entity.HabitatTile
 import service.AbstractRefreshingService
+import service.ConnectionState
+import service.ScoringService
 
 /**
  * This interface provides a mechanism for the service layer classes to communicate
@@ -15,45 +16,75 @@ import service.AbstractRefreshingService
  *
  */
 interface Refreshables {
-    /**
-     *
-     */
-    fun refreshAfterGameStart(){}
 
     /**
      *
      */
-    fun refreshAfterWildlifeTokenReplaced(){}
+    fun refreshAfterHotSeatConfigurationChosen() {}
 
     /**
      *
      */
-    fun refreshAfterTokenTilePairChosen(){}
+    fun refreshAfterNetworkConfigurationMenuChosen() {}
 
     /**
      *
      */
-    fun refreshAfterHabitatTileAdded(){}
+    fun refreshAfterNetworkJoinMenuChosen() {}
 
     /**
      *
      */
-    fun refreshAfterWildlifeTokenAdded(habitatTile: HabitatTile){}
+    fun refreshAfterNetworkJoin() {}
 
     /**
      *
      */
-    fun refreshAfterNextTurn(){}
+    fun refreshAfterGameStart() {}
 
     /**
      *
      */
-    //fun refreshAfterGameEnd(scores : Map<String, PlayerScore>){}
-    fun refreshAfterGameEnd(){}
+    fun refreshAfterWildlifeTokenReplaced() {}
 
     /**
      *
      */
-    fun refreshAfterTileRotation(){}
+    fun refreshAfterTokenTilePairChosen() {}
+
+    /**
+     *
+     */
+    fun refreshAfterHabitatTileAdded() {}
+
+    /**
+     *
+     */
+    fun refreshAfterWildlifeTokenAdded() {}
+
+    /**
+     *
+     */
+    fun refreshAfterNextTurn() {}
+
+    /**
+     *
+     */
+    fun refreshAfterGameEnd(scores: Map<String, ScoringService.Companion.PlayerScore>) {}
+
+    /**
+     *
+     */
+    fun refreshAfterTileRotation() {}
+
+    /**
+     *
+     */
+    fun refreshConnectionState(newState : ConnectionState) {}
+
+    /**
+     *
+     */
+    fun refreshAfterPlayerJoined(networkPlayers : MutableList<String>)
 
 }
