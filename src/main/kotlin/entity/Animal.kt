@@ -17,4 +17,17 @@ enum class Animal {
     HAWK,
     SALMON,
     ;
+
+    companion object {
+        fun fromValue(value : String) : Animal {
+            return when(value) {
+                "B" -> BEAR
+                "E" -> ELK
+                "F" -> FOX
+                "H" -> HAWK
+                else -> SALMON
+            }
+        }
+    }
+
 }
