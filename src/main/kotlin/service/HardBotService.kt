@@ -144,6 +144,66 @@ class HardBotService(private val rootService: RootService) {
             }
         })
 
+        if (player.natureToken > 0) {
+            threads.add(Thread {
+                val habitat = player.habitat.mapValues { entry -> entry.value.copy() }.toMutableMap()
+                for (i in 0..3) {
+                    val selectedTile = shop[i].first
+                    checkNotNull(selectedTile)
+                    for (j in 0..3) {
+                        if (i==j) {
+                            continue
+                        }
+                        val selectedToken = shop[j].second
+                        checkNotNull(selectedToken)
+                        var tokenChance : Number? = null
+
+                        if (player.natureToken > 1) {
+                            val tokenLeft = game.wildlifeTokenList.filter { it ->
+                                it.animal == selectedToken.animal }.size
+                            tokenChance = tokenLeft / game.wildlifeTokenList.size
+                        }
+
+                        possibleTilePlaces.forEach { tilePlace ->
+                            habitat[tilePlace] = selectedTile
+                            val animalPositions = gameService.getAllPossibleTilesForWildlife(selectedToken.animal,
+                                habitat)
+                            animalPositions.forEach { animalPlace ->
+                                for (rotation in 0..5) {
+                                    list.add(
+                                        HardBotPossiblePlacements(
+                                            tile = selectedTile,
+                                            tilePlacement = tilePlace,
+                                            rotation = rotation,
+                                            wildlifeToken = selectedToken,
+                                            usedNaturalToken = true,
+                                            wildlifePlacement = animalPlace,
+                                            wildLifeChance = tokenChance,
+                                            customPair = Pair(i,j)
+                                        )
+                                    )
+                                }
+                            }
+                            for (rotation in 0..5) {
+                                list.add(
+                                    HardBotPossiblePlacements(
+                                        tile = selectedTile,
+                                        tilePlacement = tilePlace,
+                                        rotation = rotation,
+                                        usedNaturalToken = true,
+                                        wildLifeChance = tokenChance,
+                                        customPair = Pair(i,j)
+                                    )
+                                )
+                            }
+                            habitat.remove(tilePlace)
+                        }
+                    }
+                }
+            })
+        }
+
+
         for (thread in threads) {
             thread.start()
         }
