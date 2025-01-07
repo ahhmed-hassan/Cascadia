@@ -14,6 +14,7 @@ class RootService {
     val gameService = GameService(this)
     val playerActionService = PlayerActionService(this)
     val scoringService = ScoringService(this)
+    val networkService = NetworkService(this)
 
     var currentGame : CascadiaGame? = null
 
@@ -25,6 +26,7 @@ class RootService {
         gameService.addRefreshable(newRefreshable)
         playerActionService.addRefreshable(newRefreshable)
         scoringService.addRefreshable(newRefreshable)
+        networkService.addRefreshable(newRefreshable)
     }
 
     /**
