@@ -117,7 +117,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         checkNotNull(game)
 
         // check if argument contains any indices
-        require(tokenIndices.size > 0 || tokenIndices.size < 5) { "number of indices must be between 0 and 5" }
+        require(tokenIndices.size in 0..4) { "number of indices must be between 0 and 4" }
 
         //check whether indices are not the same
         require(tokenIndices.distinct().size == tokenIndices.size) { "All indices must be different" }
@@ -137,16 +137,21 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
             !game.hasReplacedThreeToken
         ) {
             game.hasReplacedThreeToken = true
+
+            // perform actual replacement of tokens
+            rootService.gameService.executeTokenReplacement(tokenIndices)
         }
         // otherwise the player must use a nature token in exchange
         else if (game.currentPlayer.natureToken > 0) {
             game.currentPlayer.natureToken--
+
+            // perform actual replacement of tokens
+            rootService.gameService.executeTokenReplacement(tokenIndices, natureTokenUsed = true)
         } else {
             throw IllegalStateException("Current Player not allowed to perform replacement")
         }
 
-        // perform actual replacement of tokens
-        rootService.gameService.executeTokenReplacement(tokenIndices)
+
 
     }
 
@@ -212,7 +217,8 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
      * @throws IllegalArgumentException if there is no [HabitatTile] to place
      * post :
      * The [HabitatTile.rotationOffset] is incremented.
-     * the [HabitatTile.terrains] would have the right order as how it would be placed (one step clockwise rotated)
+     * the [HabitatTile.terrains] would have the right order as how it would be placed
+     * (one step counterclockwise rotated)
      *
      */
     fun rotateTile() {
@@ -220,7 +226,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
 
         val selectedTile = checkNotNull(game.selectedTile) { "Only the selected tile can be rotated!" }
 
-        selectedTile.rotationOffset = (selectedTile.rotationOffset + 1).mod(selectedTile.terrains.size)
+        selectedTile.rotationOffset = (selectedTile.rotationOffset - 1).mod(selectedTile.terrains.size)
         selectedTile.terrains.add(
             0, selectedTile.terrains.removeLast()
         )
