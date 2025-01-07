@@ -329,7 +329,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
      * @return [Int] representing the score resulted from the Bear combinations of this player based on
      * the current [entity.CascadiaGame.ruleSet]
      */
-    private fun calculateBearScore(player: Player): Int {
+     fun calculateBearScore(player: Player): Int {
         val makeBearGraph: (Map<Pair<Int, Int>, HabitatTile>) -> Map<Pair<Int, Int>, List<Pair<Int, Int>>> =
             { habitatTiles ->
                 val bearNodesCoordinates = habitatTiles.filterValues { it.wildlifeToken?.animal == Animal.BEAR }
