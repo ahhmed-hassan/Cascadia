@@ -1,5 +1,6 @@
 package gui
 
+import entity.Animal
 import entity.HabitatTile
 import service.RootService
 import tools.aqua.bgw.components.ComponentView
@@ -160,6 +161,7 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
                 rootService.playerActionService.chooseCustomPair(selectedHabitat, selectedToken)
                 enableAllHabitats()
                 println("ConfirmCustom")
+                custom = false
             }else {
                 rootService.playerActionService.replaceWildlifeTokens(selectedShopToken)
                 println("Confirm Replace")
@@ -239,7 +241,8 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
     ).apply {
         onMouseClicked = {
             //check overpopulation
-            rootService.playerActionService.replaceWildlifeTokens(listOf(0))
+            rootService.playerActionService.replaceWildlifeTokens(hasThreeSameWildlifeTokens().second)
+            this.isDisabled = true
         }
     }
 
@@ -457,9 +460,10 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         currentPlayerLabel.apply { text = game.currentPlayer.name }
 
         //Disable resolveOverpopulation if already done or not possible
-        if (game.hasReplacedThreeToken || !rootService.gameService.checkForSameAnimal()){
+        if (game.hasReplacedThreeToken || !hasThreeSameWildlifeTokens().first){
             resolveOverpopButton.isDisabled = true
-        }
+        } else
+            resolveOverpopButton.isDisabled = false
 
         //Disable Buttons for action with NatureToken if player has none
         if (game.currentPlayer.natureToken == 0){
@@ -663,9 +667,10 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         currentPlayerLabel.apply { text = game.currentPlayer.name }
 
         //Disable resolveOverpopulation if already done or not possible
-        if (game.hasReplacedThreeToken || !rootService.gameService.checkForSameAnimal()){
+        if (game.hasReplacedThreeToken || !hasThreeSameWildlifeTokens().first){
             resolveOverpopButton.isDisabled = true
-        }
+        } else
+            resolveOverpopButton.isDisabled = false
 
         //Disable Buttons for action with NatureToken if player has none
         if (game.currentPlayer.natureToken == 0){
@@ -733,7 +738,7 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         return HexagonView(
             size = 50,
             visual = CompoundVisual(
-                ColorVisual(Color.yellow),
+                ColorVisual(Color.LIGHT_GRAY),
                 TextVisual(animal)
             )
         )
@@ -830,6 +835,31 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
             shopHabitats[i,0]?.isDisabled = false
         }
     }
+
+    private fun hasThreeSameWildlifeTokens(): Pair<Boolean, List<Int>> {
+        val game = rootService.currentGame
+        checkNotNull(game)
+        // Map to store the indices of WildlifeTokens grouped by type
+        val tokenIndexMap = mutableMapOf<Animal, MutableList<Int>>()
+
+        // Group WildlifeTokens by their type, keeping track of their indices
+        game.shop.forEachIndexed { index, pair ->
+            val token = pair.second // Access the WildlifeToken
+            if (token != null) {
+                tokenIndexMap.computeIfAbsent(token.animal) { mutableListOf() }.add(index)
+            }
+        }
+
+        // Find the first group with at least 3 tokens
+        val matchingGroup = tokenIndexMap.entries.firstOrNull { it.value.size >= 2 }
+        return if (matchingGroup != null) {
+            Pair(true, matchingGroup.value.take(3)) // Return true and the first 3 indices
+        } else {
+            Pair(false, emptyList()) // No match, return false and an empty list
+        }
+    }
+
+
 
     private fun updateButtonStates(action: String) {
         when (action) {

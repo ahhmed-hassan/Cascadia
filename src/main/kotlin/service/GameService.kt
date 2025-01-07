@@ -257,6 +257,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         val game = rootService.currentGame
         checkNotNull(game)
 
+        game.hasReplacedThreeToken = false
 
         // check if player performed action
         check(game.hasPlayedTile) { "Player must at least add a habitat tile each turn" }

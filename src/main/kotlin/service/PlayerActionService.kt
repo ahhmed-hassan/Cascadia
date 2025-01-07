@@ -134,7 +134,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
 
         // player is allowed to freely resolve an overpopulation of three once
         if (tokenIndices.size == 3 &&
-            rootService.gameService.checkForSameAnimal(tokenIndices) &&
+            //rootService.gameService.checkForSameAnimal(tokenIndices) &&
             !game.hasReplacedThreeToken
         ) {
             game.hasReplacedThreeToken = true
