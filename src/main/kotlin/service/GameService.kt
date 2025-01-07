@@ -32,8 +32,8 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
     fun startNewGame(
         playerNames: Map<String, PlayerType>,
         scoreRules: List<Boolean>,
-        orderIsRandom: Boolean = true,
-        isRandomRules: Boolean = true,
+        orderIsRandom: Boolean,
+        isRandomRules: Boolean,
         startTileOrder: List<Int>? = null
     ) {
         require(playerNames.size in 2..4) { "The number of players must be between 2 and 4" }
@@ -439,10 +439,10 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
      *
      * @return List<Pair<Int,Int>>
      */
-    fun getAllPossibleCoordinatesForTilePlacing(): List<Pair<Int, Int>> {
+    fun getAllPossibleCoordinatesForTilePlacing(
+        habitat: MutableMap<Pair<Int, Int>, HabitatTile>
+    ): List<Pair<Int, Int>> {
         val coordinates = hashSetOf<Pair<Int, Int>>()
-        val habitat = rootService.currentGame?.currentPlayer?.habitat
-        checkNotNull(habitat)
 
         habitat.forEach {
             val key = it.key
@@ -492,10 +492,10 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
      * @param animal the animal Type
      * @return List<HabitatTile>
      */
-    fun getAllPossibleTilesForWildlife(animal: Animal): List<HabitatTile> {
-        val habitat = rootService.currentGame?.currentPlayer?.habitat
-        checkNotNull(habitat)
-
+    fun getAllPossibleTilesForWildlife(
+        animal: Animal,
+        habitat: MutableMap<Pair<Int, Int>, HabitatTile>
+    ): List<HabitatTile> {
         return habitat.values.filter { it.wildlifeToken == null && it.wildlifeSymbols.contains(animal) }
     }
 }
