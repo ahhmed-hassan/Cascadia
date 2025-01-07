@@ -15,10 +15,19 @@ class CalculateBearScoreTest {
     fun testScoreCalculationA() {
 
         // set up test object
-        val testScoringService = ScoringService(RootService())
+        val testRootService = RootService()
+        val testScoringService = ScoringService(testRootService)
+        val testGameService = GameService(testRootService)
 
-        // create test player
-        val testPlayer = createTestPlayer()
+        testGameService.startNewGame(mapOf(Pair("testPlayer", PlayerType.LOCAL), Pair("testPlayer2", PlayerType.EASY)),
+            scoreRules = listOf(false, false, false, false, false),
+            orderIsRandom = false, isRandomRules = false)
+
+        val testGame = testRootService.currentGame
+        checkNotNull(testGame)
+        val testPlayer = testGame.playerList[0]
+        setUpHabitat(testPlayer)
+
 
         // test no exact pair of bears
         assertEquals(0 , testScoringService.calculateBearScore(testPlayer))
@@ -59,10 +68,19 @@ class CalculateBearScoreTest {
     @Test
     fun testScoreCalculationB() {
         // set up test object
-        val testScoringService = ScoringService(RootService())
+        val testRootService = RootService()
+        val testScoringService = ScoringService(testRootService)
+        val testGameService = GameService(testRootService)
 
-        // create player
-        val testPlayer = createTestPlayer()
+        testGameService.startNewGame(mapOf(Pair("testPlayer", PlayerType.LOCAL), Pair("testPlayer2", PlayerType.EASY)),
+            scoreRules = listOf(true, true, true, true, true),
+            orderIsRandom = false, isRandomRules = false)
+
+        val testGame = testRootService.currentGame
+        checkNotNull(testGame)
+        val testPlayer = testGame.playerList[0]
+        setUpHabitat(testPlayer)
+
 
         // test no exact tripple of bears
         assertEquals(0 , testScoringService.calculateBearScore(testPlayer))
@@ -74,9 +92,9 @@ class CalculateBearScoreTest {
         assertEquals(10 , testScoringService.calculateBearScore(testPlayer))
 
         // test two tripple of bears
-        separatorTile = checkNotNull(testPlayer.habitat[Pair(1,0)])
+        separatorTile = checkNotNull(testPlayer.habitat[Pair(0,0)])
         separatorTile.wildlifeToken = WildlifeToken(Animal.ELK)
-        separatorTile = checkNotNull(testPlayer.habitat[Pair(1,1)])
+        separatorTile = checkNotNull(testPlayer.habitat[Pair(-1,-1)])
         separatorTile.wildlifeToken = WildlifeToken(Animal.ELK)
 
         assertEquals(20 , testScoringService.calculateBearScore(testPlayer))
@@ -84,48 +102,46 @@ class CalculateBearScoreTest {
     }
 
     /**
-     *  Helper method to create the [Player] needed for score calculation.
-     *  Initialize this player with a habitat designed for testing the bear score calculation.
+     *  Helper method to change the habitat of the test for score calculation.
      *
-     *  @return a instance of [Player] with a test habitat
+     *  @param testPlayer is the player whose habitat shall be changed
      */
-    private fun createTestPlayer() : Player {
+    private fun setUpHabitat(testPlayer : Player) {
 
         // create tiles
         val testTiles = mutableListOf<HabitatTile>()
         for (i in 1..11) {
             testTiles.add(HabitatTile(i,
-                         false,
-                          0,
-                                      listOf(Animal.BEAR, Animal.ELK),
-                                      WildlifeToken(Animal.BEAR),
-                                      mutableListOf(Terrain.WETLAND,
-                                                    Terrain.WETLAND,
-                                                    Terrain.WETLAND,
-                                                    Terrain.WETLAND,
-                                                    Terrain.WETLAND,
-                                                    Terrain.WETLAND,)))
+                false,
+                0,
+                listOf(Animal.BEAR, Animal.ELK),
+                WildlifeToken(Animal.BEAR),
+                mutableListOf(Terrain.WETLAND,
+                              Terrain.WETLAND,
+                              Terrain.WETLAND,
+                              Terrain.WETLAND,
+                              Terrain.WETLAND,
+                              Terrain.WETLAND,)))
         }
 
-        // create habitat
-        val testHabitat = mutableMapOf<Pair<Int, Int>, HabitatTile>()
-        testHabitat[Pair( 0, 0)] = testTiles[0]
-        testHabitat[Pair( 1,-1)] = testTiles[1]
-        testHabitat[Pair( 1, 0)] = testTiles[2]
-        testHabitat[Pair( 1, 1)] = testTiles[3]
-        testHabitat[Pair( 1, 2)] = testTiles[4]
-        testHabitat[Pair( 1, 3)] = testTiles[5]
-        testHabitat[Pair(-1,-1)] = testTiles[6]
-        testHabitat[Pair(-1,-2)] = testTiles[7]
-        testHabitat[Pair(-1, 0)] = testTiles[8]
-        testHabitat[Pair(-1, 1)] = testTiles[9]
-        testHabitat[Pair(-1, 2)] = testTiles[10]
-
-
-        return Player(name= "testPlayer",
-                      habitat= testHabitat,
-                      playerType= PlayerType.LOCAL)
+        // set up custom habitat
+        testPlayer.habitat.clear()
+        testPlayer.habitat[Pair( 0,  0)] = testTiles[0]
+        testPlayer.habitat[Pair( 1, -1)] = testTiles[1]
+        testPlayer.habitat[Pair( 1,  0)] = testTiles[2]
+        testPlayer.habitat[Pair( 1,  1)] = testTiles[3]
+        testPlayer.habitat[Pair( 1,  2)] = testTiles[4]
+        testPlayer.habitat[Pair( 1,  3)] = testTiles[5]
+        testPlayer.habitat[Pair(-1, -1)] = testTiles[6]
+        testPlayer.habitat[Pair(-1, -2)] = testTiles[7]
+        testPlayer.habitat[Pair(-1,  0)] = testTiles[8]
+        testPlayer.habitat[Pair(-1,  1)] = testTiles[9]
+        testPlayer.habitat[Pair(-1,  2)] = testTiles[10]
 
     }
+
+
+
+
 
 }
