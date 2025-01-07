@@ -63,7 +63,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         checkNotNull(game)
 
         // check if player allowed to choose tile
-        check(game.selectedTile != null || game.selectedToken != null || game.hasPlayedTile) {
+        check(game.selectedTile == null || game.selectedToken == null || !game.hasPlayedTile) {
             "Player already selected a pair"
         }
         check(game.currentPlayer.natureToken >= 1) { "Player has no nature token left to select custom pair" }
@@ -150,7 +150,6 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         } else {
             throw IllegalStateException("Current Player not allowed to perform replacement")
         }
-
 
 
     }
