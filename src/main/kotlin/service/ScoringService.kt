@@ -165,7 +165,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
             }
             return listOf(Pair(coordinate.first, coordinate.second))
         }
-
+    }
     /**
      * Calculates bonus points for three or more players based on their longest terrain scores.
      *
