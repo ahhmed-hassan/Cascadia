@@ -1,5 +1,6 @@
 package gui
 
+import entity.HabitatTile
 import service.AbstractRefreshingService
 
 /**
@@ -14,27 +15,6 @@ import service.AbstractRefreshingService
  *
  */
 interface Refreshables {
-
-    /**
-     *
-     */
-    fun refreshAfterHotSeatConfigurationChosen(){}
-
-    /**
-     *
-     */
-    fun refreshAfterNetworkConfigurationMenuChosen(){}
-
-    /**
-     *
-     */
-    fun refreshAfterNetworkJoinMenuChosen(){}
-
-    /**
-     *
-     */
-    fun refreshAfterNetworkJoin(){}
-
     /**
      *
      */
@@ -58,7 +38,7 @@ interface Refreshables {
     /**
      *
      */
-    fun refreshAfterWildlifeTokenAdded(){}
+    fun refreshAfterWildlifeTokenAdded(habitatTile: HabitatTile){}
 
     /**
      *

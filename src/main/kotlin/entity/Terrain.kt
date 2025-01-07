@@ -10,7 +10,7 @@ package entity
  * RIVER, Represents a river terrain.
  * WETLAND, Represents a wetland terrain.
  */
-enum class Terrain(val abbreviation : Char) {
+enum class Terrain(val shortCut : Char) {
     FOREST('F'),
     MOUNTAIN('M'),
     PRAIRIE('P'),
@@ -19,9 +19,18 @@ enum class Terrain(val abbreviation : Char) {
     ;
 
     companion object{
-        fun fromAbbreviation (abbreviation: Char) : Terrain {
-            return values().find { it.abbreviation == abbreviation }
-                ?:throw IllegalArgumentException("Invalid Terrain: $abbreviation")
+        fun fromShortCut (shortCut: Char) : Terrain {
+            return values().find { it.shortCut == shortCut }
+                ?:throw IllegalArgumentException("Invalid Terrain: $shortCut")
         }
     }
+
+    override fun toString(): String = when (this) {
+        FOREST -> "F"
+        MOUNTAIN -> "M"
+        PRAIRIE -> "P"
+        RIVER -> "R"
+        WETLAND -> "W"
+    }
+
 }
