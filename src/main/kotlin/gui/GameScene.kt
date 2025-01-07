@@ -851,7 +851,7 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         }
 
         // Find the first group with at least 3 tokens
-        val matchingGroup = tokenIndexMap.entries.firstOrNull { it.value.size >= 2 }
+        val matchingGroup = tokenIndexMap.entries.firstOrNull { it.value.size >= 3 }
         return if (matchingGroup != null) {
             Pair(true, matchingGroup.value.take(3)) // Return true and the first 3 indices
         } else {
