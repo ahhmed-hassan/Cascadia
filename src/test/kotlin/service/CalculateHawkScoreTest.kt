@@ -48,6 +48,8 @@ class CalculateHawkScoreTest {
         checkNotNull(testPlayer.habitat[Pair( -4,0)]).wildlifeToken = WildlifeToken(Animal.ELK)
         checkNotNull(testPlayer.habitat[Pair( -3,-1)]).wildlifeToken = WildlifeToken(Animal.ELK)
         checkNotNull(testPlayer.habitat[Pair( -2,-1)]).wildlifeToken = WildlifeToken(Animal.ELK)
+        checkNotNull(testPlayer.habitat[Pair( -1,-1)]).wildlifeToken = WildlifeToken(Animal.ELK)
+
         assertEquals(5 , testScoringService.calculateHawkScore(testPlayer))
 
         //tests if the score is 2 when the other hawk is not surrounded by any other hawks
@@ -59,6 +61,7 @@ class CalculateHawkScoreTest {
         assertEquals(0 , testScoringService.calculateHawkScore(testPlayer))
 
     }
+
     /**
      *  Test correct scoring for [HabitatTile]s with [Animal.HAWK] for scoring rule B
      */
@@ -95,16 +98,28 @@ class CalculateHawkScoreTest {
         assertEquals(5 , testScoringService.calculateHawkScore(testPlayer))
 
         //tests with three Hawks diagonal
-        checkNotNull(testPlayer.habitat[Pair( -2, 0)]).wildlifeToken = WildlifeToken(Animal.ELK)
+        checkNotNull(testPlayer.habitat[Pair( 1, 0)]).wildlifeToken = WildlifeToken(Animal.ELK)
+        checkNotNull(testPlayer.habitat[Pair( -3, 0)]).wildlifeToken = WildlifeToken(Animal.ELK)
+        checkNotNull(testPlayer.habitat[Pair( 0, 0)]).wildlifeToken = WildlifeToken(Animal.ELK)
+        checkNotNull(testPlayer.habitat[Pair( -1, 0)]).wildlifeToken = WildlifeToken(Animal.ELK)
         checkNotNull(testPlayer.habitat[Pair( 1, -1)]).wildlifeToken = WildlifeToken(Animal.HAWK)
         checkNotNull(testPlayer.habitat[Pair( -1, 1)]).wildlifeToken = WildlifeToken(Animal.HAWK)
-        checkNotNull(testPlayer.habitat[Pair( -1, 0)]).wildlifeToken = WildlifeToken(Animal.HAWK)
         checkNotNull(testPlayer.habitat[Pair( -1, -1)]).wildlifeToken = WildlifeToken(Animal.HAWK)
         assertEquals(9 , testScoringService.calculateHawkScore(testPlayer))
+
+        //tests with four tiles
+        checkNotNull(testPlayer.habitat[Pair( -3, -1)]).wildlifeToken = WildlifeToken(Animal.HAWK)
+        checkNotNull(testPlayer.habitat[Pair( -4, 0)]).wildlifeToken = WildlifeToken(Animal.ELK)
+        checkNotNull(testPlayer.habitat[Pair( -3, 0)]).wildlifeToken = WildlifeToken(Animal.ELK)
+        assertEquals(12 , testScoringService.calculateHawkScore(testPlayer))
+
     }
 
-
-
+    /**
+     *  the function creates the Habitat for tests
+     *
+     *  @param player is the player whose habitat shall be changed
+     */
     private fun createHabitat(player: Player) {
 
         // create tiles
