@@ -88,13 +88,15 @@ class EasyBotService(private val rootService: RootService) {
         }
 
         //place the tile
-        playerActionService.addTileToHabitat(gameService.getAllPossibleCoordinatesForTilePlacing().random())
+        playerActionService.addTileToHabitat(
+            gameService.getAllPossibleCoordinatesForTilePlacing(player.habitat).random()
+        )
 
         //maybe places the wildlife
         if (PLACEWILDLIFECHANCE <= (1..100).random()) {
             val selectedToken = game.selectedToken
             checkNotNull(selectedToken)
-            val tiles = gameService.getAllPossibleTilesForWildlife(selectedToken.animal)
+            val tiles = gameService.getAllPossibleTilesForWildlife(selectedToken.animal, player.habitat)
             if (tiles.isNotEmpty()) {
                 playerActionService.addToken(tiles.random())
             } else {
