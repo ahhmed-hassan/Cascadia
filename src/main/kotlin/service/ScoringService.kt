@@ -73,7 +73,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
             visited: MutableSet<Pair<Int, Int>>,
             coordinate: Pair<Int, Int>
         ): Int {
-            if (visited.contains(coordinate)) return 0
+            if (visited.contains(coordinate) || !graph.containsKey(coordinate)) return 0
             var connectedComponentLength: Int = 1
             visited.add(coordinate)
             val neighbours = graph[coordinate] ?: listOf()
@@ -263,24 +263,53 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
      * @param player The [Player] having this longest terrains
      * @return [Int] representing the longest connected combination of [Terrain]s at this [Player.habitat]
      */
-    private fun calculateLongestTerrain(searchedTerrain: Terrain, player: Player): Int {
+    fun calculateLongestTerrain(searchedTerrain: Terrain, player: Player): Int {
+        data class TileAndCoordinate(val tile: HabitatTile, val coordinate: Pair<Int, Int>) {
 
-        val hasAtLeastOneEdgeOfSearchedTerrain: (HabitatTile) -> Boolean = { it.terrains.any { it == searchedTerrain } }
-        val buildSearchedTerrainGraph: (Map<Pair<Int, Int>, HabitatTile>) -> Map<Pair<Int, Int>, List<Pair<Int, Int>>> =
-            { playerTiles ->
-                val searchedTerrainNodesCoordinates =
-                    playerTiles.filterValues { hasAtLeastOneEdgeOfSearchedTerrain(it) }
-                        .keys.toSet()
+            val hasSearchedTerrain: Boolean = tile.terrains.any { it == searchedTerrain }
 
-                val graph = searchedTerrainNodesCoordinates.associateWith { coordinate ->
-                    coordinate
-                        .neighbours()
-                        .filter { neighbour -> searchedTerrainNodesCoordinates.contains(neighbour) }
+            /**Checking if this tileAndCoordinate is connected with  the other TileAndCoordinate
+             * and that the corresponding edges in both tileAndCoordinates refers to searchedTerrainEdges
+             * returns true iff this TileAndCoordinate has at least one Edge of type searchedTerrain,
+             * and the other TileAndCoordinate has at least one Edge of type searchedTerrain
+             * and both of them are connecting at one of those edges.
+             */
+            val youAndMeHaveConnectingSearchedTerrainEdge: (another: TileAndCoordinate) -> Boolean =
+                { anotherTileAndCoordinate ->
+                    val hisRelativePlace = Pair(
+                        anotherTileAndCoordinate.coordinate.first - this.coordinate.first,
+                        anotherTileAndCoordinate.coordinate.second - this.coordinate.second
+                    )
+                    val hisEdge = directionsPairsAndCorrespondingEdges[hisRelativePlace]
+                    checkNotNull(hisEdge)
+
+                    val result = anotherTileAndCoordinate.tile.terrains[hisEdge] == searchedTerrain &&
+                            this.tile.terrains[(hisEdge + 3).mod(6)] == searchedTerrain
+
+                    result
                 }
-                graph
+        }
 
+        val buildSearchedTerrainGraph: (Map<Pair<Int, Int>, TileAndCoordinate>) -> Map<Pair<Int, Int>, List<Pair<Int, Int>>> =
+            { playerTilesAndCoordinate ->
+                val tilesAndCoordinatesWithSearchedTerrain =
+                    playerTilesAndCoordinate.filterValues { it.hasSearchedTerrain }
+                val graph =
+                    tilesAndCoordinatesWithSearchedTerrain.mapValues { (coordinate, parentTileAndCoordinate) ->
+                        val neighboursWithSearchedTerrain =
+                            coordinate.neighbours().mapNotNull { tilesAndCoordinatesWithSearchedTerrain[it] }
+                        val neighboursWithSearchedTerrainConnectedAtRightEdge =
+                            neighboursWithSearchedTerrain.filter { neighbourTileAndCoordinate ->
+                                parentTileAndCoordinate.youAndMeHaveConnectingSearchedTerrainEdge(
+                                    neighbourTileAndCoordinate
+                                )
+                            }
+                        neighboursWithSearchedTerrainConnectedAtRightEdge.map { it.coordinate }
+                    }
+                graph
             }
-        val searchedTerrainGraph = buildSearchedTerrainGraph(player.habitat)
+        val searchedTerrainGraph =
+            buildSearchedTerrainGraph(player.habitat.mapValues { TileAndCoordinate(it.value, it.key) })
         val visited: MutableSet<Pair<Int, Int>> = mutableSetOf()
         var longestConnectedComponent = 0
         for (terrainNode in searchedTerrainGraph.keys) {
@@ -300,7 +329,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
      * @return [Int] representing the score resulted from the Bear combinations of this player based on
      * the current [entity.CascadiaGame.ruleSet]
      */
-    private fun calculateBearScore(player: Player): Int {
+     fun calculateBearScore(player: Player): Int {
         val makeBearGraph: (Map<Pair<Int, Int>, HabitatTile>) -> Map<Pair<Int, Int>, List<Pair<Int, Int>>> =
             { habitatTiles ->
                 val bearNodesCoordinates = habitatTiles.filterValues { it.wildlifeToken?.animal == Animal.BEAR }
