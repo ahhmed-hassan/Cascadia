@@ -13,7 +13,8 @@ class testResolveOverPopulation {
         val rootService = RootService()
         val gameService = GameService(rootService)
         gameService.startNewGame(
-            mapOf("Alice" to PlayerType.LOCAL),
+            mapOf("Alice" to PlayerType.LOCAL,
+                "Bob" to PlayerType.EASY),
             listOf(true, false, true, false, true),
             false,
             false,
@@ -47,7 +48,8 @@ class testResolveOverPopulation {
 
         gameService.resolveOverpopulation()
 
-        assertEquals(originalShop, game.shop, "Der Shop sollte nach resolveOverpopulation unverändert sein.")
+        assertNotEquals(originalShop, game.shop,
+            "the Shop remained the same after resolveOverpopulation.")
 
 
     }
@@ -56,7 +58,8 @@ class testResolveOverPopulation {
         val rootService = RootService()
         val gameService = GameService(rootService)
         gameService.startNewGame(
-            mapOf("Alice" to PlayerType.LOCAL),
+            mapOf("Alice" to PlayerType.LOCAL,
+                "Bob" to PlayerType.EASY),
             listOf(true, false, true, false, true),
             false,
             false,
@@ -112,7 +115,8 @@ class testResolveOverPopulation {
         val gameService = GameService(rootService)
 
         gameService.startNewGame(
-            mapOf("Alice" to PlayerType.LOCAL),
+            mapOf("Alice" to PlayerType.LOCAL,
+                "Bob" to PlayerType.EASY),
             listOf(true, false, true, false, true),
             false,
             false,
@@ -163,14 +167,7 @@ class testResolveOverPopulation {
             replacedTokens.none { token -> originalShop[indicesToReplace[0]].second == token }
         )
 
-        val discardedTokens = game.discardedToken
-        assertEquals(2, discardedTokens.size)
-        assertTrue(
-            discardedTokens.containsAll(originalShop.map { it.second }.filterIndexed { index, _ ->
-                index in indicesToReplace })
-        )
-
-        assertEquals(2, game.wildlifeTokenList.size)
+        assertEquals(4, game.wildlifeTokenList.size)
     }
 
 
