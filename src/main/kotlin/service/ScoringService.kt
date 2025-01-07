@@ -93,28 +93,27 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
          *
          * @return List with the coordinates of tiles in the pattern
          */
-        private fun createPattern(coordinate: Pair<Int, Int>, number: Int): List<Pair<Int, Int>> {
-            if (number == 3) {
+        private fun createPattern(coordinate: Pair<Int,Int>,number: Int) : List<Pair<Int,Int>> {
+            if(number==3) {
                 return listOf(
                     Pair(coordinate.first, coordinate.second),
                     Pair(coordinate.first - 1, coordinate.second + 1),
                     Pair(coordinate.first - 1, coordinate.second),
-                    Pair(coordinate.first - 2, coordinate.second + 1)
-                )
+                    Pair(coordinate.first - 2, coordinate.second + 1))
             }
-            if (number == 2) {
+            if(number==2) {
                 return listOf(
                     Pair(coordinate.first, coordinate.second),
                     Pair(coordinate.first - 1, coordinate.second + 1),
-                    Pair(coordinate.first - 1, coordinate.second)
-                )
+                    Pair(coordinate.first - 1, coordinate.second))
             }
-            if (number == 1) {
+            if(number==1) {
                 return listOf(
                     Pair(coordinate.first, coordinate.second),
                     Pair(coordinate.first, coordinate.second - 1),
                 )
-            } else {
+            }
+            else {
                 return listOf(Pair(coordinate.first, coordinate.second))
             }
         }
@@ -223,6 +222,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
      *
      * @throws IllegalStateException if no game has been started.
      */
+
     fun calculateScore(): Map<String, PlayerScore> {
         val game = rootService.currentGame
         checkNotNull(game) { "No game started yet" }
@@ -375,14 +375,14 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
      *
      * @param player the person you want to add the score to
      */
-    private fun calculateElkScore(player: Player): Int {
+    private fun calculateElkScore(player : Player) {
         //filters out all the elks on the map
         val elkCoordinate = player.habitat.filterValues { it.wildlifeToken?.animal == Animal.ELK }.keys.toMutableSet()
         //gets the ruleset
         val isB = checkNotNull(rootService.currentGame).ruleSet[Animal.ELK.ordinal]
-        var result: Int = 0
+
         //ruleset A
-        if (!isB) {
+        if(!isB) {
             for (i in 3 downTo 0) {
                 //checks for every Elk if it is in a row with i other Elks
                 for (coordinate in elkCoordinate) {
@@ -393,57 +393,55 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
                     //elkCoordinate pair
                     if (straightLine) {
                         if (i == 3) {
-                            result += 13
+                            player.score += 13
                             elkCoordinate.remove(Pair(coordinate.first, coordinate.second))
                             elkCoordinate.remove(Pair(coordinate.first, coordinate.second + 1))
                             elkCoordinate.remove(Pair(coordinate.first, coordinate.second + 2))
                             elkCoordinate.remove(Pair(coordinate.first, coordinate.second + 3))
                         } else if (i == 2) {
-                            result += 9
+                            player.score += 9
                             elkCoordinate.remove(Pair(coordinate.first, coordinate.second))
                             elkCoordinate.remove(Pair(coordinate.first, coordinate.second + 1))
                             elkCoordinate.remove(Pair(coordinate.first, coordinate.second + 2))
                         } else if (i == 1) {
-                            result += 5
+                            player.score += 5
                             elkCoordinate.remove(Pair(coordinate.first, coordinate.second))
                             elkCoordinate.remove(Pair(coordinate.first, coordinate.second + 1))
                         } else {
-                            result += 2
+                            player.score += 2
                             elkCoordinate.remove(Pair(coordinate.first, coordinate.second))
                         }
                     }
                 }
             }
         } else {
-            for (i in 3 downTo 0) {
+            for(i in 3 downTo 0) {
                 for (coordinate in elkCoordinate) {
                     //creates the pattern that fits the amount of tiles
-                    val pattern = createPattern(coordinate, i)
+                    val pattern = createPattern(coordinate,i)
                     //checks if it is an elk
                     val isMatch = pattern.all { it in elkCoordinate }
                     //checks which score must be given and what needs to be removed
-                    if (isMatch && i == 3) {
-                        result += 13
+                    if(isMatch && i==3) {
+                        player.score += 13
                         elkCoordinate.removeAll(pattern)
                     }
-                    if (isMatch && i == 2) {
-                        result += 9
+                    if(isMatch && i==2) {
+                        player.score += 9
                         elkCoordinate.removeAll(pattern)
                     }
-                    if (isMatch && i == 1) {
-                        result += 5
+                    if(isMatch && i==1) {
+                        player.score += 5
                         elkCoordinate.removeAll(pattern)
                     }
-                    if (isMatch && i == 0) {
-                        result += 2
+                    if(isMatch && i==0) {
+                        player.score += 2
                         elkCoordinate.removeAll(pattern)
                     }
                 }
             }
         }
-        return result
     }
-
     /**
      * Adds the score for the hawks to the player according to the current rule for hawks
      *
@@ -451,17 +449,17 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
      *
      * @return an [Int] of hawk score for the given [Player] based on the current [entity.CascadiaGame.ruleSet]
      */
-    private fun calculateHawkScore(player: Player): Int {
+     fun calculateHawkScore(player : Player): Int {
         var points = 0;
         //filters out all the hawks on the map
-        val hawkCoordinate = player.habitat.filterValues { it.wildlifeToken?.animal == Animal.HAWK }.keys.toMutableSet()
+        val hawkCoordinate = player.habitat.filterValues { it.wildlifeToken?.animal == Animal.HAWK}.keys.toMutableSet()
         //gets the ruleset
         val isB = checkNotNull(rootService.currentGame).ruleSet[Animal.HAWK.ordinal]
 
         //implementing one Set of pairs for rule a
         val notAdjacent: MutableSet<Pair<Int, Int>> = mutableSetOf()
 
-        for (coordinate in hawkCoordinate) {
+        for(coordinate in hawkCoordinate){
             //checks for every hawk if it is not adjacent to any other hawks
             val neighbours = getNeighbours(coordinate)
             if (neighbours.none { it in hawkCoordinate }) {
@@ -499,22 +497,22 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
             //implementing one set of pairs for rule b
             val inSight: MutableSet<Pair<Int, Int>> = mutableSetOf()
             //checks if a hawk is also in direct sight to another hawk
-            for (coordinate in notAdjacent) {
-                for (innerCoordinate in hawkCoordinate) {
+            for(coordinate in notAdjacent){
+                for(innerCoordinate in hawkCoordinate){
                     //vertical
-                    if (coordinate.second == innerCoordinate.second) {
+                    if(coordinate.second == innerCoordinate.second){
                         inSight.add(coordinate)
                     }
                     //horizontal
-                    if (coordinate.first == innerCoordinate.first) {
+                    if(coordinate.first == innerCoordinate.first){
                         inSight.add(coordinate)
                     }
                     //diagonal plus
-                    if (coordinate.first - innerCoordinate.first == coordinate.second - innerCoordinate.second) {
+                    if(coordinate.first - innerCoordinate.first == coordinate.second - innerCoordinate.second){
                         inSight.add(coordinate)
                     }
                     //diagonal minus
-                    if (coordinate.first - innerCoordinate.first == -(coordinate.second - innerCoordinate.second)) {
+                    if(coordinate.first - innerCoordinate.first == -(coordinate.second - innerCoordinate.second)){
                         inSight.add(coordinate)
                     }
                 }
