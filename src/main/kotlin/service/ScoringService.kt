@@ -420,7 +420,8 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
      *
      * @param player the person you want to add the score to
      */
-    private fun calculateElkScore(player: Player): Int {
+    fun calculateElkScore(player: Player): Int {
+        var points = 0;
         //filters out all the elks on the map
         val elkCoordinate = player.habitat.filterValues { it.wildlifeToken?.animal == Animal.ELK }.keys.toMutableSet()
         //gets the ruleset
@@ -454,13 +455,13 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
                         //elkCoordinate pair
                         if (straightLine) {
                             if (i == 3) {
-                                player.score += 13
+                                points += 13
                             } else if (i == 2) {
-                                player.score += 9
+                                points += 9
                             } else if (i == 1) {
-                                player.score += 5
+                                points += 5
                             } else {
-                                player.score += 2
+                                points += 2
                             }
 
                             //removes the Elks
@@ -489,26 +490,26 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
 
                         //checks which score must be given and what needs to be removed
                         if (isMatch && i == 3) {
-                            player.score += 13
+                            points += 13
                             elkCoordinate.removeAll(pattern)
                         }
                         if (isMatch && i == 2) {
-                            player.score += 9
+                            points += 9
                             elkCoordinate.removeAll(pattern)
                         }
                         if (isMatch && i == 1) {
-                            player.score += 5
+                            points += 5
                             elkCoordinate.removeAll(pattern)
                         }
                         if (isMatch && i == 0) {
-                            player.score += 2
+                            points += 2
                             elkCoordinate.removeAll(pattern)
                         }
                     }
                 }
             }
         }
-        return result
+        return points
     }
 
     /**
