@@ -217,7 +217,8 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
      * @throws IllegalArgumentException if there is no [HabitatTile] to place
      * post :
      * The [HabitatTile.rotationOffset] is incremented.
-     * the [HabitatTile.terrains] would have the right order as how it would be placed (one step clockwise rotated)
+     * the [HabitatTile.terrains] would have the right order as how it would be placed
+     * (one step counterclockwise rotated)
      *
      */
     fun rotateTile() {
@@ -225,7 +226,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
 
         val selectedTile = checkNotNull(game.selectedTile) { "Only the selected tile can be rotated!" }
 
-        selectedTile.rotationOffset = (selectedTile.rotationOffset + 1).mod(selectedTile.terrains.size)
+        selectedTile.rotationOffset = (selectedTile.rotationOffset - 1).mod(selectedTile.terrains.size)
         selectedTile.terrains.add(
             0, selectedTile.terrains.removeLast()
         )
