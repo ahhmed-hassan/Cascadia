@@ -118,7 +118,7 @@ class CalculateSalmonScoreTest {
         var changeTile = checkNotNull(testPlayer.habitat[Pair(0,0)])
         changeTile.wildlifeToken = WildlifeToken(Animal.SALMON)
 
-        assertEquals(16, testScoringService.calculateSalmonScore(testPlayer))
+        assertEquals(2, testScoringService.calculateSalmonScore(testPlayer))
 
         // test run of two
         changeTile = checkNotNull(testPlayer.habitat[Pair(1,-1)])
