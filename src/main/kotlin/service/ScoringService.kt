@@ -451,7 +451,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
      *
      * @return an [Int] of hawk score for the given [Player] based on the current [entity.CascadiaGame.ruleSet]
      */
-    private fun calculateHawkScore(player: Player): Int {
+     fun calculateHawkScore(player: Player): Int {
         var points = 0;
         //filters out all the hawks on the map
         val hawkCoordinate = player.habitat.filterValues { it.wildlifeToken?.animal == Animal.HAWK }.keys.toMutableSet()
