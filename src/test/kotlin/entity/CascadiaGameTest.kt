@@ -29,7 +29,7 @@ class CascadiaGameTest {
 
         val ruleSet = listOf(false, true, false, true, false)
 
-        val shop = mutableListOf<Pair<HabitatTile?, WildlifeToken?>>(
+        val shop = mutableListOf(
             Pair(testTile, testToken),
             Pair(null, null)
         )
