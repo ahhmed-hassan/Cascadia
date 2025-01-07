@@ -2,6 +2,7 @@ package gui
 
 import entity.Animal
 import entity.HabitatTile
+import entity.Terrain
 import service.RootService
 import tools.aqua.bgw.components.ComponentView
 import tools.aqua.bgw.components.container.HexagonGrid
@@ -402,8 +403,9 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         for (habitat in game.habitatTileList)
             habitats[habitat] = createLabeledHexagonView(
                 color = habitat.isKeystoneTile,
-                labels = habitat.terrains.map { it.shortCut.toString() },
-                tokens = habitat.wildlifeSymbols.map { it.shortCut.toString() }
+                labels = habitat.terrains.map { terrain: Terrain ->
+                    (terrain.name.substring(0, 1)) },
+                tokens = habitat.wildlifeSymbols.map { animal: Animal -> animal.name.substring(0,1) }
             )
 
         //create a HexagonView for each shopTile
@@ -411,8 +413,9 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
             val habitate = checkNotNull(habitat.first)
             habitats[habitate] = createLabeledHexagonView(
                 color = habitate.isKeystoneTile,
-                labels = habitate.terrains.map { it.shortCut.toString() },
-                tokens = habitate.wildlifeSymbols.map { it.shortCut.toString() }
+                labels = habitate.terrains.map { terrain: Terrain ->
+                    (terrain.name.substring(0, 1)) },
+                tokens = habitate.wildlifeSymbols.map { animal: Animal -> animal.name.substring(0,1) }
             )
         }
 
@@ -421,8 +424,9 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
             for (habitate in player) {
                 habitats[habitate] = createLabeledHexagonView(
                     color = habitate.isKeystoneTile,
-                    labels = habitate.terrains.map { it.shortCut.toString() },
-                    tokens = habitate.wildlifeSymbols.map { it.shortCut.toString() }
+                    labels = habitate.terrains.map { terrain: Terrain ->
+                        (terrain.name.substring(0, 1)) },
+                    tokens = habitate.wildlifeSymbols.map { animal: Animal -> animal.name.substring(0,1) }
                 )
             }
         }
@@ -492,7 +496,12 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         playableToken.isDisabled = false
         discardToken.isDisabled = false
 
-        val tokenHabitate = game.selectedToken?.let { rootService.gameService.getAllPossibleTilesForWildlife(it.animal) }
+        val tokenHabitate = game.selectedToken?.let {
+            rootService.gameService.getAllPossibleTilesForWildlife(
+                it.animal,
+                habitat = game.currentPlayer.habitat
+            )
+        }
 
         for (habitat in game.currentPlayer.habitat){
             if (tokenHabitate != null) {
@@ -516,8 +525,7 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         checkNotNull(rotateTile)
 
        // get the list of terrains from Habitat
-        val sideLabels = rotateTile.terrains.map { it.shortCut.toString() }
-
+        val sideLabels = rotateTile.terrains.map { terrain: Terrain -> terrain.name.substring(0,1) }
 
         //Do we want to change the Position of terrain in PlayerActionService ?
 //        val rotation = game.selectedTile?.rotationOffset
@@ -533,7 +541,7 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         val newHexagon = createLabeledHexagonView(
             labels = sideLabels,
             color = rotateTile.isKeystoneTile,
-            tokens = rotateTile.wildlifeSymbols.map { it.shortCut.toString() }
+            tokens = rotateTile.wildlifeSymbols.map { animal: Animal -> animal.name.substring(0,1) }
         ).apply {
             onMouseClicked = {
                 rootService.playerActionService.rotateTile()
@@ -563,7 +571,7 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         replaceWildlifeButton.isDisabled = true
 
         //call method getAllPossibleCoordinatesForTilePlacing in createPossibleHexagons
-        createPossibleHexagons(rootService.gameService.getAllPossibleCoordinatesForTilePlacing())
+        createPossibleHexagons(rootService.gameService.getAllPossibleCoordinatesForTilePlacing(game.currentPlayer.habitat))
 
         val tokenToPlay = game.selectedToken
         checkNotNull(tokenToPlay)
@@ -592,8 +600,8 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         playableToken[0,0] = null
         habitats[habitatTile] = createLabeledHexagonView(
             color = habitatTile.isKeystoneTile,
-            labels = habitatTile.terrains.map { it.shortCut.toString() },
-            token = habitatTile.wildlifeToken?.animal.toString()
+            labels = habitatTile.terrains.map { terrain: Terrain -> terrain.name.substring(0,1) },
+            token = habitatTile.wildlifeToken?.animal.toString().substring(0,1)
         )
     }
 

@@ -53,9 +53,9 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         //There is exactly one local player in a network game
         //Count the number of players with type "LOCAL"
         val localPlayers = playerNames.values.count { it == PlayerType.LOCAL }
-        if (localPlayers != 1) {
-            throw IllegalArgumentException("In a network game must be exactly one local player.")
-        }
+//        if (localPlayers != 1) {
+//            throw IllegalArgumentException("In a network game must be exactly one local player.")
+//        }
 
         //Ensure that no network players exist if the game connection state indicates Hotseat mode
         val networkService = NetworkService(rootService)
@@ -267,6 +267,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         val game = rootService.currentGame
         checkNotNull(game)
 
+        game.hasReplacedThreeToken = false
 
         // check if player performed action
         check(game.hasPlayedTile) { "Player must at least add a habitat tile each turn" }
@@ -278,8 +279,10 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         }
 
         // refill shop
-        val newHabitatTile = game.habitatTileList[game.habitatTileList.size - 1]
-        val newWildlifeToken = game.wildlifeTokenList[game.wildlifeTokenList.size - 1]
+        val newHabitatTile = game.habitatTileList[game.habitatTileList.size-1]
+        game.habitatTileList.remove(newHabitatTile)
+        val newWildlifeToken = game.wildlifeTokenList[game.wildlifeTokenList.size-1]
+        game.wildlifeTokenList.remove(newWildlifeToken)
         for (i in 0 until game.shop.size) {
             // refill missing pair
             if (game.shop[i].first == null && game.shop[i].second == null) {
@@ -301,7 +304,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         }
 
         // switch current player
-        val nextPlayerIndex = game.playerList.indexOf(game.currentPlayer) + 1 % game.playerList.size
+        val nextPlayerIndex = (game.playerList.indexOf(game.currentPlayer) + 1 ).mod(game.playerList.size)
         game.currentPlayer = game.playerList[nextPlayerIndex]
 
         // refresh GUI

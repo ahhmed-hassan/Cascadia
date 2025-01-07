@@ -223,39 +223,39 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
      *
      * @throws IllegalStateException if no game has been started.
      */
-//    fun calculateScore(): Map<String, PlayerScore> {
-//        val game = rootService.currentGame
-//        checkNotNull(game) { "No game started yet" }
-//
-//        val playersScores = game.playerList.associate { player ->
-//            player.name to
-//                    PlayerScore(
-//                        animalsScores = mapOf(
-//                            Animal.BEAR to calculateBearScore(player),
-//                            Animal.SALMON to calculateSalmonScore(player),
-//                            Animal.ELK to calculateElkScore(player),
-//                            Animal.FOX to calculateFoxScore(player),
-//                            Animal.HAWK to calculateHawkScore(player)
-//                        ),
-//                        ownLongestTerrainsScores = Terrain.values()
-//                            .associateWith { calculateLongestTerrain(it, player) },
-//                        natureTokens = player.natureToken
-//                    )
-//        }
-//
-//        val terrainScoresByPlayer: Map<String, Map<Terrain, Int>> = playersScores.mapValues { (_, playerScore) ->
-//            playerScore.ownLongestTerrainsScores
-//        }
-//
-//        val bonus = calculateBonusScores(terrainScoresByPlayer)
-//
-//        return playersScores.mapValues { (playerName: String, playerScore: PlayerScore) ->
-//            val playerBonus = checkNotNull(bonus[playerName])
-//            playerScore.copy(
-//                longestAmongOtherPlayers = playerBonus
-//            )
-//        }
-//    }
+    fun calculateScore(): Map<String, PlayerScore> {
+        val game = rootService.currentGame
+        checkNotNull(game) { "No game started yet" }
+
+        val playersScores = game.playerList.associate { player ->
+            player.name to
+                    PlayerScore(
+                        animalsScores = mapOf(
+                            Animal.BEAR to calculateBearScore(player),
+                            Animal.SALMON to calculateSalmonScore(player),
+                            Animal.ELK to calculateElkScore(player),
+                            Animal.FOX to calculateFoxScore(player),
+                            Animal.HAWK to calculateHawkScore(player)
+                        ),
+                        ownLongestTerrainsScores = Terrain.values()
+                            .associateWith { calculateLongestTerrain(it, player) },
+                        natureTokens = player.natureToken
+                    )
+        }
+
+        val terrainScoresByPlayer: Map<String, Map<Terrain, Int>> = playersScores.mapValues { (_, playerScore) ->
+            playerScore.ownLongestTerrainsScores
+        }
+
+        val bonus = calculateBonusScores(terrainScoresByPlayer)
+
+        return playersScores.mapValues { (playerName: String, playerScore: PlayerScore) ->
+            val playerBonus = checkNotNull(bonus[playerName])
+            playerScore.copy(
+                longestAmongOtherPlayers = playerBonus
+            )
+        }
+    }
 
     /***
      * Calculating the longest connected terrains of some type for some player
