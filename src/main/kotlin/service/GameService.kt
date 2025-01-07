@@ -363,8 +363,8 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         val firstToken = game.shop[tokenIndices[0]].second
         checkNotNull(firstToken)
         val firstAnimal = firstToken.animal
-        for (i in 1..3) {
-            val currentToken = game.shop[tokenIndices[i]].second
+        for (index in tokenIndices) {
+            val currentToken = game.shop[index].second
             checkNotNull(currentToken)
             if (currentToken.animal != firstAnimal) {
                 return false
