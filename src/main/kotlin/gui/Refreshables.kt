@@ -1,6 +1,7 @@
 package gui
 
 import service.AbstractRefreshingService
+import service.ConnectionState
 import service.ScoringService
 
 /**
@@ -75,5 +76,15 @@ interface Refreshables {
      *
      */
     fun refreshAfterTileRotation() {}
+
+    /**
+     *
+     */
+    fun refreshConnectionState(newState : ConnectionState) {}
+
+    /**
+     *
+     */
+    fun refreshAfterPlayerJoined(networkPlayers : MutableList<String>)
 
 }

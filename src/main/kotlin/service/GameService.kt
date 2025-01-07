@@ -32,8 +32,8 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
     fun startNewGame(
         playerNames: Map<String, PlayerType>,
         scoreRules: List<Boolean>,
-        orderIsRandom: Boolean = true,
-        isRandomRules: Boolean = true,
+        orderIsRandom: Boolean,
+        isRandomRules: Boolean,
         startTileOrder: List<Int>? = null
     ) {
         require(playerNames.size in 2..4) { "The number of players must be between 2 and 4" }
@@ -376,9 +376,13 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
      *
      * @param [tokenIndices] is a list of indices of the tile-token pairs in [shop] whose token shall be replaced.
      * @param networkReplacement is a boolean to flag replacements done by other network players.
+     * @param natureTokenUsed is a boolean to flag the usage of nature token
+     * as this requires different handling of discarded tokens.
      *
      */
-    fun executeTokenReplacement(tokenIndices: List<Int>, networkReplacement: Boolean = false) {
+    fun executeTokenReplacement(tokenIndices : List<Int>,
+                                networkReplacement : Boolean = false,
+                                natureTokenUsed : Boolean = false) {
 
         //check for existing game
         val game = checkNotNull(rootService.currentGame)
@@ -392,13 +396,8 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
             )
         }
 
-        // resolve possible overpopulation of four
-        if (checkForSameAnimal() && !networkReplacement) {
-            resolveOverpopulation()
-        }
-
-        // return discarded wildlifeTokens
-        else {
+        if (natureTokenUsed) {
+            // return discarded wildlifeTokens
             for (token in game.discardedToken) {
                 checkNotNull(token)
                 game.wildlifeTokenList.add(token)
@@ -408,6 +407,26 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
                 game.wildlifeTokenList.shuffle()
             }
 
+            // resolve possible overpopulation of four
+            if (checkForSameAnimal() && !networkReplacement) {
+                resolveOverpopulation()
+            }
+        } else {
+            // resolve possible overpopulation of four
+            if (checkForSameAnimal() && !networkReplacement) {
+                resolveOverpopulation()
+            }
+            // return discarded wildlifeTokens
+            else {
+                for (token in game.discardedToken) {
+                    checkNotNull(token)
+                    game.wildlifeTokenList.add(token)
+                }
+                game.discardedToken = mutableListOf()
+                if (!networkReplacement) {
+                    game.wildlifeTokenList.shuffle()
+                }
+            }
         }
 
         // refresh GUI Elements
@@ -420,10 +439,10 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
      *
      * @return List<Pair<Int,Int>>
      */
-    fun getAllPossibleCoordinatesForTilePlacing(): List<Pair<Int, Int>> {
+    fun getAllPossibleCoordinatesForTilePlacing(
+        habitat: MutableMap<Pair<Int, Int>, HabitatTile>
+    ): List<Pair<Int, Int>> {
         val coordinates = hashSetOf<Pair<Int, Int>>()
-        val habitat = rootService.currentGame?.currentPlayer?.habitat
-        checkNotNull(habitat)
 
         habitat.forEach {
             val key = it.key
@@ -473,10 +492,10 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
      * @param animal the animal Type
      * @return List<HabitatTile>
      */
-    fun getAllPossibleTilesForWildlife(animal: Animal): List<HabitatTile> {
-        val habitat = rootService.currentGame?.currentPlayer?.habitat
-        checkNotNull(habitat)
-
+    fun getAllPossibleTilesForWildlife(
+        animal: Animal,
+        habitat: MutableMap<Pair<Int, Int>, HabitatTile>
+    ): List<HabitatTile> {
         return habitat.values.filter { it.wildlifeToken == null && it.wildlifeSymbols.contains(animal) }
     }
 }
