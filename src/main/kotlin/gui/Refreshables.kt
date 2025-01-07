@@ -1,6 +1,8 @@
 package gui
 
 import service.AbstractRefreshingService
+import service.ConnectionState
+import service.ScoringService
 
 /**
  * This interface provides a mechanism for the service layer classes to communicate
@@ -68,11 +70,21 @@ interface Refreshables {
     /**
      *
      */
-    fun refreshAfterGameEnd(scores: Map<String, PlayerScore>) {}
+    fun refreshAfterGameEnd(scores: Map<String, ScoringService.Companion.PlayerScore>) {}
 
     /**
      *
      */
     fun refreshAfterTileRotation() {}
+
+    /**
+     *
+     */
+    fun refreshConnectionState(newState : ConnectionState) {}
+
+    /**
+     *
+     */
+    fun refreshAfterPlayerJoined(networkPlayers : MutableList<String>)
 
 }

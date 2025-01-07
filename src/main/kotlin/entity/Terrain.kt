@@ -17,4 +17,17 @@ enum class Terrain {
     RIVER,
     WETLAND,
     ;
+
+    companion object {
+        fun fromValue(value : String) : Terrain {
+            return when(value) {
+                "F" ->  FOREST
+                "M" ->  MOUNTAIN
+                "P" ->  PRAIRIE
+                "R" ->  RIVER
+                else ->  WETLAND
+            }
+        }
+    }
+
 }
