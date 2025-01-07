@@ -1,5 +1,6 @@
 package gui
 
+import entity.Animal
 import entity.HabitatTile
 import entity.WildlifeToken
 import service.RootService
@@ -331,7 +332,7 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         }
     }
 
-    private val bearRule = Label(
+    private val bearRuleA = Label(
         posX = 50,
         posY = 50,
         width = 420,
@@ -339,7 +340,15 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         visual = ImageVisual("Bear_A.png")
     )
 
-    private val elkRule = Label(
+    private val bearRuleB = Label(
+        posX = 50,
+        posY = 50,
+        width = 420,
+        height = 270,
+        visual = ImageVisual("Bear_B.png")
+    )
+
+    private val elkRuleA = Label(
         posX = 520,
         posY = 50,
         width = 420,
@@ -347,7 +356,15 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         visual = ImageVisual("Elk_A.png")
     )
 
-    private val foxRule = Label(
+    private val elkRuleB = Label(
+        posX = 520,
+        posY = 50,
+        width = 420,
+        height = 270,
+        visual = ImageVisual("Elk_B.png")
+    )
+
+    private val foxRuleA = Label(
         posX = 990,
         posY = 50,
         width = 420,
@@ -355,7 +372,15 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         visual = ImageVisual("Fox_A.png")
     )
 
-    private val hawkRule = Label(
+    private val foxRuleB = Label(
+        posX = 990,
+        posY = 50,
+        width = 420,
+        height = 270,
+        visual = ImageVisual("Fox_B.png")
+    )
+
+    private val hawkRuleA = Label(
         posX = 50,
         posY = 370,
         width = 420,
@@ -363,12 +388,28 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         visual = ImageVisual("Hawk_A.png")
     )
 
-    private val salmonRule = Label(
+    private val hawkRuleB = Label(
+        posX = 50,
+        posY = 370,
+        width = 420,
+        height = 270,
+        visual = ImageVisual("Hawk_B.png")
+    )
+
+    private val salmonRuleA = Label(
         posX = 520,
         posY = 370,
         width = 420,
         height = 270,
         visual = ImageVisual("Salmon_A.png")
+    )
+
+    private val salmonRuleB = Label(
+        posX = 520,
+        posY = 370,
+        width = 420,
+        height = 270,
+        visual = ImageVisual("Salmon_B.png")
     )
 
 
@@ -441,13 +482,6 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
 
         getRuleSets()
 
-        ruleSetOverlay.addAll(
-            closeRuleSet,
-            bearRule,
-            elkRule,
-            foxRule,
-            hawkRule,
-            salmonRule)
 
         /**
          *  Missing:
@@ -564,18 +598,32 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         playableToken.isDisabled = true
 
         playableTile[0,0] = selectedHabitat?.apply {
-            onMouseClicked = {
-                //rootService.playerActionService.rotateTile()
+            onMouseClicked = { mouseEvent ->
+                when (mouseEvent.button) {
+                    MouseButtonType.RIGHT_BUTTON -> {
+                        for (i in 1..6) {
+                            rootService.playerActionService.rotateTile()
+                        }
+                    }
+                    else -> {}
+                }
             }
             isDisabled = false
         }
     }
 
     override fun refreshAfterWildlifeTokenAdded() {
-        //val game = rootService.currentGame
-        //checkNotNull(game)
+        val game = rootService.currentGame
+        checkNotNull(game)
 
-        super.refreshAfterWildlifeTokenAdded()
+        val selectedTile = game.selectedTile
+        val selectedToken = game.selectedToken
+        checkNotNull(selectedTile) { "No habitat tile has been chosen yet" }
+        checkNotNull(selectedToken) { "No wildlife token has been chosen yet" }
+
+        rootService.playerActionService.addToken(selectedTile)
+        updateButtonStates("wildlifeTokenAdded")
+
     }
 
     override fun refreshAfterWildlifeTokenReplaced() {
@@ -721,10 +769,43 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
 
     //get the correct images
     private fun getRuleSets(){
-        //val game = rootService.currentGame
-        //checkNotNull(game)
+        val game = rootService.currentGame
+        checkNotNull(game)
 
-        //iterate over ruleset and update the pngs (visuals) based on
+        ruleSetOverlay.clear()
+        ruleSetOverlay.add(closeRuleSet)
+
+        // Update the rule set visuals based on the current game's rule set
+        if (game.ruleSet[Animal.BEAR.ordinal]) {
+            ruleSetOverlay.add(bearRuleB)
+        } else {
+            ruleSetOverlay.add(bearRuleA)
+        }
+
+        if (game.ruleSet[Animal.ELK.ordinal]) {
+            ruleSetOverlay.add(elkRuleB)
+        } else {
+            ruleSetOverlay.add(elkRuleA)
+        }
+
+        if (game.ruleSet[Animal.FOX.ordinal]) {
+            ruleSetOverlay.add(foxRuleB)
+        } else {
+            ruleSetOverlay.add(foxRuleA)
+        }
+
+        if (game.ruleSet[Animal.HAWK.ordinal]) {
+            ruleSetOverlay.add(hawkRuleB)
+        } else {
+            ruleSetOverlay.add(hawkRuleA)
+        }
+
+        if (game.ruleSet[Animal.SALMON.ordinal]) {
+            ruleSetOverlay.add(salmonRuleB)
+        } else {
+            ruleSetOverlay.add(salmonRuleA)
+        }
+
     }
 
     /**
