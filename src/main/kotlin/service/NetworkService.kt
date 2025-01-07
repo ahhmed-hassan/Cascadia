@@ -1,7 +1,5 @@
 package service
 
-
-
 import edu.udo.cs.sopra.ntf.entity.Animal
 import edu.udo.cs.sopra.ntf.entity.ScoringCards
 import entity.*
