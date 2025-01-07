@@ -19,13 +19,17 @@ class DiscardTokenTest {
         val rootServ = RootService()
         val gameServ = GameService(rootServ)
         val playerActionServ = PlayerActionService(rootServ)
-        gameServ.startNewGame(mapOf("Alice" to PlayerType.LOCAL), listOf(true, false, true, false, true))
+        gameServ.startNewGame(
+            mapOf("Alice" to PlayerType.LOCAL, "Bob" to PlayerType.EASY), listOf(true, false, true, false, true),
+            false, isRandomRules = false, startTileOrder = null
+        )
         val game = rootServ.currentGame
         checkNotNull(game)
 
         assertEquals(null, game.selectedToken)
 
         game.selectedToken = WildlifeToken(Animal.FOX)
+        game.hasPlayedTile = true
 
         val selectedToken = game.selectedToken
         checkNotNull(selectedToken)
