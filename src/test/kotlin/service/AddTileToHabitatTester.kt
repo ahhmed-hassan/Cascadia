@@ -94,5 +94,6 @@ class AddTileToHabitatTester {
     @Test
     fun validPlace() {
         assertDoesNotThrow { rootService.playerActionService.addTileToHabitat(0 to -1) }
+        assertNull(checkNotNull(rootService.currentGame).selectedTile)
     }
 }
