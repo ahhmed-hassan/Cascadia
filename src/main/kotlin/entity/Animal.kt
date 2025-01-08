@@ -1,5 +1,7 @@
 package entity
 
+import entity.Terrain.*
+
 /**
  * Enum [Animal] representing the types of animals found in the Cascadia game.
  * Each animal has specific behaviors and scoring rules defined in the game.
