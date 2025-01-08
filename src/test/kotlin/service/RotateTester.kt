@@ -19,7 +19,9 @@ class RotateTester {
     fun setup() {
         rootService.gameService.startNewGame(
             mapOf("Ahmed" to PlayerType.LOCAL, "Hello" to PlayerType.EASY),
-            listOf(true, true, true, true, true)
+            listOf(true, true, true, true, true),
+            false,
+            false
         )
     }
 
@@ -39,8 +41,8 @@ class RotateTester {
 
         rootService.playerActionService.rotateTile()
         assertEquals(
-            1, rootService.currentGame?.selectedTile?.rotationOffset,
-            "Rotation offset not incremented as wanted"
+            5, rootService.currentGame?.selectedTile?.rotationOffset,
+            "Rotation offset not decremented as wanted"
         )
         val expectedList: MutableList<Terrain> = mutableListOf(
             Terrain.PRAIRIE, Terrain.PRAIRIE, Terrain.MOUNTAIN,
@@ -53,8 +55,8 @@ class RotateTester {
 
         rootService.playerActionService.rotateTile()
         assertEquals(
-            2, rootService.currentGame?.selectedTile?.rotationOffset,
-            "Rotation offset not incremented as wanted"
+            4, rootService.currentGame?.selectedTile?.rotationOffset,
+            "Rotation offset not decremented as wanted"
         )
         val expectedListAfterTwoRotations = mutableListOf(
             Terrain.PRAIRIE, Terrain.MOUNTAIN, Terrain.MOUNTAIN,
@@ -68,7 +70,7 @@ class RotateTester {
 
     @Test
     fun rotatingNullTile() {
-        val exception = assertThrows<IllegalArgumentException> { rootService.playerActionService.rotateTile() }
+        val exception = assertThrows<IllegalStateException> { rootService.playerActionService.rotateTile() }
         assertEquals("Only the selected tile can be rotated!", exception.message)
     }
 }
