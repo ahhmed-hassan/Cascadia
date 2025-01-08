@@ -1,9 +1,6 @@
 package service
 
-import entity.Animal
-import entity.HabitatTile
-import entity.Player
-import entity.Terrain
+import entity.*
 
 
 /**
@@ -618,7 +615,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
      * @param player the [Player] to calculate its runs.
      * @return an [Int] of salmon score for the given [Player] based on the current [entity.CascadiaGame.ruleSet]
      */
-    private fun calculateSalmonScore(player: Player): Int {
+     fun calculateSalmonScore(player: Player): Int {
         val hasSalmonToken: (HabitatTile) -> Boolean = { it.wildlifeToken?.animal == Animal.SALMON }
         val makeSalmonGraph: (Map<Pair<Int, Int>, HabitatTile>) -> Map<Pair<Int, Int>, List<Pair<Int, Int>>> =
             { habitatTile ->
@@ -646,7 +643,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
             if (!visited.contains(salmonCoordinate))
                 salmonRuns += depthFirstConnectedComponentLength(salmonGraph, visited, salmonCoordinate)
         }
-        return scoreMap.getOrDefault(maxOf(salmonRuns, maxRuns), 0)
+        return scoreMap.getOrDefault(minOf(salmonRuns, maxRuns), 0)
     }
 
 
