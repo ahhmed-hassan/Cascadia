@@ -63,7 +63,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         checkNotNull(game)
 
         // check if player allowed to choose tile
-        check(game.selectedTile != null || game.selectedToken != null || game.hasPlayedTile) {
+        check(game.selectedTile == null && game.selectedToken == null && !game.hasPlayedTile) {
             "Player already selected a pair"
         }
         check(game.currentPlayer.natureToken >= 1) { "Player has no nature token left to select custom pair" }
@@ -126,7 +126,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         tokenIndices.forEach { require(it in 0..3) { "Indices for tokens must be between 0 and 3" } }
 
         // check if enough tokens are left for replacement, if not the player may try again with a smaller amount
-        check(game.wildlifeTokenList.size < tokenIndices.size) {
+        check(game.wildlifeTokenList.size >= tokenIndices.size) {
             "Not enough wildlifeTokens for replacement left. " +
                     "Replacement of up to ${game.wildlifeTokenList.size} Tokens still possible. " +
                         "TokenIndices equals ${tokenIndices.size}"
@@ -231,7 +231,8 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
 
         selectedTile.rotationOffset = (selectedTile.rotationOffset - 1).mod(selectedTile.terrains.size)
         selectedTile.terrains.add(
-            0, selectedTile.terrains.removeLast()
+            selectedTile.terrains.lastIndex,
+            selectedTile.terrains.removeFirst()
         )
 
         onAllRefreshables { refreshAfterTileRotation() }
