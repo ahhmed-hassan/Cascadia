@@ -52,10 +52,10 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
 
         //There is exactly one local player in a network game
         //Count the number of players with type "LOCAL"
-        val localPlayers = playerNames.values.count { it == PlayerType.LOCAL }
-        if (localPlayers != 1) {
-            throw IllegalArgumentException("In a network game must be exactly one local player.")
-        }
+//        val localPlayers = playerNames.values.count { it == PlayerType.LOCAL }
+//        if (localPlayers != 1) {
+//            throw IllegalArgumentException("In a network game must be exactly one local player.")
+//        }
 
         //Ensure that no network players exist if the game connection state indicates Hotseat mode
         val networkService = NetworkService(rootService)
@@ -192,7 +192,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
                     val id = part[0].toInt()
                     val habitats = part[1].map { Terrain.fromValue(it.toString()) }.toMutableList()
                     val wildlife = part[2].map { Animal.fromValue(it.toString()) }
-                    val keystone = part[3].toBoolean()
+                    val keystone = part[3] == "yes"
 
                     //Add a new HabitatTile to the list
                     habitatTiles.add(
@@ -225,7 +225,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
                     val id = parts[0].toInt()
                     val habitats = parts[1].map { Terrain.fromValue(it.toString()) }.toMutableList()
                     val wildlife = parts[2].map { Animal.fromValue(it.toString()) }
-                    val keystone = parts[3].toBoolean()
+                    val keystone = parts[3] == "yes"
 
                     //Add a new HabitatTile to the list
                     val startTile = HabitatTile(

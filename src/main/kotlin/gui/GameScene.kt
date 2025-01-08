@@ -158,14 +158,16 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         visual = ColorVisual(200, 150, 255)
     ).apply {
         onMouseClicked = {
+            val game = rootService.currentGame
+            checkNotNull(game)
             if (custom) {
                 rootService.playerActionService.chooseCustomPair(selectedHabitat, selectedToken)
                 enableAllHabitats()
-                println("ConfirmCustom")
+                natureTokenLabel.apply { text = "NatureToken: " + game.currentPlayer.natureToken.toString() }
                 custom = false
             }else {
                 rootService.playerActionService.replaceWildlifeTokens(selectedShopToken)
-                println("Confirm Replace")
+                natureTokenLabel.apply { text = "NatureToken: " + game.currentPlayer.natureToken.toString() }
 
             }
             updateButtonStates("default")
