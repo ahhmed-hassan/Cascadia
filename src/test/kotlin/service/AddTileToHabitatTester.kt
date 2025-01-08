@@ -11,7 +11,7 @@ import kotlin.test.*
 
 /**
  * A class to test the service method [PlayerActionService.addTileToHabitat]
- * @property dummyHabitat just a random [HabitatTile]
+ * @property dummyHabitat just a random [HabitatTile] to work as a placeholder
  */
 class AddTileToHabitatTester {
     private val rootService = RootService()
