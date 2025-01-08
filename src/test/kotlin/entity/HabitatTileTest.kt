@@ -40,7 +40,7 @@ class HabitatTileTest {
         )
 
         assertEquals(id, habitatTile.id)
-        assertTrue(habitatTile.isKeystoneTile)
+        assertFalse(habitatTile.isKeystoneTile)
         assertEquals(rotationOffset, habitatTile.rotationOffset)
         assertEquals(wildLifeSymbols, habitatTile.wildlifeSymbols)
         assertNotNull(habitatTile.wildlifeToken)
