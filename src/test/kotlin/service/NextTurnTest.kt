@@ -5,8 +5,7 @@ import entity.HabitatTile
 import entity.PlayerType
 import entity.WildlifeToken
 import org.junit.jupiter.api.assertThrows
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import kotlin.test.*
 
 /**
  * This test class validates the functionality of [service.GameService.nextTurn], ensuring that the game
@@ -56,8 +55,8 @@ class NextTurnTest {
         game.selectedTile = null
 
         gameServ.nextTurn()
-        assert(game.shop[0].first != null)
-        assert(game.shop[1].second != null)
+        assertNotNull(game.shop[0].first)
+        assertNotNull(game.shop[1].second)
 
         //Test: Check if overpopulation is resolved
         val habitatTile = HabitatTile(
@@ -74,7 +73,7 @@ class NextTurnTest {
         game.shop[2] = Pair(habitatTile, WildlifeToken(Animal.FOX))
         game.shop[3] = Pair(habitatTile, WildlifeToken(Animal.FOX))
 
-        assertEquals(true, gameServ.checkForSameAnimal())
+        assertTrue(gameServ.checkForSameAnimal())
 
         gameServ.nextTurn()
 
@@ -91,6 +90,6 @@ class NextTurnTest {
 
         gameServ.nextTurn()
 
-        assert(currentPLayer != game.currentPlayer)
+        assertNotEquals(currentPLayer, game.currentPlayer)
     }
 }
