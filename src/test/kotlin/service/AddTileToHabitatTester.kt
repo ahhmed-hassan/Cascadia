@@ -14,7 +14,7 @@ import kotlin.test.*
  * @property dummyHabitat just a random [HabitatTile]
  */
 class AddTileToHabitatTester {
-    val rootService = RootService()
+    private val rootService = RootService()
 
     private val dummyHabitat =
         HabitatTile(
