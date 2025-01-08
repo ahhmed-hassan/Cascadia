@@ -440,7 +440,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
         if (!isB) {
             for (i in 3 downTo 0) {
                 //checks for every Elk if it is in a row with i other Elks
-                for (coordinate in elkCoordinate) {
+                for (coordinate in elkCoordinate.toSet()) {
                     //checks if there is a row in each direction
                     for (direction in directions) {
                         val straightLine = (0..i).all { element ->
@@ -480,7 +480,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
         } else {
             for(i in 3 downTo 0) {
                 var isMatch : Boolean = false
-                for (coordinate in elkCoordinate) {
+                for (coordinate in elkCoordinate.toSet()) {
                     //creates the pattern with every rotation
                     for (j in 0 .. 2) {
                         //creates the pattern that fits the amount of tiles for 3 different rotations
@@ -655,7 +655,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
      *
      * @param player the player for witch the score should be calculated
      */
-    private fun calculateFoxScore(player: Player): Int {
+    fun calculateFoxScore(player: Player): Int {
         val foxes = mutableListOf<Pair<Int, Int>>()
         val habitat = player.habitat
         var points = 0
@@ -676,10 +676,11 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
 
             //counts the animals
             neighbours.forEach { neighbour ->
-                {
                     animals[habitat[neighbour]?.wildlifeToken?.animal?.ordinal ?: 5]++
-                }
             }
+
+
+
 
             //resets the fallback value for animals that are null
             animals[5] = 0
@@ -688,12 +689,12 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
                 //B
                 var pairs = 0
                 animals[Animal.FOX.ordinal] = 0
+
+
                 animals.forEach { animal ->
-                    {
                         if (animal >= 2) {
                             pairs++
                         }
-                    }
                 }
 
                 if (pairs == 1) points += 3
@@ -702,11 +703,10 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
             } else {
                 //A
                 var differentAnimals = 0
+
                 animals.forEach { animal ->
-                    {
-                        if (animal >= 1) {
-                            differentAnimals++
-                        }
+                    if (animal >= 1) {
+                        differentAnimals++
                     }
                 }
                 points += differentAnimals
