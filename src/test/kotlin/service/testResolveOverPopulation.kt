@@ -20,6 +20,7 @@ class testResolveOverPopulation {
             false,
             null
         )
+
         val game = rootService.currentGame
         checkNotNull(game)
         game.shop.clear()
