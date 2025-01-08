@@ -396,6 +396,9 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
 
         //check for existing game
         val game = checkNotNull(rootService.currentGame)
+        val isNetworkGame = rootService.networkService.connectionState != ConnectionState.DISCONNECTED
+        val myTurn1 = rootService.networkService.connectionState == ConnectionState.PLAYING_MY_TURN
+        val myTurn2 = rootService.networkService.connectionState == ConnectionState.SWAPPING_WILDLIFE_TOKENS
 
         // perform replacement
         tokenIndices.forEach {
@@ -404,6 +407,9 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
                 game.shop[it].first,
                 game.wildlifeTokenList.removeLast()
             )
+        }
+        if (isNetworkGame && (myTurn1 xor myTurn2)) {
+            rootService.networkService.sendResolvedOverPopulationMessage()
         }
 
         if (natureTokenUsed) {
@@ -415,6 +421,9 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
             game.discardedToken = mutableListOf()
             if (!networkReplacement) {
                 game.wildlifeTokenList.shuffle()
+                if (isNetworkGame &&  myTurn1) {
+                    rootService.networkService.sendSwappedWithNatureTokenMessage(tokenIndices)
+                }
             }
 
             // resolve possible overpopulation of four
@@ -435,6 +444,9 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
                 game.discardedToken = mutableListOf()
                 if (!networkReplacement) {
                     game.wildlifeTokenList.shuffle()
+                    if (isNetworkGame && myTurn2) {
+                        rootService.networkService.sendShuffledWildlifeTokensMessage()
+                    }
                 }
             }
         }
