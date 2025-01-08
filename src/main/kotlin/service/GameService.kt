@@ -277,9 +277,11 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
             return
         }
 
+
+
         // refill shop
-        val newHabitatTile = game.habitatTileList[game.habitatTileList.size - 1]
-        val newWildlifeToken = game.wildlifeTokenList[game.wildlifeTokenList.size - 1]
+        val newHabitatTile = game.habitatTileList.removeLast()
+        val newWildlifeToken = game.wildlifeTokenList.removeLast()
         for (i in 0 until game.shop.size) {
             // refill missing pair
             if (game.shop[i].first == null && game.shop[i].second == null) {
@@ -300,8 +302,11 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
             resolveOverpopulation()
         }
 
+        game.hasReplacedThreeToken = false
+        game.hasPlayedTile = false
+
         // switch current player
-        val nextPlayerIndex = game.playerList.indexOf(game.currentPlayer) + 1 % game.playerList.size
+        val nextPlayerIndex = (game.playerList.indexOf(game.currentPlayer) + 1) % game.playerList.size
         game.currentPlayer = game.playerList[nextPlayerIndex]
 
         // refresh GUI
@@ -363,8 +368,8 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         val firstToken = game.shop[tokenIndices[0]].second
         checkNotNull(firstToken)
         val firstAnimal = firstToken.animal
-        for (i in 1..3) {
-            val currentToken = game.shop[tokenIndices[i]].second
+        for (index in tokenIndices) {
+            val currentToken = game.shop[index].second
             checkNotNull(currentToken)
             if (currentToken.animal != firstAnimal) {
                 return false
