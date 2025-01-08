@@ -301,7 +301,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         }
 
         // switch current player
-        val nextPlayerIndex = game.playerList.indexOf(game.currentPlayer) + 1 % game.playerList.size
+        val nextPlayerIndex = (game.playerList.indexOf(game.currentPlayer) + 1) % game.playerList.size
         game.currentPlayer = game.playerList[nextPlayerIndex]
 
         // refresh GUI
@@ -385,9 +385,11 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
      * as this requires different handling of discarded tokens.
      *
      */
-    fun executeTokenReplacement(tokenIndices : List<Int>,
-                                networkReplacement : Boolean = false,
-                                natureTokenUsed : Boolean = false) {
+    fun executeTokenReplacement(
+        tokenIndices: List<Int>,
+        networkReplacement: Boolean = false,
+        natureTokenUsed: Boolean = false
+    ) {
 
         //check for existing game
         val game = checkNotNull(rootService.currentGame)
