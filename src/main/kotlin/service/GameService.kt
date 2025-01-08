@@ -38,12 +38,19 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
     ) {
         require(playerNames.size in 2..4) { "The number of players must be between 2 and 4" }
 
-        //Check the size of the rules and determine if they are randomized or provided by the user
-        if (isRandomRules) {
-            require(scoreRules.size == 5) { "The scoring rules must be 5" }
+//        //Check the size of the rules and determine if they are randomized or provided by the user
+//        if (isRandomRules) {
+//            require(scoreRules.size == 5) { "The scoring rules must be 5" }
+//        } else {
+//            // true is 1 (Cards B), false is 0 (Cards A)
+//            val randomRules = List(5) { (0..1).random() == 1 }
+//        }
+
+        //Determine the player order based on the orderIsRandom parameter
+        val rules = if (isRandomRules) {
+            List(5) { (0..1).random() == 1 }
         } else {
-            // true is 1 (Cards B), false is 0 (Cards A)
-            val randomRules = List(5) { (0..1).random() == 1 }
+            scoreRules
         }
 
         //Player names must be unique,
@@ -52,7 +59,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
 
         //There is exactly one local player in a network game
         //Count the number of players with type "LOCAL"
-        val localPlayers = playerNames.values.count { it == PlayerType.LOCAL }
+//        val localPlayers = playerNames.values.count { it == PlayerType.LOCAL }
 //        if (localPlayers != 1) {
 //            throw IllegalArgumentException("In a network game must be exactly one local player.")
 //        }
@@ -120,7 +127,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         //Create the game
         val game = CascadiaGame(
             startTiles,
-            scoreRules,
+            rules,
             0.3f,
             25,
             false,
@@ -192,7 +199,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
                     val id = part[0].toInt()
                     val habitats = part[1].map { Terrain.fromValue(it.toString()) }.toMutableList()
                     val wildlife = part[2].map { Animal.fromValue(it.toString()) }
-                    val keystone = part[3].toBoolean()
+                    val keystone = part[3] == "yes"
 
                     //Add a new HabitatTile to the list
                     habitatTiles.add(

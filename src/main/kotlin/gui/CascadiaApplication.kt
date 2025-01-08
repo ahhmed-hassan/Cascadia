@@ -1,6 +1,7 @@
 package gui
 
 import service.RootService
+import service.ScoringService
 import tools.aqua.bgw.core.BoardGameApplication
 
 class CascadiaApplication : BoardGameApplication("Cascadia Game"), Refreshables {
@@ -58,9 +59,9 @@ class CascadiaApplication : BoardGameApplication("Cascadia Game"), Refreshables 
         this.showMenuScene(mainMenuScene, 0)
     }
 
-//    override fun refreshAfterGameEnd() {
-//        this.showMenuScene(winningMenuScene)
-//    }
+    override fun refreshAfterGameEnd(scores: Map<String, ScoringService.Companion.PlayerScore>) {
+        this.showMenuScene(winningMenuScene)
+    }
 
     override fun refreshAfterGameStart() {
         hideMenuScene()
