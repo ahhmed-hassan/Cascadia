@@ -152,7 +152,6 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         }
 
 
-
     }
 
     /**
@@ -193,6 +192,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         val selectedToken = game.selectedToken
         checkNotNull(selectedToken)
         val currentPlayer = game.currentPlayer
+        val gameServ = GameService(rootService)
 
         //Check if a wildlife token is already placed on this tile
         require(tile.wildlifeToken == null) { "There is already a wildlife token on this tile!" }
@@ -209,6 +209,8 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         game.selectedToken = null
 
         onAllRefreshables { refreshAfterWildlifeTokenAdded() }
+
+        gameServ.nextTurn()
     }
 
     /**

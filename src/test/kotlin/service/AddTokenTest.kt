@@ -18,7 +18,11 @@ class AddTokenTest {
         val rootServ = RootService()
         val gameServ = GameService(rootServ)
         val playerActionServ = PlayerActionService(rootServ)
-        gameServ.startNewGame(mapOf("Alice" to PlayerType.LOCAL), listOf(true, false, true, false, true))
+        gameServ.startNewGame(
+            mapOf("Alice" to PlayerType.LOCAL, "Bob" to PlayerType.EASY), listOf(true, false, true, false, true),
+            false, isRandomRules = false, startTileOrder = null
+        )
+
         val game = rootServ.currentGame
         checkNotNull(game)
         val currentPlayer = game.currentPlayer
@@ -46,6 +50,7 @@ class AddTokenTest {
 
         assertThrows<IllegalArgumentException> { playerActionServ.addToken(tile2) }
 
+        game.hasPlayedTile = true
         playerActionServ.addToken(tile3)
 
         assertEquals(1, currentPlayer.natureToken)
