@@ -303,6 +303,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         }
 
         game.hasReplacedThreeToken = false
+        game.hasPlayedTile = false
 
         // switch current player
         val nextPlayerIndex = (game.playerList.indexOf(game.currentPlayer) + 1) % game.playerList.size
