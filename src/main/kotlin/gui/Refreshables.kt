@@ -1,6 +1,7 @@
 package gui
 
 import service.AbstractRefreshingService
+import service.ConnectionState
 import service.ScoringService
 
 /**
@@ -19,52 +20,52 @@ interface Refreshables {
     /**
      *
      */
-    fun refreshAfterHotSeatConfigurationChosen() {}
+    fun refreshAfterHotSeatConfigurationChosen(){}
 
     /**
      *
      */
-    fun refreshAfterNetworkConfigurationMenuChosen() {}
+    fun refreshAfterNetworkConfigurationMenuChosen(){}
 
     /**
      *
      */
-    fun refreshAfterNetworkJoinMenuChosen() {}
+    fun refreshAfterNetworkJoinMenuChosen(){}
 
     /**
      *
      */
-    fun refreshAfterNetworkJoin() {}
+    fun refreshAfterNetworkJoin(){}
 
     /**
      *
      */
-    fun refreshAfterGameStart() {}
+    fun refreshAfterGameStart(){}
 
     /**
      *
      */
-    fun refreshAfterWildlifeTokenReplaced() {}
+    fun refreshAfterWildlifeTokenReplaced(){}
 
     /**
      *
      */
-    fun refreshAfterTokenTilePairChosen() {}
+    fun refreshAfterTokenTilePairChosen(){}
 
     /**
      *
      */
-    fun refreshAfterHabitatTileAdded() {}
+    fun refreshAfterHabitatTileAdded(){}
 
     /**
      *
      */
-    fun refreshAfterWildlifeTokenAdded() {}
+    fun refreshAfterWildlifeTokenAdded(){}
 
     /**
      *
      */
-    fun refreshAfterNextTurn() {}
+    fun refreshAfterNextTurn(){}
 
     /**
      *
@@ -74,6 +75,16 @@ interface Refreshables {
     /**
      *
      */
-    fun refreshAfterTileRotation() {}
+    fun refreshAfterTileRotation(){}
+
+    /**
+     *
+     */
+    fun refreshConnectionState(newState : ConnectionState) {}
+
+    /**
+     *
+     */
+    fun refreshAfterPlayerJoined(networkPlayers : MutableList<String>)
 
 }
