@@ -93,7 +93,19 @@ class AddTileToHabitatTester {
      */
     @Test
     fun validPlace() {
+        val someHabitat = HabitatTile(
+            id = Int.MAX_VALUE,
+            isKeystoneTile = false,
+            rotationOffset = 0,
+            wildlifeSymbols = listOf(Animal.SALMON),
+            wildlifeToken = null,
+            terrains = List(6) { Terrain.RIVER }.toMutableList()
+        )
+        val game = checkNotNull(rootService.currentGame)
+        game.selectedTile = someHabitat
         assertDoesNotThrow { rootService.playerActionService.addTileToHabitat(0 to -1) }
-        assertNull(checkNotNull(rootService.currentGame).selectedTile)
+        val savedHabitat = game.currentPlayer.habitat.get(0 to -1)
+        assertNotNull(savedHabitat)
+        assertNull(game.selectedTile)
     }
 }
