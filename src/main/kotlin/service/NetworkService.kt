@@ -165,8 +165,8 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         rootService.gameService.startNewGame(
             playerNames = playerNames,
             scoreRules = scoreRules,
-            false,
-            false,
+            orderIsRandom = false,
+            isRandomRules = false,
             startTileOrder = startTilesOrder,
         )
 
@@ -442,27 +442,27 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         require(connectionState == ConnectionState.PLAYING_MY_TURN) { "not my turn" }
 
         val game = checkNotNull(rootService.currentGame) { "Game not found" }
-        val this_placedTileIndex = requireNotNull(placedTileIndex)
+        val tileIndex = requireNotNull(placedTileIndex)
         val coordinates = requireNotNull(tileCoordinates) { "Tile coordinates must not be null" }
-        val this_qcoordTile = coordinates.first
-        val this_rcoordTile = coordinates.second
+        val qTile = coordinates.first
+        val rTile = coordinates.second
 
-        val this_selectedTokenIndex = requireNotNull(selectedTokenIndex)
-        val this_qcoordToken = tokenCoordinates?.first ?: -1 // Default-Wert, wenn null
-        val this_rcoordToken = tokenCoordinates?.second ?: -1 // Default-Wert, wenn null
+        val tokenIndex = requireNotNull(selectedTokenIndex)
+        val qToken = tokenCoordinates?.first ?: -1 // Default-Wert, wenn null
+        val rToken = tokenCoordinates?.second ?: -1 // Default-Wert, wenn null
 
-        val this_wildlifeTokens = game.wildlifeTokenList.map { RemoteAnimal.valueOf(it.animal.name) }
+        val wildlifeTokensList = game.wildlifeTokenList.map { RemoteAnimal.valueOf(it.animal.name) }
 
         val message = PlaceMessage (
-            placedTile = this_placedTileIndex,
-            qcoordTile = this_qcoordTile,
-            rcoordTile = this_rcoordTile,
-            selectedToken = this_selectedTokenIndex,
-            qcoordToken = this_qcoordToken,
-            rcoordToken = this_rcoordToken,
+            placedTile = tileIndex,
+            qcoordTile = qTile,
+            rcoordTile = rTile,
+            selectedToken = tokenIndex,
+            qcoordToken = qToken,
+            rcoordToken = rToken,
             usedNatureToken = usedNatureToken,
             tileRotation = tileRotation,
-            wildlifeTokens = this_wildlifeTokens,
+            wildlifeTokens = wildlifeTokensList,
         )
 
         // Ensure there is a network client and send the message.

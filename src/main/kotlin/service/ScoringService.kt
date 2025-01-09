@@ -1,9 +1,6 @@
 package service
 
-import entity.Animal
-import entity.HabitatTile
-import entity.Player
-import entity.Terrain
+import entity.*
 
 
 /**
@@ -166,6 +163,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
             return listOf(Pair(coordinate.first, coordinate.second))
         }
     }
+
     /**
      * Calculates bonus points for three or more players based on their longest terrain scores.
      *
@@ -374,7 +372,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
      * @return [Int] representing the score resulted from the Bear combinations of this player based on
      * the current [entity.CascadiaGame.ruleSet]
      */
-     fun calculateBearScore(player: Player): Int {
+    fun calculateBearScore(player: Player): Int {
         val makeBearGraph: (Map<Pair<Int, Int>, HabitatTile>) -> Map<Pair<Int, Int>, List<Pair<Int, Int>>> =
             { habitatTiles ->
                 val bearNodesCoordinates = habitatTiles.filterValues { it.wildlifeToken?.animal == Animal.BEAR }
@@ -440,7 +438,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
         if (!isB) {
             for (i in 3 downTo 0) {
                 //checks for every Elk if it is in a row with i other Elks
-                for (coordinate in elkCoordinate) {
+                for (coordinate in elkCoordinate.toSet()) {
                     //checks if there is a row in each direction
                     for (direction in directions) {
                         val straightLine = (0..i).all { element ->
@@ -480,7 +478,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
         } else {
             for(i in 3 downTo 0) {
                 var isMatch : Boolean = false
-                for (coordinate in elkCoordinate) {
+                for (coordinate in elkCoordinate.toSet()) {
                     //creates the pattern with every rotation
                     for (j in 0 .. 2) {
                         //creates the pattern that fits the amount of tiles for 3 different rotations
@@ -618,35 +616,36 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
      * @param player the [Player] to calculate its runs.
      * @return an [Int] of salmon score for the given [Player] based on the current [entity.CascadiaGame.ruleSet]
      */
-    private fun calculateSalmonScore(player: Player): Int {
-        val hasSalmonToken: (HabitatTile) -> Boolean = { it.wildlifeToken?.animal == Animal.SALMON }
+    fun calculateSalmonScore(player: Player): Int {
         val makeSalmonGraph: (Map<Pair<Int, Int>, HabitatTile>) -> Map<Pair<Int, Int>, List<Pair<Int, Int>>> =
             { habitatTile ->
+                val hasSalmonToken: (HabitatTile) -> Boolean = { it.wildlifeToken?.animal == Animal.SALMON }
                 val salmonCoordinates = habitatTile.filterValues { hasSalmonToken(it) }.keys.toSet()
                 val graph = salmonCoordinates.associateWith { coordinate ->
                     coordinate
                         .neighbours()
-                        .filter { neighbour -> salmonCoordinates.contains(neighbour) }//filter out non-salmons
-                    /**At this point the nodes are of type salmons and edges are between two direct neighbours only if
-                    both of them are salmon
-                    Thus we still need to filter out every node that has more than two neighbours
-                    Note that we already know at this point that each node would have at least one salmon neighbour,
-                    so no need for checking the lower bound */
-                }.filterValues { neighbours -> neighbours.size <= 2 }
-                graph
+                        .filter { neighbour -> salmonCoordinates.contains(neighbour) }
+                }//filter out non-salmons
+                //All salmon nodes that has more than two salmon neighbours or can reach such a node
+                val hasMoreThanTwoOrCanReachIt = mutableSetOf<Pair<Int, Int>>()
+                for (salmonCoordinate in graph.filterValues { it.size > 2 }.keys)
+                    if (!hasMoreThanTwoOrCanReachIt.contains(salmonCoordinate))
+                        depthFirstConnectedComponentLength(graph, hasMoreThanTwoOrCanReachIt, salmonCoordinate)
+                //After the for loop the hasMoreThanTwoOrCanReachIt is already complete cause each call would modify it
+                graph.filterKeys { !hasMoreThanTwoOrCanReachIt.contains(it) }
             }
         val salmonGraph = makeSalmonGraph(player.habitat)
         val visited: MutableSet<Pair<Int, Int>> = mutableSetOf()
         val isB = checkNotNull(rootService.currentGame) { "No game started yet" }.ruleSet[Animal.SALMON.ordinal]
         val scoreMap = if (isB) mapOf(1 to 2, 2 to 4, 3 to 9, 4 to 11, 5 to 17)
-        else mapOf(1 to 2, 2 to 5, 3 to 8, 4 to 12, 5 to 16, 7 to 25)
-        val maxRuns = if (isB) 7 else 5
+        else mapOf(1 to 2, 2 to 5, 3 to 8, 4 to 12, 5 to 16, 6 to 20, 7 to 25)
+        val maxRuns = if (isB) 5 else 7
         var salmonRuns = 0
         for (salmonCoordinate in salmonGraph.keys) {
             if (!visited.contains(salmonCoordinate))
                 salmonRuns += depthFirstConnectedComponentLength(salmonGraph, visited, salmonCoordinate)
         }
-        return scoreMap.getOrDefault(maxOf(salmonRuns, maxRuns), 0)
+        return scoreMap.getOrDefault(minOf(salmonRuns, maxRuns), 0)
     }
 
 
@@ -655,7 +654,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
      *
      * @param player the player for witch the score should be calculated
      */
-    private fun calculateFoxScore(player: Player): Int {
+    fun calculateFoxScore(player: Player): Int {
         val foxes = mutableListOf<Pair<Int, Int>>()
         val habitat = player.habitat
         var points = 0
@@ -676,10 +675,11 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
 
             //counts the animals
             neighbours.forEach { neighbour ->
-                {
                     animals[habitat[neighbour]?.wildlifeToken?.animal?.ordinal ?: 5]++
-                }
             }
+
+
+
 
             //resets the fallback value for animals that are null
             animals[5] = 0
@@ -688,12 +688,12 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
                 //B
                 var pairs = 0
                 animals[Animal.FOX.ordinal] = 0
+
+
                 animals.forEach { animal ->
-                    {
                         if (animal >= 2) {
                             pairs++
                         }
-                    }
                 }
 
                 if (pairs == 1) points += 3
@@ -702,11 +702,10 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
             } else {
                 //A
                 var differentAnimals = 0
+
                 animals.forEach { animal ->
-                    {
-                        if (animal >= 1) {
-                            differentAnimals++
-                        }
+                    if (animal >= 1) {
+                        differentAnimals++
                     }
                 }
                 points += differentAnimals
