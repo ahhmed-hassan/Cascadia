@@ -15,6 +15,9 @@ import kotlin.test.assertEquals
 class RotateTester {
     private var rootService = RootService()
 
+    /**
+     *  set up tests for rotateTile
+     */
     @BeforeTest
     fun setup() {
         rootService.gameService.startNewGame(
@@ -25,6 +28,9 @@ class RotateTester {
         )
     }
 
+    /**
+     *  test the rotation of a habitat tile with rotate tile.
+     */
     @Test
     fun properRotation() {
         rootService.currentGame?.selectedTile = HabitatTile(
@@ -68,6 +74,9 @@ class RotateTester {
         )
     }
 
+    /**
+     *  test handling of a null value for habitat tile in rotateTile method.
+     */
     @Test
     fun rotatingNullTile() {
         val exception = assertThrows<IllegalStateException> { rootService.playerActionService.rotateTile() }
