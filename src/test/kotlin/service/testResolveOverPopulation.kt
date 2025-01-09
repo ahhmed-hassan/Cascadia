@@ -1,13 +1,18 @@
 package service
 
 import entity.*
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.*
 import kotlin.test.*
 
+/**
+ *  Test class for the resolveOverPopulation and its connected methods in the class gameService.
+ */
 class testResolveOverPopulation {
 
+    /**
+     *  test usage of method resolveOverpPopulation
+     */
     @Test
     fun testResolveOverPopulation() {
         val rootService = RootService()
@@ -54,6 +59,10 @@ class testResolveOverPopulation {
 
 
     }
+
+    /**
+     *  test usage of method checkForSameAnimal
+     */
     @Test
     fun testCheckForSameAnimal() {
         val rootService = RootService()
@@ -110,6 +119,10 @@ class testResolveOverPopulation {
             gameService.checkForSameAnimal(listOf(0, 1, 2, 3, 4))
         }
     }
+
+    /**
+     *  test usage of method executeTokenReplacement
+     */
     @Test
     fun testExecuteTokenReplacement() {
         val rootService = RootService()

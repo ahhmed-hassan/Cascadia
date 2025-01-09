@@ -5,6 +5,9 @@ import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 
+/**
+ *  Test class for testing the connection to the network.
+ */
 class testNetworkConnection {
     private lateinit var rootServiceHost: RootService
     private lateinit var rootServiceGuest: RootService
@@ -31,6 +34,10 @@ class testNetworkConnection {
         }
 
     }
+
+    /**
+     *  Test for hosting and joining Games via network
+     */
     @Test
     fun testHostAndJoinGame() {
 
@@ -50,6 +57,9 @@ class testNetworkConnection {
         return false
     }
 
+    /**
+     *  generate a random number and return as String.
+     */
     fun generateRandomNumberAsString(): String {
         // Define the range for the random number.
         val lowerBound = 2001

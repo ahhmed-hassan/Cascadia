@@ -2,6 +2,9 @@ package service
 import entity.*
 import kotlin.test.*
 
+/**
+ *  Test class for the calculateElkScore method in the class scoringService.
+ */
 class CalculateElkScoreTest {
 
     /**
