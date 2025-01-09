@@ -17,7 +17,7 @@ class testNetworkConnection {
         rootServiceHost = RootService()
         rootServiceGuest = RootService()
 
-        rootServiceHost.networkService.hostGame(NETWORK_SECRET, generateRandomNumberAsString(), "Rodi", PlayerType.LOCAL)
+        rootServiceHost.networkService.hostGame(NETWORK_SECRET, null, "Rodi", PlayerType.NETWORK)
 
         assert(rootServiceHost.waitForState(ConnectionState.WAITING_FOR_GUESTS)) {
             error("Nach dem Warten nicht im Zustand angekommen")
