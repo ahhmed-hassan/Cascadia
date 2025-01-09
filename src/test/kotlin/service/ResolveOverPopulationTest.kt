@@ -8,7 +8,7 @@ import kotlin.test.*
 /**
  *  Test class for the resolveOverPopulation and its connected methods in the class gameService.
  */
-class testResolveOverPopulation {
+class ResolveOverPopulationTest {
 
     /**
      *  test usage of method resolveOverpPopulation

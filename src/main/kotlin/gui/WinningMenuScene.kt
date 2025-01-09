@@ -6,6 +6,9 @@ import tools.aqua.bgw.core.MenuScene
 import tools.aqua.bgw.visual.ColorVisual
 import tools.aqua.bgw.visual.ImageVisual
 
+/**
+ * Class of the winnig scene of a game of Cascadia
+ */
 class WinningMenuScene : MenuScene(1920, 1080) {
 
     private val titleLabel = Label(

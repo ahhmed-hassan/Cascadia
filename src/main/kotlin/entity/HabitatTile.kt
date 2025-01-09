@@ -20,5 +20,4 @@ class HabitatTile(
     val wildlifeSymbols: List<Animal>,
     var wildlifeToken: WildlifeToken?,
     val terrains: MutableList<Terrain>
-) {
-}
+)

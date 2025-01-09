@@ -5,6 +5,9 @@ import tools.aqua.bgw.components.uicomponents.Label
 import tools.aqua.bgw.core.BoardGameScene
 import tools.aqua.bgw.visual.ColorVisual
 
+/**
+ * Class of the main scene of a game of Cascadia where the gameplay is happening
+ */
 class GameScene : BoardGameScene(1920, 1080) {
 
     private val currentPlayerLabel = Label(
