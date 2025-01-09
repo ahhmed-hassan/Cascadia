@@ -390,9 +390,11 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
      * as this requires different handling of discarded tokens.
      *
      */
-    fun executeTokenReplacement(tokenIndices : List<Int>,
-                                networkReplacement : Boolean = false,
-                                natureTokenUsed : Boolean = false) {
+    fun executeTokenReplacement(
+        tokenIndices: List<Int>,
+        networkReplacement: Boolean = false,
+        natureTokenUsed: Boolean = false
+    ) {
 
         //check for existing game
         val game = checkNotNull(rootService.currentGame)
