@@ -97,7 +97,7 @@ class HardBotService(private val rootService: RootService) {
     private fun calculateAllPossibilities(
         tiles: List<HabitatTile>,
         game: CascadiaGame,
-        tokenList : MutableList<WildlifeToken>
+        tokenList: MutableList<WildlifeToken>
     ): MutableList<HardBotPossiblePlacements> {
         val shop = game.shop
         val player = game.currentPlayer
@@ -149,13 +149,14 @@ class HardBotService(private val rootService: RootService) {
             threads.add(Thread {
                 val habitat = player.habitat.mapValues { entry -> entry.value.copy() }.toMutableMap()
 
-                var selectedToken : WildlifeToken? = null
+                var selectedToken: WildlifeToken? = null
                 var selectedTokenIndex = 0
                 for (animal in Animal.values()) {
-                    var tokenChance : Number?
+                    var tokenChance: Number?
                     if (animal in shop.map {
                             val token = checkNotNull(it.second)
-                            token.animal}) {
+                            token.animal
+                        }) {
 
                         tokenChance = 1
 
@@ -165,14 +166,15 @@ class HardBotService(private val rootService: RootService) {
                         selectedTokenIndex = shop.indexOf(firstPair)
                     } else if (player.natureToken > 1) {
                         val k = tokenList.filter {
-                            it.animal == animal }.size
-
+                            it.animal == animal
+                        }.size
+                        if (k == 0) continue
                         val n = tokenList.size
                         val tokenChanceComplement = 0L +
-                                ((n-k)*(n-k-1)*(n-k-2)*(n-k-3)) / ( n * (n-1) * (n-2) * (n-3))
+                                ((n - k) * (n - k - 1) * (n - k - 2) * (n - k - 3)) / (n * (n - 1) * (n - 2) * (n - 3))
                         tokenChance = 1 - tokenChanceComplement
 
-                        val replacedToken = tokenList.first{ it.animal == animal }
+                        val replacedToken = tokenList.first { it.animal == animal }
                         tokenList.remove(replacedToken)
                         shop[0] = Pair(game.shop[0].first, replacedToken)
 
@@ -201,25 +203,13 @@ class HardBotService(private val rootService: RootService) {
                                             tilePlacement = tilePlace,
                                             rotation = rotation,
                                             wildlifeToken = selectedToken,
-                                            usedNaturalToken = if (player.natureToken == 1) 1; else 2,
+                                            usedNaturalToken = if (tokenChance == 1) 1; else 2,
                                             wildlifePlacement = animalPlace,
                                             wildLifeChance = tokenChance,
                                             customPair = Pair(i, selectedTokenIndex),
                                         )
                                     )
                                 }
-                            }
-                            for (rotation in 0..5) {
-                                list.add(
-                                    HardBotPossiblePlacements(
-                                        tile = selectedTile,
-                                        tilePlacement = tilePlace,
-                                        rotation = rotation,
-                                        usedNaturalToken = if (player.natureToken == 1) 1; else 2,
-                                        wildLifeChance = tokenChance,
-                                        customPair = Pair(i, selectedTokenIndex),
-                                    )
-                                )
                             }
                             habitat.remove(tilePlace)
                         }
