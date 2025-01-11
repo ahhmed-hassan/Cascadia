@@ -15,6 +15,8 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
 
     private val playerNameFields = mutableListOf<TextField>()
     private val playerButtons = mutableListOf<Button>()
+    private var randomOrder = false
+
 
     private val overlay = Pane<UIComponent>(
         posX = 200,
@@ -83,6 +85,21 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
         return playerTypeButton
     }
 
+    val randomOrderButton = ToggleButton(
+        width = 250,
+        height = 50,
+        posX = 600,
+        posY = 700,
+        text = "Random Order",
+        font = Font(24),
+        visual = ColorVisual(255, 255, 255)
+    ).apply {
+        onMouseClicked = {
+            randomOrder = !randomOrder
+            visual = if (randomOrder) ColorVisual(Color.GRAY) else ColorVisual(255, 255, 255)
+        }
+    }
+
     val startButton = Button(
         width = 250,
         height = 50,
@@ -96,7 +113,7 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
             val playerNames = playerNameFields.filter { it.text.isNotBlank() }.map { it.text }
             val playerTypes = playerButtons.filter { it.text.isNotBlank() }.map { it.text }
             val param = mapPlayerToPlayerTypes(playerNames,playerTypes)
-            val secret = "Server secret"
+            val secret = "cascadia24d"
             val name = playersField.text
             val sessionID = gameId.text
 
@@ -106,22 +123,11 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
         }
     }
 
-    private val cancelButton = Button(
-        width = 140, height = 35,
-        posX = 210, posY = 330,
-        text = "Cancel"
-    ).apply {
-        visual = ColorVisual(221, 136, 136)
-        isVisible = false
-        onMouseClicked = {
-            rootService.networkService.disconnect()
-        }
-    }
-
     private val networkStatusArea = TextArea(
-        width = 300, height = 35,
-        posX = 50, posY = 385,
-        text = ""
+        width = 300,
+        height = 35,
+        posX = 600,
+        posY = 450,
     ).apply {
         isDisabled = true
         // only visible when the text is changed to something non-empty
@@ -131,13 +137,28 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
         }
     }
 
+    private val cancelButton = Button(
+        width = 140,
+        height = 35,
+        posX = 600,
+        posY = 550,
+        text = "Cancel"
+    ).apply {
+        visual = ColorVisual(221, 136, 136)
+        isVisible = false
+        onMouseClicked = {
+            rootService.networkService.disconnect()
+        }
+    }
+
     init {
         background = ImageVisual("Cascadia.jpg")
         overlay.addAll(
             titleLabel,
-            startButton,
             playersField,
             gameId,
+            randomOrderButton,
+            startButton,
             cancelButton,
             networkStatusArea
         )

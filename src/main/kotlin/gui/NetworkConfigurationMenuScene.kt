@@ -18,6 +18,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     private val playerButtons = mutableListOf<Button>()
     private var rules = mutableListOf<Boolean>()
     private var randomRule = false
+    private var randomOrder = false
 
 
     private val overlay = Pane<UIComponent>(
@@ -227,7 +228,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         }
     }
 
-    private val randomRuleButton = Button(
+    private val randomRuleButton = ToggleButton(
         width = 250,
         height = 50,
         posX = 400,
@@ -242,10 +243,25 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         }
     }
 
+    private val randomOrderButton = ToggleButton(
+        width = 250,
+        height = 50,
+        posX = 100,
+        posY = 800,
+        text = "Random Order",
+        font = Font(24),
+        visual = ColorVisual(255, 255, 255)
+    ).apply {
+        onMouseClicked = {
+            randomOrder = !randomOrder
+            visual = if (randomOrder) ColorVisual(Color.GRAY) else ColorVisual(255, 255, 255)
+        }
+    }
+
     val startButton = Button(
         width = 250,
         height = 50,
-        posX = 1000,
+        posX = 1100,
         posY = 800,
         text = "Start",
         font = Font(24),
@@ -256,34 +272,51 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             val playerTypes = playerButtons.filter { it.text.isNotBlank() }.map { it.text }
             val param = mapPlayerToPlayerTypes(playerNames,playerTypes)
             val rules = determineRules()
-            //rootService.gameService.startNewGame(playerNames = param, scoreRules = rules, isRandomRules = randomRule, orderIsRandom = true)
+            //rootService.gameService.startNewGame(playerNames = param, scoreRules = rules, isRandomRules = randomRule, orderIsRandom = randomOrder)
             hostGame(param, rules)
             rules.clear()
         }
     }
 
-    private val cancelButton = Button(
-        width = 140, height = 35,
-        posX = 210, posY = 330,
-        text = "Cancel"
+    val createHostGameButton = Button(
+        width = 250,
+        height = 50,
+        posX = 800,
+        posY = 800,
+        text = "Host Game",
+        font = Font(24),
+        visual = ColorVisual(255, 255, 255)
     ).apply {
-        visual = ColorVisual(221, 136, 136)
-        isVisible = false
         onMouseClicked = {
-            rootService.networkService.disconnect()
+            rootService.networkService.startNewHostedGame(orderIsRandom = randomOrder, isRandomRules = randomRule, scoreRules = rules)
         }
     }
 
     private val networkStatusArea = TextArea(
-        width = 300, height = 35,
-        posX = 50, posY = 385,
-        text = ""
+        width = 300,
+        height = 35,
+        posX = 210,
+        posY = 450,
     ).apply {
         isDisabled = true
         // only visible when the text is changed to something non-empty
         isVisible = false
         textProperty.addListener { _, new ->
             isVisible = new.isNotEmpty()
+        }
+    }
+
+    private val cancelButton = Button(
+        width = 140,
+        height = 35,
+        posX = 210,
+        posY = 550,
+        text = "Cancel"
+    ).apply {
+        visual = ColorVisual(221, 136, 136)
+        isVisible = false
+        onMouseClicked = {
+            rootService.networkService.disconnect()
         }
     }
 
@@ -297,7 +330,9 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             simSpeed,
             simEntry,
             randomRuleButton,
+            randomOrderButton,
             startButton,
+            createHostGameButton,
             playersField,
             createId,
             bearImage,
@@ -311,7 +346,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             foxImage,
             foxToggleButton,
             cancelButton,
-            networkStatusArea
+            networkStatusArea,
         )
         addComponents(overlay)
         val buttons = createPlayerButtons(300)
@@ -394,12 +429,12 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
      * @param rules A list of boolean values that defines the scoring rules for the game.
      */
     private fun hostGame(playerNames: Map<String, PlayerType>, rules: List<Boolean>) {
-        val secret = "Server secret"
+        val secret = "cascadia24d"
         val name = playersField.text
         val sessionID = createId.text
 
         rootService.networkService.hostGame(secret, sessionID, name, PlayerType.NETWORK)
-        //rootService.networkService.startNewHostedGame(orderIsRandom = false, isRandomRules = randomRule, scoreRules = rules)
+        //rootService.networkService.startNewHostedGame(orderIsRandom = randomOrder, isRandomRules = randomRule, scoreRules = rules)
     }
 
     override fun refreshConnectionState(newState: ConnectionState) {
@@ -407,6 +442,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         val disconnected = newState == ConnectionState.DISCONNECTED
         cancelButton.isVisible = !disconnected
         startButton.isVisible = disconnected
+        createHostGameButton.isVisible = disconnected
     }
 
 
