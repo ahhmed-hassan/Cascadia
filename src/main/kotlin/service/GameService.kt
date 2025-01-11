@@ -131,7 +131,9 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         rootService.currentGame = game
 
         // Resolve overpopulation of four in the shop after game created
-        if (checkForSameAnimal()) { resolveOverpopulation() }
+        if (checkForSameAnimal()) {
+            resolveOverpopulation()
+        }
 
         // This block is only activated if the game is a network game and startTileOrder is provided.
         if (startTileOrder != null && startTileOrder.size == playerList.size) {
