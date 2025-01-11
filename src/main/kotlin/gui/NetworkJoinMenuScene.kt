@@ -1,12 +1,10 @@
 package gui
 
 import entity.PlayerType
+import service.ConnectionState
 import service.RootService
 import tools.aqua.bgw.components.layoutviews.Pane
-import tools.aqua.bgw.components.uicomponents.Button
-import tools.aqua.bgw.components.uicomponents.Label
-import tools.aqua.bgw.components.uicomponents.TextField
-import tools.aqua.bgw.components.uicomponents.UIComponent
+import tools.aqua.bgw.components.uicomponents.*
 import tools.aqua.bgw.core.MenuScene
 import tools.aqua.bgw.util.Font
 import tools.aqua.bgw.visual.ColorVisual
@@ -108,6 +106,31 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
         }
     }
 
+    private val cancelButton = Button(
+        width = 140, height = 35,
+        posX = 210, posY = 330,
+        text = "Cancel"
+    ).apply {
+        visual = ColorVisual(221, 136, 136)
+        isVisible = false
+        onMouseClicked = {
+            rootService.networkService.disconnect()
+        }
+    }
+
+    private val networkStatusArea = TextArea(
+        width = 300, height = 35,
+        posX = 50, posY = 385,
+        text = ""
+    ).apply {
+        isDisabled = true
+        // only visible when the text is changed to something non-empty
+        isVisible = false
+        textProperty.addListener { _, new ->
+            isVisible = new.isNotEmpty()
+        }
+    }
+
     init {
         background = ImageVisual("Cascadia.jpg")
         overlay.addAll(
@@ -115,6 +138,8 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
             startButton,
             playersField,
             gameId,
+            cancelButton,
+            networkStatusArea
         )
         addComponents(overlay)
         val buttons = createPlayerButtons(300)
@@ -144,5 +169,12 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
             pairs[names[i]] = playerType
         }
         return pairs
+    }
+
+    override fun refreshConnectionState(state: ConnectionState) {
+        networkStatusArea.text = state.toUIText()
+        val disconnected = state == ConnectionState.DISCONNECTED
+        cancelButton.isVisible = !disconnected
+        startButton.isVisible = disconnected
     }
 }
