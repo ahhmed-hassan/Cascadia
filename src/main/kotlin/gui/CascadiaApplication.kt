@@ -12,19 +12,10 @@ class CascadiaApplication : BoardGameApplication("Cascadia Game"), Refreshables 
 
     private val hotSeatConfigurationMenu = HotSeatConfigurationMenuScene(rootService)
 
-    private val networkConfigurationMenuScene = NetworkConfigurationMenuScene(rootService).apply {
-        startButton.onMouseClicked = {
-            hideMenuScene()
-            showGameScene(gameScene)
-        }
-    }
+    private val networkConfigurationMenuScene = NetworkConfigurationMenuScene(rootService)
 
-    private val networkJoinMenuScene = NetworkJoinMenuScene(rootService).apply {
-        startButton.onMouseClicked = {
-            hideMenuScene()
-            showMenuScene(winningMenuScene)
-        }
-    }
+    private val networkJoinMenuScene = NetworkJoinMenuScene(rootService)
+
 
     private val mainMenuScene = MainMenuScene(rootService).apply {
         startHotSeatGameButton.onMouseClicked = {

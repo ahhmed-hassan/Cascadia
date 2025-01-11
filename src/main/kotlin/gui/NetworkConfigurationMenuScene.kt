@@ -256,7 +256,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             val playerTypes = playerButtons.filter { it.text.isNotBlank() }.map { it.text }
             val param = mapPlayerToPlayerTypes(playerNames,playerTypes)
             val rules = determineRules()
-            rootService.gameService.startNewGame(playerNames = param, scoreRules = rules, isRandomRules = randomRule, orderIsRandom = true)
+            //rootService.gameService.startNewGame(playerNames = param, scoreRules = rules, isRandomRules = randomRule, orderIsRandom = true)
             hostGame(param, rules)
             rules.clear()
         }
@@ -399,12 +399,12 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         val sessionID = createId.text
 
         rootService.networkService.hostGame(secret, sessionID, name, PlayerType.NETWORK)
-        rootService.networkService.startNewHostedGame(orderIsRandom = false, isRandomRules = randomRule, scoreRules = rules)
+        //rootService.networkService.startNewHostedGame(orderIsRandom = false, isRandomRules = randomRule, scoreRules = rules)
     }
 
-    override fun refreshConnectionState(state: ConnectionState) {
-        networkStatusArea.text = state.toUIText()
-        val disconnected = state == ConnectionState.DISCONNECTED
+    override fun refreshConnectionState(newState: ConnectionState) {
+        networkStatusArea.text = newState.toUIText()
+        val disconnected = newState == ConnectionState.DISCONNECTED
         cancelButton.isVisible = !disconnected
         startButton.isVisible = disconnected
     }
