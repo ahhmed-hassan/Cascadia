@@ -394,7 +394,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
      * @param rules A list of boolean values that defines the scoring rules for the game.
      */
     private fun hostGame(playerNames: Map<String, PlayerType>, rules: List<Boolean>) {
-        val secret = "secret"
+        val secret = "Server secret"
         val name = playersField.text
         val sessionID = createId.text
 

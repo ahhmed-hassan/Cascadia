@@ -98,6 +98,11 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
             val playerNames = playerNameFields.filter { it.text.isNotBlank() }.map { it.text }
             val playerTypes = playerButtons.filter { it.text.isNotBlank() }.map { it.text }
             val param = mapPlayerToPlayerTypes(playerNames,playerTypes)
+            val secret = "Server secret"
+            val name = playersField.text
+            val sessionID = gameId.text
+
+            rootService.networkService.joinGame(secret, name, sessionID, PlayerType.NETWORK)
             //rootService.gameService.startNewGame(playerNames = param, scoreRules = rules)
             println(param)
         }
@@ -126,7 +131,7 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
     private fun mapPlayerToPlayerTypes(
         names: List<String>,
         types: List<String>,
-    ) {
+    ): Map<String, PlayerType> {
         val pairs: MutableMap<String, PlayerType> = mutableMapOf()
 
         for (i in names.indices) {
@@ -138,5 +143,6 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
             }
             pairs[names[i]] = playerType
         }
+        return pairs
     }
 }
