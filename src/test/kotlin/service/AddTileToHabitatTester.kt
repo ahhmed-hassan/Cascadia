@@ -116,6 +116,7 @@ class AddTileToHabitatTester {
             terrains = List(6) { Terrain.RIVER }.toMutableList()
         )
         val game = checkNotNull(rootService.currentGame)
+        rootService.networkService.connectionState = ConnectionState.PLAYING_MY_TURN
         game.selectedTile = someHabitat
         assertDoesNotThrow { rootService.playerActionService.addTileToHabitat(0 to -1) }
         val savedHabitat = game.currentPlayer.habitat.get(0 to -1)
