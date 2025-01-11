@@ -86,7 +86,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
      * player order, and order of startTiles. It also ensures that the system is in the correct
      * connection state to host a game and updates the connection state based on the player's turn.
      *
-     * @param orderIsRanom Indicates whether the player order should be randomized.
+     * @param orderIsRandom Indicates whether the player order should be randomized.
      * @param isRandomRules Indicates whether the game rules should be randomized.
      * @param scoreRules A list of boolean values defining the scoring rules for the game.
      *                   ( [true] for B [false] for A).
@@ -97,7 +97,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
      *                               the game and client are properly initialized.
      *
      */
-    fun startNewHostedGame(orderIsRanom : Boolean, isRandomRules : Boolean, scoreRules : List<Boolean>) {
+    fun startNewHostedGame(orderIsRandom : Boolean, isRandomRules : Boolean, scoreRules : List<Boolean>) {
         check(connectionState == ConnectionState.WAITING_FOR_GUESTS)
         { "currently not prepared to start a new hosted game." }
 
@@ -107,7 +107,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         rootService.gameService.startNewGame(
             playerNames,
             scoreRules,
-            orderIsRanom,
+            orderIsRandom,
             isRandomRules,
             null,
         )

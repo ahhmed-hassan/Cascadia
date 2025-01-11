@@ -1,6 +1,7 @@
 package gui
 
 import entity.PlayerType
+import service.ConnectionState
 import service.RootService
 import tools.aqua.bgw.components.layoutviews.Pane
 import tools.aqua.bgw.components.uicomponents.*
@@ -255,9 +256,34 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             val playerTypes = playerButtons.filter { it.text.isNotBlank() }.map { it.text }
             val param = mapPlayerToPlayerTypes(playerNames,playerTypes)
             val rules = determineRules()
-            //rootService.gameService.startNewGame(playerNames = param, scoreRules = rules)
-            println(param)
+            rootService.gameService.startNewGame(playerNames = param, scoreRules = rules, isRandomRules = randomRule, orderIsRandom = true)
+            hostGame(param, rules)
             rules.clear()
+        }
+    }
+
+    private val cancelButton = Button(
+        width = 140, height = 35,
+        posX = 210, posY = 330,
+        text = "Cancel"
+    ).apply {
+        visual = ColorVisual(221, 136, 136)
+        isVisible = false
+        onMouseClicked = {
+            rootService.networkService.disconnect()
+        }
+    }
+
+    private val networkStatusArea = TextArea(
+        width = 300, height = 35,
+        posX = 50, posY = 385,
+        text = ""
+    ).apply {
+        isDisabled = true
+        // only visible when the text is changed to something non-empty
+        isVisible = false
+        textProperty.addListener { _, new ->
+            isVisible = new.isNotEmpty()
         }
     }
 
@@ -284,6 +310,8 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             salmonToggleButton,
             foxImage,
             foxToggleButton,
+            cancelButton,
+            networkStatusArea
         )
         addComponents(overlay)
         val buttons = createPlayerButtons(300)
@@ -343,7 +371,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     private fun mapPlayerToPlayerTypes(
         names: List<String>,
         types: List<String>,
-    ) {
+    ): Map<String, PlayerType> {
         val pairs: MutableMap<String, PlayerType> = mutableMapOf()
 
         for (i in names.indices) {
@@ -356,8 +384,31 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             pairs[names[i]] = playerType
         }
 
-
+        return pairs
     }
+
+    /**
+     * Hosts a new game session using the player names and rules.
+     *
+     * @param playerNames A map of player names and their player types.
+     * @param rules A list of boolean values that defines the scoring rules for the game.
+     */
+    private fun hostGame(playerNames: Map<String, PlayerType>, rules: List<Boolean>) {
+        val secret = "secret"
+        val name = playersField.text
+        val sessionID = createId.text
+
+        rootService.networkService.hostGame(secret, sessionID, name, PlayerType.NETWORK)
+        rootService.networkService.startNewHostedGame(orderIsRandom = false, isRandomRules = randomRule, scoreRules = rules)
+    }
+
+    override fun refreshConnectionState(state: ConnectionState) {
+        networkStatusArea.text = state.toUIText()
+        val disconnected = state == ConnectionState.DISCONNECTED
+        cancelButton.isVisible = !disconnected
+        startButton.isVisible = disconnected
+    }
+
 
 
 }
