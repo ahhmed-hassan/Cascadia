@@ -89,6 +89,20 @@ class AddTileToHabitatTester {
     }
 
     /**
+     * Testing with not a valid game yet
+     */
+    @Test
+    fun invalidGame() {
+        rootService.currentGame = null
+        val notStartedGame = assertThrows<IllegalStateException> {
+            rootService.playerActionService.addTileToHabitat(
+                Random.nextInt() to Random.nextInt()
+            )
+        }
+        assertEquals("No game started", notStartedGame.message)
+    }
+
+    /**
      * The happy path!
      */
     @Test
