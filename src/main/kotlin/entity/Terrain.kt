@@ -17,4 +17,23 @@ enum class Terrain {
     RIVER,
     WETLAND,
     ;
+
+    companion object {
+
+        /**
+         * Transfrom a given first letter into its responding Terrain
+         *
+         * @param value the first letter of a member of this enum
+         */
+        fun fromValue(value : String) : Terrain {
+            return when(value) {
+                "F" ->  FOREST
+                "M" ->  MOUNTAIN
+                "P" ->  PRAIRIE
+                "R" ->  RIVER
+                else ->  WETLAND
+            }
+        }
+    }
+
 }

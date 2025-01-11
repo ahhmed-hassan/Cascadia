@@ -165,8 +165,8 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         rootService.gameService.startNewGame(
             playerNames = playerNames,
             scoreRules = scoreRules,
-            false,
-            false,
+            orderIsRandom = false,
+            isRandomRules = false,
             startTileOrder = startTilesOrder,
         )
 
@@ -232,7 +232,9 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
                         .take(3) // Limit the list to the first 3 matching tokens.
 
                     // Execute the replacement of the identified tokens in the shop.
-                    rootService.gameService.executeTokenReplacement(indices, true, false)
+                    rootService.gameService.executeTokenReplacement(indices,
+                        true,
+                        false)
                 }
             }
         }
@@ -370,7 +372,9 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         }
 
         // Execute token replacement using the provided indices, marking the nature token as used.
-        rootService.gameService.executeTokenReplacement(message.swappedSelectedTokens, true, true)
+        rootService.gameService.executeTokenReplacement(message.swappedSelectedTokens,
+            true,
+            true)
 
         // Update the game's wildlife token list with the swapped tokens from the message.
         game.wildlifeTokenList = message.swappedWildlifeTokens.map { animal ->
@@ -442,27 +446,27 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         require(connectionState == ConnectionState.PLAYING_MY_TURN) { "not my turn" }
 
         val game = checkNotNull(rootService.currentGame) { "Game not found" }
-        val this_placedTileIndex = requireNotNull(placedTileIndex)
+        val tileIndex = requireNotNull(placedTileIndex)
         val coordinates = requireNotNull(tileCoordinates) { "Tile coordinates must not be null" }
-        val this_qcoordTile = coordinates.first
-        val this_rcoordTile = coordinates.second
+        val qTile = coordinates.first
+        val rTile = coordinates.second
 
-        val this_selectedTokenIndex = requireNotNull(selectedTokenIndex)
-        val this_qcoordToken = tokenCoordinates?.first ?: -1 // Default-Wert, wenn null
-        val this_rcoordToken = tokenCoordinates?.second ?: -1 // Default-Wert, wenn null
+        val tokenIndex = requireNotNull(selectedTokenIndex)
+        val qToken = tokenCoordinates?.first ?: -1 // Default-Wert, wenn null
+        val rToken = tokenCoordinates?.second ?: -1 // Default-Wert, wenn null
 
-        val this_wildlifeTokens = game.wildlifeTokenList.map { RemoteAnimal.valueOf(it.animal.name) }
+        val wildlifeTokensList = game.wildlifeTokenList.map { RemoteAnimal.valueOf(it.animal.name) }
 
         val message = PlaceMessage (
-            placedTile = this_placedTileIndex,
-            qcoordTile = this_qcoordTile,
-            rcoordTile = this_rcoordTile,
-            selectedToken = this_selectedTokenIndex,
-            qcoordToken = this_qcoordToken,
-            rcoordToken = this_rcoordToken,
+            placedTile = tileIndex,
+            qcoordTile = qTile,
+            rcoordTile = rTile,
+            selectedToken = tokenIndex,
+            qcoordToken = qToken,
+            rcoordToken = rToken,
             usedNatureToken = usedNatureToken,
             tileRotation = tileRotation,
-            wildlifeTokens = this_wildlifeTokens,
+            wildlifeTokens = wildlifeTokensList,
         )
 
         // Ensure there is a network client and send the message.
@@ -506,10 +510,12 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
     }
 
     /**
-     * Sends a `ResolveOverpopulationMessage` to indicate that the current player has resolved an overpopulation scenario.
+     * Sends a `ResolveOverpopulationMessage` to indicate that the current player has resolved an overpopulation
+     * scenario.
      *
      * This function constructs and sends a `ResolveOverpopulationMessage` to the connected network client.
-     * It ensures that the current connection state is appropriate for resolving overpopulation and that a network client exists.
+     * It ensures that the current connection state is appropriate for resolving overpopulation
+     * and that a network client exists.
      *
      * @throws IllegalStateException if the connection state is not `SWAPPING_WILDLIFE_TOKENS`.
      * @throws IllegalArgumentException if no network client is found.
@@ -611,7 +617,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
 
     /**
      * Updates the [connectionState] to [newState] and notifies
-     * all refreshables via [Refreshable.refreshConnectionState]
+     * all refreshables via Refreshables.refreshConnectionState
      */
     fun updateConnectionState(newState: ConnectionState) {
         this.connectionState = newState

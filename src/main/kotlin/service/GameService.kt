@@ -39,26 +39,19 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         require(playerNames.size in 2..4) { "The number of players must be between 2 and 4" }
 
         //Check the size of the rules and determine if they are randomized or provided by the user
-        if (isRandomRules) {
-            require(scoreRules.size == 5) { "The scoring rules must be 5" }
+        val ruleSet = if (isRandomRules) {
+            List(5) { (0..1).random() == 1 } // true is 1 (Cards B), false is 0 (Cards A)
         } else {
-            // true is 1 (Cards B), false is 0 (Cards A)
-            val randomRules = List(5) { (0..1).random() == 1 }
+            require(scoreRules.size == 5) { "The scoring rules must be 5" }
+            scoreRules
         }
 
         //Player names must be unique,
         // size of the original key list must match the size of the unique set of keys.
         require(playerNames.keys.size == playerNames.keys.toSet().size) { "Player names must be unique." }
 
-        //There is exactly one local player in a network game
-        //Count the number of players with type "LOCAL"
-        val localPlayers = playerNames.values.count { it == PlayerType.LOCAL }
-        if (localPlayers != 1) {
-            throw IllegalArgumentException("In a network game must be exactly one local player.")
-        }
-
-        //Ensure that no network players exist if the game connection state indicates Hotseat mode
         val networkService = NetworkService(rootService)
+        //Ensure that no network players exist if the game connection state indicates Hotseat mode
         if (networkService.connectionState == ConnectionState.DISCONNECTED) {
             val networkPlayers = playerNames.values.count { it == PlayerType.NETWORK }
             if (networkPlayers > 0) {
@@ -97,7 +90,6 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
             wildlifeTokens.add(WildlifeToken(Animal.HAWK))
             wildlifeTokens.add(WildlifeToken(Animal.SALMON))
         }
-
         wildlifeTokens.shuffle()
 
         // Create shop with first 4 tiles and first 4 wildlife tokens
@@ -113,14 +105,15 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         startTiles.shuffle()
 
         // Create player list
-        val playerList = playerNames.map { (name, type) ->
-            Player(name, mutableMapOf(), type)
+        val playerList = playerOrder.map { name ->
+            val playerType = requireNotNull(playerNames[name])
+            Player(name, mutableMapOf(), playerType)
         }
 
         //Create the game
         val game = CascadiaGame(
             startTiles,
-            scoreRules,
+            ruleSet,
             0.3f,
             25,
             false,
@@ -135,10 +128,10 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
             wildlifeTokens
         )
 
+        rootService.currentGame = game
+
         // Resolve overpopulation of four in the shop after game created
-        if (checkForSameAnimal()) {
-            resolveOverpopulation()
-        }
+        if (checkForSameAnimal()) { resolveOverpopulation() }
 
         // This block is only activated if the game is a network game and startTileOrder is provided.
         if (startTileOrder != null && startTileOrder.size == playerList.size) {
@@ -171,24 +164,32 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
                 //Place the lower-left tile in the player's habitat
                 player.habitat[1 to 0] = playerStartTile[2]
             }
-
         }
-        rootService.currentGame = game
         onAllRefreshables { refreshAfterGameStart() }
     }
 
+    /**
+     * Reads starting tiles for players from the "tiles.csv" file and returns a list of tiles.
+     *
+     * @return the list of habitat tiles from the .csv
+     */
     fun getHabitatTiles(): List<HabitatTile> {
         val habitatTiles = mutableListOf<HabitatTile>()
-        File("tiles.csv").bufferedReader().useLines { lines ->
+        val resource = this::class.java.classLoader.getResource("tiles.csv")
+            ?: throw IllegalArgumentException("tiles.csv not found in resources")
+        File(resource.toURI()).bufferedReader().useLines { lines ->
             lines.drop(1) //skip the first line (header)
                 .filter { it.isNotBlank() } //exclude empty lines
                 .filterNot { it.contains("--", ignoreCase = true) } //exclude lines containing "--" (-- seite)
                 .forEach { line ->
                     val part = line.split(";")  //Parse data from the CSV line
                     val id = part[0].toInt()
-                    val habitats = part[1].map { Terrain.valueOf(it.toString()) }.toMutableList()
-                    val wildlife = part[2].map { Animal.valueOf(it.toString()) }
-                    val keystone = part[3].toBoolean()
+                    val habitats = part[1].map { Terrain.fromValue(it.toString()) }.toMutableList()
+                    val wildlife = part[2].map { Animal.fromValue(it.toString()) }
+                    val keystone = when (part[3].lowercase()) {
+                        "yes" -> true
+                        else -> false
+                    }
 
                     //Add a new HabitatTile to the list
                     habitatTiles.add(
@@ -207,20 +208,26 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
     }
 
     /**
-     * Reads starting tiles for players from the `start_tiles.csv` file and returns a list of tile groups.
+     * Reads starting tiles for players from the "start_tiles.csv" file and returns a list of tile groups.
+     *
+     * @return the list of lists of habitat tiles from the .csv each representing one start tile
      */
     fun getStartTiles(): List<List<HabitatTile>> {
         val startTiles = mutableListOf<List<HabitatTile>>() //is List<List<HabitatTile>> in CascadiaGame
         val startTileList = mutableListOf<HabitatTile>() // temp List for startTiles
-
-        File("start_tiles.csv").bufferedReader().useLines { lines ->
+        val resource = this::class.java.classLoader.getResource("start_tiles.csv")
+            ?: throw IllegalArgumentException("start_tiles.csv not found in resources")
+        File(resource.toURI()).bufferedReader().useLines { lines ->
             lines.drop(1) //skip the first line (header)
                 .forEach { line ->
-                    val parts = line.split(";")  //Parse data from the CSV line
-                    val id = parts[0].toInt()
-                    val habitats = parts[1].map { Terrain.valueOf(it.toString()) }.toMutableList()
-                    val wildlife = parts[2].map { Animal.valueOf(it.toString()) }.toMutableList()
-                    val keystone = parts[3].toBoolean()
+                    val part = line.split(";")  //Parse data from the CSV line
+                    val id = part[0].toInt()
+                    val habitats = part[1].map { Terrain.fromValue(it.toString()) }.toMutableList()
+                    val wildlife = part[2].map { Animal.fromValue(it.toString()) }
+                    val keystone = when (part[3].lowercase()) {
+                        "yes" -> true
+                        else -> false
+                    }
 
                     //Add a new HabitatTile to the list
                     val startTile = HabitatTile(
@@ -235,7 +242,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
 
                     //once 3 tiles are grouped, add them to the startTiles list and clear the temporary list
                     if (startTileList.size == 3) {
-                        startTiles.add(startTileList)
+                        startTiles.add(startTileList.toList())
                         startTileList.clear()
                     }
                 }
@@ -245,11 +252,11 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
 
     /**
      *  End a turn of a [CascadiaGame] by refilling the shop
-     *  and switching the [currentPlayer] to the next player in [PlayerList].
+     *  and switching the [CascadiaGame.currentPlayer] to the next player in [CascadiaGame.playerList].
      *  Resolve all occurring overpopulations of four that appear during the shop refill.
      *  Call a GUI-refresh afterwards.
      *
-     *  If the [habitatTileStack] is empty prior to the shop refill
+     *  If the [CascadiaGame.habitatTileList] is empty prior to the shop refill
      *  [nextTurn] will end the game by calling a GUI-refresh.
      *
      *  @throws IllegalStateException if player has not yet added a tile to his habitat
@@ -273,8 +280,8 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         }
 
         // refill shop
-        val newHabitatTile = game.habitatTileList[game.habitatTileList.size - 1]
-        val newWildlifeToken = game.wildlifeTokenList[game.wildlifeTokenList.size - 1]
+        val newHabitatTile = game.habitatTileList.removeLast()
+        val newWildlifeToken = game.wildlifeTokenList.removeLast()
         for (i in 0 until game.shop.size) {
             // refill missing pair
             if (game.shop[i].first == null && game.shop[i].second == null) {
@@ -295,8 +302,11 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
             resolveOverpopulation()
         }
 
+        game.hasReplacedThreeToken = false
+        game.hasPlayedTile = false
+
         // switch current player
-        val nextPlayerIndex = game.playerList.indexOf(game.currentPlayer) + 1 % game.playerList.size
+        val nextPlayerIndex = (game.playerList.indexOf(game.currentPlayer) + 1) % game.playerList.size
         game.currentPlayer = game.playerList[nextPlayerIndex]
 
         // refresh GUI
@@ -329,11 +339,11 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
     }
 
     /**
-     * Check whether the token in the game [shop] at the given indices have the same animal value.
+     * Check whether the token in the game [CascadiaGame.shop] at the given indices have the same animal value.
      *
      * @param tokenIndices is list of indices for wildLifeToken in the game shop. Default is list of all four indices.
      *
-     * @return [true] if all token in shop at the indices in [tokenIndices] have the same animal value, [false] if not.
+     * @return true if all token in shop at the indices in [tokenIndices] have the same animal value, false if not.
      *
      * @throws IllegalArgumentException if indices out of bound for shop, not mutually distinct
      * or number of indices is either too big or too small.
@@ -358,8 +368,8 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         val firstToken = game.shop[tokenIndices[0]].second
         checkNotNull(firstToken)
         val firstAnimal = firstToken.animal
-        for (i in 1..3) {
-            val currentToken = game.shop[tokenIndices[i]].second
+        for (index in tokenIndices) {
+            val currentToken = game.shop[index].second
             checkNotNull(currentToken)
             if (currentToken.animal != firstAnimal) {
                 return false
@@ -372,20 +382,26 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
      * Perform the actual replacement of tokens in the shop and trigger GUI update afterwards.
      * Usage of this function assumes that there either is an overpopulation of three the player can resolve
      * for free or that the player want's to replace an arbitrary number of tokens by using a nature token.
-     * Used for this purposes in [replaceWildlifeTokens] and [resolveOverpopulation].
+     * Used for this purposes in [PlayerActionService.replaceWildlifeTokens] and [resolveOverpopulation].
      *
-     * @param [tokenIndices] is a list of indices of the tile-token pairs in [shop] whose token shall be replaced.
+     * @param [tokenIndices] is a list of indices of the tile-token pairs in [CascadiaGame.shop]
+     * whose token shall be replaced.
      * @param networkReplacement is a boolean to flag replacements done by other network players.
      * @param natureTokenUsed is a boolean to flag the usage of nature token
      * as this requires different handling of discarded tokens.
      *
      */
-    fun executeTokenReplacement(tokenIndices : List<Int>,
-                                networkReplacement : Boolean = false,
-                                natureTokenUsed : Boolean = false) {
+    fun executeTokenReplacement(
+        tokenIndices: List<Int>,
+        networkReplacement: Boolean = false,
+        natureTokenUsed: Boolean = false
+    ) {
 
         //check for existing game
         val game = checkNotNull(rootService.currentGame)
+
+        val myTurn1 = rootService.networkService.connectionState == ConnectionState.PLAYING_MY_TURN
+        val myTurn2 = rootService.networkService.connectionState == ConnectionState.SWAPPING_WILDLIFE_TOKENS
 
         // perform replacement
         tokenIndices.forEach {
@@ -394,6 +410,9 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
                 game.shop[it].first,
                 game.wildlifeTokenList.removeLast()
             )
+        }
+        if (myTurn1 or myTurn2) {
+            rootService.networkService.sendResolvedOverPopulationMessage()
         }
 
         if (natureTokenUsed) {
@@ -405,6 +424,9 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
             game.discardedToken = mutableListOf()
             if (!networkReplacement) {
                 game.wildlifeTokenList.shuffle()
+                if (myTurn1) {
+                    rootService.networkService.sendSwappedWithNatureTokenMessage(tokenIndices)
+                }
             }
 
             // resolve possible overpopulation of four
@@ -425,6 +447,9 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
                 game.discardedToken = mutableListOf()
                 if (!networkReplacement) {
                     game.wildlifeTokenList.shuffle()
+                    if (myTurn2) {
+                        rootService.networkService.sendShuffledWildlifeTokensMessage()
+                    }
                 }
             }
         }

@@ -17,4 +17,23 @@ enum class Animal {
     HAWK,
     SALMON,
     ;
+
+    companion object {
+
+        /**
+         * Transfrom a given first letter into its responding Animal
+         *
+         * @param value the first letter of a member of this enum
+         */
+        fun fromValue(value : String) : Animal {
+            return when(value) {
+                "B" -> BEAR
+                "E" -> ELK
+                "F" -> FOX
+                "H" -> HAWK
+                else -> SALMON
+            }
+        }
+    }
+
 }
