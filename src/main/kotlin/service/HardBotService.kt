@@ -4,7 +4,7 @@ import entity.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ConcurrentLinkedQueue
 
 class HardBotService(private val rootService: RootService) {
     val gameService = GameService(rootService)
@@ -15,9 +15,11 @@ class HardBotService(private val rootService: RootService) {
 
         require(game.currentPlayer.playerType == PlayerType.NORMAL)
 
-        Thread {
+        val thread = Thread {
             takeAsyncTurn(game)
-        }.start()
+        }
+        thread.start()
+        thread.join()
     }
 
     private fun takeAsyncTurn(game: CascadiaGame) = runBlocking {
@@ -25,10 +27,10 @@ class HardBotService(private val rootService: RootService) {
         val tiles = game.habitatTileList.shuffled()
         val animalTokens = game.wildlifeTokenList.shuffled().toMutableList()
         val numberOfPlayers = game.playerList.size
-        val currendRound =
-            if (tiles.size % numberOfPlayers == 0) tiles.size / numberOfPlayers + 1 else tiles.size / numberOfPlayers + 2
+        val currentRound =
+            if (tiles.size % numberOfPlayers == 0) tiles.size / numberOfPlayers else tiles.size / numberOfPlayers + 1
 
-        val queue = LinkedBlockingQueue<HardBotJob>()
+        val queue = ConcurrentLinkedQueue<HardBotJob>()
         var timeIsUp = false
 
         launch {
@@ -45,21 +47,76 @@ class HardBotService(private val rootService: RootService) {
 
         val maxNumberOfThreads = Runtime.getRuntime().availableProcessors()
 
-        val posibillities = calculateAllPossibilities(tiles, game, animalTokens)
+        val possibilities = calculateAllPossibilities(game, animalTokens)
+
+        launch {
+            if (currentRound == 1) {
+                possibilities.forEach { placement ->
+                    createJob(
+                        tiles = tiles.map { it.copy() }.toMutableList(),
+                        player = game.currentPlayer,
+                        round = currentRound,
+                        employer = placement,
+                        animals = animalTokens.shuffled().toMutableList(),
+                        queue = queue,
+                        shop = game.shop.map { pair -> Pair(pair.first?.copy(), pair.second?.copy()) }.toMutableList(),
+                        tile = placement.tile
+                    )
+                }
+            } else {
+                while (!timeIsUp) {
+                    possibilities.forEach { possibility ->
+                        createJob(
+                            tiles = tiles.map { it.copy() }.toMutableList(),
+                            player = game.currentPlayer,
+                            round = currentRound,
+                            animals = animalTokens.shuffled().toMutableList(),
+                            queue = queue,
+                            employer = possibility,
+                            shop = game.shop.map { pair -> Pair(pair.first?.copy(), pair.second?.copy()) }
+                                .toMutableList(),
+                            tile = possibility.tile
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun simulate(queue: ConcurrentLinkedQueue<HardBotJob>) {
+        val gameService = rootService.gameService
+        while (!Thread.interrupted()) {
+            val job = queue.poll()
+            if (job == null) {
+                Thread.onSpinWait()
+            } else {
+                (1 until job.round).forEach { _ ->
+                    val tilePositions = gameService.getAllPossibleCoordinatesForTilePlacing(job.habitat)
+                    val tile = job.shop[0].first
+                    val animal = job.shop[0].second
+                    checkNotNull(tile)
+                    checkNotNull(animal)
+                    job.habitat[tilePositions.random()] = tile
+
+
+                }
+            }
+
+        }
     }
 
     private fun createJob(
-        tiles: List<HabitatTile>,
+        tiles: MutableList<HabitatTile>,
         player: Player,
         round: Int,
         animals: MutableList<WildlifeToken>,
-        queue: LinkedBlockingQueue<HardBotJob>,
+        queue: ConcurrentLinkedQueue<HardBotJob>,
         employer: HardBotPossiblePlacements,
         shop: MutableList<Pair<HabitatTile?, WildlifeToken?>>,
         tile: HabitatTile
     ) {
         val habitat = player.habitat.mapValues { entry -> entry.value.copy() }.toMutableMap()
-        val naturalTokens = if (employer.usedNaturalToken > 0) player.natureToken - 1 else player.natureToken
+        val naturalTokens = player.natureToken - employer.usedNaturalToken
 
         val replacedWildlife = employer.replacedWildlife
         val wildlifeToken = employer.wildlifeToken
@@ -89,13 +146,38 @@ class HardBotService(private val rootService: RootService) {
         }
 
         val customPair = employer.customPair
+        val shopTilePos: Int
+        val shopAnimalPos: Int
         if (customPair != null) {
-
+            shopTilePos = customPair.first
+            shopAnimalPos = customPair.second
+        } else {
+            shopTilePos = shop.indexOfFirst { it.first == tile }
+            shopAnimalPos = shopTilePos
         }
+        shop[shopTilePos] = Pair(tiles.removeAt((0 until tiles.size).random()), shop[shopTilePos].second)
+        shop[shopAnimalPos] = Pair(shop[shopAnimalPos].first, animals.removeAt((0 until animals.size).random()))
+
+        for (i in 0 until employer.rotation) rotateTile(tile)
+        habitat[employer.tilePlacement] = tile
+        val wildLifePlacement = employer.wildlifePlacement
+        if (wildLifePlacement != null) {
+            wildLifePlacement.wildlifeToken = wildlifeToken
+        }
+        queue.add(
+            HardBotJob(
+                naturalTokens = naturalTokens,
+                habitat = habitat,
+                round = round,
+                habitatTiles = tiles,
+                animals = animals,
+                employer = employer,
+                shop = shop
+            )
+        )
     }
 
     private fun calculateAllPossibilities(
-        tiles: List<HabitatTile>,
         game: CascadiaGame,
         tokenList: MutableList<WildlifeToken>
     ): MutableList<HardBotPossiblePlacements> {
@@ -103,7 +185,7 @@ class HardBotService(private val rootService: RootService) {
         val player = game.currentPlayer
         val possibleTilePlaces = gameService.getAllPossibleCoordinatesForTilePlacing(player.habitat)
 
-        val list = LinkedBlockingQueue<HardBotPossiblePlacements>()
+        val list = ConcurrentLinkedQueue<HardBotPossiblePlacements>()
         val threads = mutableListOf<Thread>()
 
         threads.add(Thread {
@@ -227,5 +309,13 @@ class HardBotService(private val rootService: RootService) {
         }
 
         return list.toMutableList()
+    }
+
+    private fun rotateTile(tile: HabitatTile) {
+        tile.rotationOffset = (tile.rotationOffset - 1) % 6
+        tile.terrains.add(
+            tile.terrains.lastIndex,
+            tile.terrains.removeFirst()
+        )
     }
 }
