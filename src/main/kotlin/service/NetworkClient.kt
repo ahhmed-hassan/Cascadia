@@ -29,7 +29,8 @@ class NetworkClient (playerName: String, host: String, secret: String, val netwo
      * It waits for the guest player when the response status is [CreateGameResponseStatus.SUCCESS],
      * in order to manage potential network issues.
      *
-     * @throws IllegalStateException if the status is not success, or if the system is not currently awaiting a game creation response.
+     * @throws IllegalStateException if the status is not success, or if the system is not currently awaiting
+     * a game creation response.
      */
     override fun onCreateGameResponse(response: CreateGameResponse) {
         BoardGameApplication.runOnGUIThread {

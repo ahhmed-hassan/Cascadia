@@ -4,6 +4,9 @@ import entity.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+/**
+ *  Test class for the calculateFoxScore method in the class scoringService.
+ */
 class CalculateFoxScoreTest {
 
     /**

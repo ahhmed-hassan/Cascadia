@@ -35,6 +35,4 @@ class CascadiaGame(
     var selectedTile: HabitatTile?,
     var selectedToken: WildlifeToken?,
     var wildlifeTokenList: MutableList<WildlifeToken>
-    ) {
-
-}
+    )

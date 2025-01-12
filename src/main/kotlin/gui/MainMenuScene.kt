@@ -5,6 +5,9 @@ import tools.aqua.bgw.core.MenuScene
 import tools.aqua.bgw.visual.ColorVisual
 import tools.aqua.bgw.visual.ImageVisual
 
+/**
+ * Class of the main menue scene of a game of Cascadia from where all other menues can be reached.
+ */
 class MainMenuScene : MenuScene(1920, 1080) {
 
     val startHotSeatGameButton = Button(

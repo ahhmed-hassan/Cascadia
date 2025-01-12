@@ -53,83 +53,57 @@ class LongestTerrainTester {
      */
     @BeforeTest
     fun setup() {
-
         val tilesAndCoordinates: Map<Pair<Int, Int>, HabitatTile> = mapOf(
             (-2 to -1) to dummyTile(
-                Terrain.PRAIRIE + List(3) { Terrain.RIVER } + List(2) { Terrain.PRAIRIE }
-            ),
+                Terrain.PRAIRIE + List(3) { Terrain.RIVER } + List(2) { Terrain.PRAIRIE }),
             (-2 to 0) to dummyTile(
-                List(3) { Terrain.PRAIRIE } + List(3) { Terrain.FOREST }
-            ),
+                List(3) { Terrain.PRAIRIE } + List(3) { Terrain.FOREST }),
             /*second Row*/
             (-1 to -2) to dummyTile(
-                Terrain.RIVER + List(3) { Terrain.PRAIRIE } + Terrain.RIVER + Terrain.RIVER
-            ),
+                Terrain.RIVER + List(3) { Terrain.PRAIRIE } + Terrain.RIVER + Terrain.RIVER),
             (-1 to -1) to dummyTile(
-                List(2) { Terrain.RIVER } + List(3) { Terrain.PRAIRIE } + Terrain.RIVER
-            ),
+                List(2) { Terrain.RIVER } + List(3) { Terrain.PRAIRIE } + Terrain.RIVER),
             (-1 to 0) to dummyTile(
-                List(6) { Terrain.RIVER }
-            ),
+                List(6) { Terrain.RIVER }),
             (-1 to 1) to dummyTile(
-                List(3) { Terrain.MOUNTAIN } + List(3) { Terrain.RIVER }
-            ),
+                List(3) { Terrain.MOUNTAIN } + List(3) { Terrain.RIVER }),
             (-1 to 2) to dummyTile(
-                Terrain.RIVER + List(3) { Terrain.MOUNTAIN } + Terrain.RIVER + Terrain.RIVER
-            ),
+                Terrain.RIVER + List(3) { Terrain.MOUNTAIN } + Terrain.RIVER + Terrain.RIVER),
             (-1 to 3) to dummyTile(
-                List(2) { Terrain.RIVER } + List(3) { Terrain.MOUNTAIN } + Terrain.RIVER
-            ),
+                List(2) { Terrain.RIVER } + List(3) { Terrain.MOUNTAIN } + Terrain.RIVER),
             /*third row*/
             (0 to -3) to dummyTile(
-                List(3) { Terrain.PRAIRIE } + List(3) { Terrain.WETLAND }
-            ),
+                List(3) { Terrain.PRAIRIE } + List(3) { Terrain.WETLAND }),
             (0 to -2) to dummyTile(
-                List(2) { Terrain.PRAIRIE } + List(3) { Terrain.MOUNTAIN } + Terrain.PRAIRIE
-            ),
+                List(2) { Terrain.PRAIRIE } + List(3) { Terrain.MOUNTAIN } + Terrain.PRAIRIE),
             (0 to -1) to dummyTile(
-                Terrain.PRAIRIE + List(3) { Terrain.FOREST } + List(2) { Terrain.PRAIRIE }
-            ),
+                Terrain.PRAIRIE + List(3) { Terrain.FOREST } + List(2) { Terrain.PRAIRIE }),
             (0 to 0) to dummyTile(
-                List(2) { Terrain.MOUNTAIN } + List(3) { Terrain.WETLAND } + Terrain.MOUNTAIN
-            ),
+                List(2) { Terrain.MOUNTAIN } + List(3) { Terrain.WETLAND } + Terrain.MOUNTAIN),
             (0 to 1) to dummyTile(
-                Terrain.MOUNTAIN + List(3) { Terrain.WETLAND } + List(2) { Terrain.MOUNTAIN }
-            ),
+                Terrain.MOUNTAIN + List(3) { Terrain.WETLAND } + List(2) { Terrain.MOUNTAIN }),
             (0 to 2) to dummyTile(
-                List(2) { Terrain.MOUNTAIN } + List(3) { Terrain.WETLAND } + Terrain.MOUNTAIN
-            ),
+                List(2) { Terrain.MOUNTAIN } + List(3) { Terrain.WETLAND } + Terrain.MOUNTAIN),
             /*4th row*/
             (1 to -3) to dummyTile(
-                List(6) { Terrain.PRAIRIE }
-            ),
+                List(6) { Terrain.PRAIRIE }),
             (1 to -2) to dummyTile(
-                List(3) { Terrain.FOREST } + List(3) { Terrain.PRAIRIE }
-            ),
+                List(3) { Terrain.FOREST } + List(3) { Terrain.PRAIRIE }),
             (1 to -1) to dummyTile(
-                List(3) { Terrain.WETLAND } + List(3) { Terrain.FOREST }
-            ),
+                List(3) { Terrain.WETLAND } + List(3) { Terrain.FOREST }),
             (1 to 0) to dummyTile(
-                Terrain.WETLAND + List(3) { Terrain.FOREST } + List(2) { Terrain.WETLAND }
-            ),
+                Terrain.WETLAND + List(3) { Terrain.FOREST } + List(2) { Terrain.WETLAND }),
             (1 to 1) to dummyTile(
-                List(3) { Terrain.WETLAND } + List(3) { Terrain.FOREST }
-            ),
+                List(3) { Terrain.WETLAND } + List(3) { Terrain.FOREST }),
             (1 to 2) to dummyTile(
-                List(6) { Terrain.WETLAND }
-            ),
+                List(6) { Terrain.WETLAND }),
             /*5th row*/
             (2 to -2) to dummyTile(
-                List(3) { Terrain.FOREST } + List(3) { Terrain.PRAIRIE }
-            ),
+                List(3) { Terrain.FOREST } + List(3) { Terrain.PRAIRIE }),
             (2 to -1) to dummyTile(
-                List(3) { Terrain.FOREST } + List(3) { Terrain.WETLAND }
-            ),
+                List(3) { Terrain.FOREST } + List(3) { Terrain.WETLAND }),
             (2 to 0) to dummyTile(
-                List(6) { Terrain.FOREST }
-            )
-
-
+                List(6) { Terrain.FOREST })
         )
         player.habitat.putAll(tilesAndCoordinates)
     }

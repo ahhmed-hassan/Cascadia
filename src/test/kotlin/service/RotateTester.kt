@@ -15,6 +15,9 @@ import kotlin.test.assertEquals
 class RotateTester {
     private var rootService = RootService()
 
+    /**
+     *  set up tests for rotateTile
+     */
     @BeforeTest
     fun setup() {
         rootService.gameService.startNewGame(
@@ -25,6 +28,9 @@ class RotateTester {
         )
     }
 
+    /**
+     *  test the rotation of a habitat tile with rotate tile.
+     */
     @Test
     fun properRotation() {
         rootService.currentGame?.selectedTile = HabitatTile(
@@ -39,6 +45,7 @@ class RotateTester {
             )
         )
 
+        rootService.networkService.connectionState = ConnectionState.PLAYING_MY_TURN
         rootService.playerActionService.rotateTile()
         assertEquals(
             5, rootService.currentGame?.selectedTile?.rotationOffset,
@@ -53,6 +60,7 @@ class RotateTester {
             "The list elements are not rotated properly"
         )
 
+        rootService.networkService.connectionState = ConnectionState.WAITING_FOR_OPPONENTS_TURN
         rootService.playerActionService.rotateTile()
         assertEquals(
             4, rootService.currentGame?.selectedTile?.rotationOffset,
@@ -68,6 +76,19 @@ class RotateTester {
         )
     }
 
+    /**
+     * Testing with invalid game
+     */
+    @Test
+    fun inValidGame() {
+        rootService.currentGame = null
+        val notStartedGame = assertThrows<IllegalStateException> { rootService.playerActionService.rotateTile() }
+        assertEquals("No game started yet", notStartedGame.message)
+    }
+
+    /**
+     *  test handling of a null value for habitat tile in rotateTile method.
+     */
     @Test
     fun rotatingNullTile() {
         val exception = assertThrows<IllegalStateException> { rootService.playerActionService.rotateTile() }

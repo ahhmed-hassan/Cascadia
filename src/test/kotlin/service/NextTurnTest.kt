@@ -75,6 +75,8 @@ class NextTurnTest {
 
         assertTrue(gameServ.checkForSameAnimal())
 
+        game.hasPlayedTile = true
+
         gameServ.nextTurn()
 
         assertEquals(false, gameServ.checkForSameAnimal())
