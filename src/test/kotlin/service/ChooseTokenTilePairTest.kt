@@ -64,6 +64,7 @@ class ChooseTokenTilePairTest {
 
         assertNull(game.shop[3].first)
         assertNull(game.shop[3].second)
+
     }
 
 }
