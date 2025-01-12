@@ -23,7 +23,7 @@ class HardBotService(private val rootService: RootService) {
     private fun takeAsyncTurn(game: CascadiaGame) = runBlocking {
 
         val tiles = game.habitatTileList.shuffled()
-        val animalTokens = game.wildlifeTokenList.shuffled()
+        val animalTokens = game.wildlifeTokenList.shuffled().toMutableList()
         val numberOfPlayers = game.playerList.size
         val currendRound =
             if (tiles.size % numberOfPlayers == 0) tiles.size / numberOfPlayers + 1 else tiles.size / numberOfPlayers + 2
@@ -45,7 +45,7 @@ class HardBotService(private val rootService: RootService) {
 
         val maxNumberOfThreads = Runtime.getRuntime().availableProcessors()
 
-        val posibillities = calculateAllPossibilities(tiles, game)
+        val posibillities = calculateAllPossibilities(tiles, game, animalTokens)
     }
 
     private fun createJob(
@@ -59,7 +59,7 @@ class HardBotService(private val rootService: RootService) {
         tile: HabitatTile
     ) {
         val habitat = player.habitat.mapValues { entry -> entry.value.copy() }.toMutableMap()
-        val naturalTokens = if (employer.usedNaturalToken) player.natureToken - 1 else player.natureToken
+        val naturalTokens = if (employer.usedNaturalToken > 0) player.natureToken - 1 else player.natureToken
 
         val replacedWildlife = employer.replacedWildlife
         val wildlifeToken = employer.wildlifeToken
@@ -96,7 +96,8 @@ class HardBotService(private val rootService: RootService) {
 
     private fun calculateAllPossibilities(
         tiles: List<HabitatTile>,
-        game: CascadiaGame
+        game: CascadiaGame,
+        tokenList: MutableList<WildlifeToken>
     ): MutableList<HardBotPossiblePlacements> {
         val shop = game.shop
         val player = game.currentPlayer
@@ -123,7 +124,7 @@ class HardBotService(private val rootService: RootService) {
                                     tilePlacement = tilePlace,
                                     rotation = rotation,
                                     wildlifeToken = second,
-                                    usedNaturalToken = false,
+                                    usedNaturalToken = 0,
                                     wildlifePlacement = animalPlace,
                                 )
                             )
@@ -135,7 +136,7 @@ class HardBotService(private val rootService: RootService) {
                                 tile = first,
                                 tilePlacement = tilePlace,
                                 rotation = rotation,
-                                usedNaturalToken = false,
+                                usedNaturalToken = 0,
                             )
                         )
                     }
@@ -143,6 +144,79 @@ class HardBotService(private val rootService: RootService) {
                 }
             }
         })
+
+        if (player.natureToken > 0) {
+            threads.add(Thread {
+                val habitat = player.habitat.mapValues { entry -> entry.value.copy() }.toMutableMap()
+
+                var selectedToken: WildlifeToken? = null
+                var selectedTokenIndex = 0
+                for (animal in Animal.values()) {
+                    var tokenChance: Number?
+                    if (animal in shop.map {
+                            val token = checkNotNull(it.second)
+                            token.animal
+                        }) {
+
+                        tokenChance = 1
+
+                        val firstPair = shop.find { checkNotNull(it.second).animal == animal }
+
+                        selectedToken = checkNotNull(firstPair).second
+                        selectedTokenIndex = shop.indexOf(firstPair)
+                    } else if (player.natureToken > 1) {
+                        val k = tokenList.filter {
+                            it.animal == animal
+                        }.size
+                        if (k == 0) continue
+                        val n = tokenList.size
+                        val tokenChanceComplement = 0L +
+                                ((n - k) * (n - k - 1) * (n - k - 2) * (n - k - 3)) / (n * (n - 1) * (n - 2) * (n - 3))
+                        tokenChance = 1 - tokenChanceComplement
+
+                        val replacedToken = tokenList.first { it.animal == animal }
+                        tokenList.remove(replacedToken)
+                        shop[0] = Pair(game.shop[0].first, replacedToken)
+
+                        selectedToken = shop[0].second
+                    } else {
+                        continue
+                    }
+
+                    for (i in 0..3) {
+                        if (i == selectedTokenIndex) {
+                            continue
+                        }
+                        val selectedTile = shop[i].first
+                        checkNotNull(selectedTile)
+
+                        possibleTilePlaces.forEach { tilePlace ->
+                            habitat[tilePlace] = selectedTile
+                            val animalPositions = gameService.getAllPossibleTilesForWildlife(
+                                checkNotNull(selectedToken).animal, habitat
+                            )
+                            animalPositions.forEach { animalPlace ->
+                                for (rotation in 0..5) {
+                                    list.add(
+                                        HardBotPossiblePlacements(
+                                            tile = selectedTile,
+                                            tilePlacement = tilePlace,
+                                            rotation = rotation,
+                                            wildlifeToken = selectedToken,
+                                            usedNaturalToken = if (tokenChance == 1) 1; else 2,
+                                            wildlifePlacement = animalPlace,
+                                            wildLifeChance = tokenChance,
+                                            customPair = Pair(i, selectedTokenIndex),
+                                        )
+                                    )
+                                }
+                            }
+                            habitat.remove(tilePlace)
+                        }
+                    }
+                }
+            })
+        }
 
         for (thread in threads) {
             thread.start()

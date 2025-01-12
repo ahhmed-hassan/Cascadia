@@ -9,7 +9,7 @@ class HardBotPossiblePlacements(
     val customPair: Pair<Int, Int>? = null,
     val replacedWildlife: BooleanArray? = null,
     val wildLifeChance: Number? = null,
-    val usedNaturalToken: Boolean
+    val usedNaturalToken: Int
 ) {
     var score = 0
     var numberOfScores = 0
