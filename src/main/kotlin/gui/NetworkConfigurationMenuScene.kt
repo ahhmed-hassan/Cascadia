@@ -341,6 +341,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         )
         addComponents(overlay)
         val buttons = createPlayerButtons(300)
+        playerNameFields.add(playersField)
         playerButtons.add(buttons)
         overlay.add(buttons)
     }
@@ -432,6 +433,8 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     override fun refreshAfterPlayerJoined(networkPlayers: MutableList<String>) {
         playerNameFields.forEach { overlay.remove(it) }
         playerNameFields.clear()
+        playerNameFields.add(playersField)
+        overlay.add(playersField)
 
         networkPlayers.forEachIndexed { index, playerName ->
             val playerNameField = TextField(
@@ -442,7 +445,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
                 text = playerName,
                 visual = ColorVisual(255, 255, 255)
             )
-            playerNameFields.add(playerNameField)
+            playerNameFields.add(playersField)
             overlay.add(playerNameField)
         }
         if (networkPlayers.size >=1 ) {
