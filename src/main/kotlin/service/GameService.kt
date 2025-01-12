@@ -40,8 +40,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
 
         //Check the size of the rules and determine if they are randomized or provided by the user
         val ruleSet = if (isRandomRules) {
-            // true is 1 (Cards B), false is 0 (Cards A)
-            List(5) { (0..1).random() == 1 }
+            List(5) { (0..1).random() == 1 } // true is 1 (Cards B), false is 0 (Cards A)
         } else {
             require(scoreRules.size == 5) { "The scoring rules must be 5" }
             scoreRules
@@ -91,7 +90,6 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
             wildlifeTokens.add(WildlifeToken(Animal.HAWK))
             wildlifeTokens.add(WildlifeToken(Animal.SALMON))
         }
-
         wildlifeTokens.shuffle()
 
         // Create shop with first 4 tiles and first 4 wildlife tokens
@@ -133,9 +131,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         rootService.currentGame = game
 
         // Resolve overpopulation of four in the shop after game created
-        if (checkForSameAnimal()) {
-            resolveOverpopulation()
-        }
+        if (checkForSameAnimal()) { resolveOverpopulation() }
 
         // This block is only activated if the game is a network game and startTileOrder is provided.
         if (startTileOrder != null && startTileOrder.size == playerList.size) {
@@ -168,14 +164,14 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
                 //Place the lower-left tile in the player's habitat
                 player.habitat[1 to 0] = playerStartTile[2]
             }
-
         }
-
         onAllRefreshables { refreshAfterGameStart() }
     }
 
     /**
      * Reads starting tiles for players from the "tiles.csv" file and returns a list of tiles.
+     *
+     * @return the list of habitat tiles from the .csv
      */
     fun getHabitatTiles(): List<HabitatTile> {
         val habitatTiles = mutableListOf<HabitatTile>()
@@ -213,6 +209,8 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
 
     /**
      * Reads starting tiles for players from the "start_tiles.csv" file and returns a list of tile groups.
+     *
+     * @return the list of lists of habitat tiles from the .csv each representing one start tile
      */
     fun getStartTiles(): List<List<HabitatTile>> {
         val startTiles = mutableListOf<List<HabitatTile>>() //is List<List<HabitatTile>> in CascadiaGame
@@ -280,8 +278,6 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
             onAllRefreshables { refreshAfterGameEnd(rootService.scoringService.calculateScore()) }
             return
         }
-
-
 
         // refill shop
         val newHabitatTile = game.habitatTileList.removeLast()
@@ -388,7 +384,8 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
      * for free or that the player want's to replace an arbitrary number of tokens by using a nature token.
      * Used for this purposes in [PlayerActionService.replaceWildlifeTokens] and [resolveOverpopulation].
      *
-     * @param [tokenIndices] is a list of indices of the tile-token pairs in [CascadiaGame.shop] whose token shall be replaced.
+     * @param [tokenIndices] is a list of indices of the tile-token pairs in [CascadiaGame.shop]
+     * whose token shall be replaced.
      * @param networkReplacement is a boolean to flag replacements done by other network players.
      * @param natureTokenUsed is a boolean to flag the usage of nature token
      * as this requires different handling of discarded tokens.

@@ -1,7 +1,5 @@
 package entity
 
-import entity.Terrain.*
-
 /**
  * Enum [Animal] representing the types of animals found in the Cascadia game.
  * Each animal has specific behaviors and scoring rules defined in the game.
@@ -21,6 +19,12 @@ enum class Animal {
     ;
 
     companion object {
+
+        /**
+         * Transfrom a given first letter into its responding Animal
+         *
+         * @param value the first letter of a member of this enum
+         */
         fun fromValue(value : String) : Animal {
             return when(value) {
                 "B" -> BEAR
