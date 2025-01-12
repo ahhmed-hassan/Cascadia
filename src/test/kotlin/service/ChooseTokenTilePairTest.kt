@@ -5,6 +5,7 @@ import entity.HabitatTile
 import entity.PlayerType
 import entity.WildlifeToken
 import org.junit.jupiter.api.assertThrows
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
@@ -16,6 +17,7 @@ class ChooseTokenTilePairTest {
      * Tests the behavior of the [service.PlayerActionService.chooseTokenTilePair] method from the
      * [PlayerActionService] class.
      */
+    @Test
     fun testChooseTokenTilePair() {
         // Preparations for the tests
         val rootServ = RootService()
@@ -31,10 +33,9 @@ class ChooseTokenTilePairTest {
 
         val game = rootServ.currentGame
         checkNotNull(game)
-        val currentPlayer = game.currentPlayer
 
         //Test: Check if the player can choose a pair outside the shop boundaries
-        assertThrows<IllegalStateException> { rootServ.playerActionService.chooseTokenTilePair(4) }
+        assertThrows<IllegalArgumentException> { rootServ.playerActionService.chooseTokenTilePair(4) }
 
         game.selectedToken = WildlifeToken(Animal.FOX)
         game.selectedTile = HabitatTile(
@@ -47,7 +48,7 @@ class ChooseTokenTilePairTest {
         )
 
         //Test: Check if the player can select a pair of the shop if they already selected a pair
-        assertThrows<IllegalStateException> { rootServ.playerActionService.chooseTokenTilePair(3) }
+        assertThrows<IllegalArgumentException> { rootServ.playerActionService.chooseTokenTilePair(3) }
 
         game.selectedToken = null
         game.selectedTile = null
