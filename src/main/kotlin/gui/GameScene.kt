@@ -29,7 +29,7 @@ import java.awt.Color
 import java.lang.Thread.sleep
 import kotlin.math.cos
 import kotlin.math.sin
-
+import kotlinx.coroutines.*
 
 class GameScene (
     val rootService: RootService,
@@ -630,12 +630,13 @@ class GameScene (
         )
 
         if (game.currentPlayer.playerType == PlayerType.EASY){
-            playAnimation(
-                DelayAnimation(duration = speed).apply {
-                    onFinished = { unlock() }
+            disableAll()
+            easyBotService.takeTurn()
+            runBlocking {
+                launch {
+                    delay(speed.toLong())
                 }
-            )
-            sleep(speed.toLong())
+            }
         }
     }
 
@@ -654,6 +655,12 @@ class GameScene (
             }
         }
         selectedShopToken.clear()
+
+        runBlocking {
+            launch {
+                delay(speed.toLong())
+            }
+        }
     }
 
     override fun refreshAfterNextTurn() {
@@ -724,6 +731,7 @@ class GameScene (
             replaceWildlifeButton.isDisabled = false
             confirmReplacementButton.isDisabled = false
         }
+
 
         if (game.currentPlayer.playerType == PlayerType.EASY){
             disableAll()
