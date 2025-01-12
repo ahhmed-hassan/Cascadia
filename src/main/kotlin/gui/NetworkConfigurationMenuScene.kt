@@ -10,7 +10,6 @@ import tools.aqua.bgw.util.Font
 import tools.aqua.bgw.visual.ColorVisual
 import tools.aqua.bgw.visual.ImageVisual
 import java.awt.Color
-import kotlin.random.Random
 
 class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1920, 1080), Refreshables {
 
@@ -228,7 +227,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         }
     }
 
-    private val randomRuleButton = ToggleButton(
+    private val randomRuleToggle = ToggleButton(
         width = 250,
         height = 50,
         posX = 400,
@@ -236,14 +235,9 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         text = "Random Rule",
         font = Font(24),
         visual = ColorVisual(255, 255, 255)
-    ).apply {
-        onMouseClicked = {
-            randomRule = true
-            visual = ColorVisual(Color.GRAY)
-        }
-    }
+    )
 
-    private val randomOrderButton = ToggleButton(
+    private val randomOrderToggle = ToggleButton(
         width = 250,
         height = 50,
         posX = 100,
@@ -251,12 +245,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         text = "Random Order",
         font = Font(24),
         visual = ColorVisual(255, 255, 255)
-    ).apply {
-        onMouseClicked = {
-            randomOrder = !randomOrder
-            visual = if (randomOrder) ColorVisual(Color.GRAY) else ColorVisual(255, 255, 255)
-        }
-    }
+    )
 
     val startButton = Button(
         width = 250,
@@ -268,7 +257,12 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         visual = ColorVisual(255, 255, 255)
     ).apply {
         onMouseClicked = {
+            if (randomOrderToggle.isSelected) { randomOrder = true }
+            if (randomRuleToggle.isSelected) { randomRule = true}
+            rules = determineRules()
             rootService.networkService.startNewHostedGame(orderIsRandom = randomOrder, isRandomRules = randomRule, scoreRules = rules)
+            rules.clear()
+
         }
     }
 
@@ -285,10 +279,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             val playerNames = playerNameFields.filter { it.text.isNotBlank() }.map { it.text }
             val playerTypes = playerButtons.filter { it.text.isNotBlank() }.map { it.text }
             val param = mapPlayerToPlayerTypes(playerNames,playerTypes)
-            val rules = determineRules()
-            //rootService.gameService.startNewGame(playerNames = param, scoreRules = rules, isRandomRules = randomRule, orderIsRandom = randomOrder)
-            hostGame(param, rules)
-            rules.clear()
+            rootService.networkService.hostGame(secret = "cascadia24d", name = playersField.text, sessionID = createId.text, playerType=param.values.first())
         }
     }
 
@@ -329,8 +320,8 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             titleRule,
             simSpeed,
             simEntry,
-            randomRuleButton,
-            randomOrderButton,
+            randomRuleToggle,
+            randomOrderToggle,
             startButton,
             createHostGameButton,
             playersField,
@@ -363,36 +354,31 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
      */
     private fun determineRules(): MutableList<Boolean> {
 
-        if (!randomRule) {
-            if (bearToggleButton.text == "A") {
-                rules.add(false)
-            } else
-                rules.add(true)
+        if (bearToggleButton.text == "A") {
+            rules.add(false)
+        } else
+            rules.add(true)
 
-            if (elkToggleButton.text == "A") {
-                rules.add(false)
-            } else
-                rules.add(true)
+        if (elkToggleButton.text == "A") {
+            rules.add(false)
+        } else
+            rules.add(true)
 
-            if (foxToggleButton.text == "A") {
-                rules.add(false)
-            } else
-                rules.add(true)
+        if (foxToggleButton.text == "A") {
+            rules.add(false)
+        } else
+            rules.add(true)
 
-            if (hawkToggleButton.text == "A") {
-                rules.add(false)
-            } else
-                rules.add(true)
+        if (hawkToggleButton.text == "A") {
+            rules.add(false)
+        } else
+            rules.add(true)
 
-            if (salmonToggleButton.text == "A") {
-                rules.add(false)
-            } else
-                rules.add(true)
-        }
-        else{
-            for (i in 0..4)
-                rules.add(Random.nextBoolean())
-        }
+        if (salmonToggleButton.text == "A") {
+            rules.add(false)
+        } else
+            rules.add(true)
+
 
         return rules
     }
@@ -428,14 +414,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
      * @param playerNames A map of player names and their player types.
      * @param rules A list of boolean values that defines the scoring rules for the game.
      */
-    private fun hostGame(playerNames: Map<String, PlayerType>, rules: List<Boolean>) {
-        val secret = "cascadia24d"
-        val name = playersField.text
-        val sessionID = createId.text
 
-        rootService.networkService.hostGame(secret, sessionID, name, PlayerType.NETWORK)
-        //rootService.networkService.startNewHostedGame(orderIsRandom = randomOrder, isRandomRules = randomRule, scoreRules = rules)
-    }
 
     override fun refreshConnectionState(newState: ConnectionState) {
         networkStatusArea.text = newState.toUIText()
@@ -450,11 +429,11 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
      *
      * @param playerList A list of player names.
      */
-    override fun refreshAfterPlayerJoined(playerList: MutableList<String>) {
+    override fun refreshAfterPlayerJoined(networkPlayers: MutableList<String>) {
         playerNameFields.forEach { overlay.remove(it) }
         playerNameFields.clear()
 
-        playerList.forEachIndexed { index, playerName ->
+        networkPlayers.forEachIndexed { index, playerName ->
             val playerNameField = TextField(
                 width = 200,
                 height = 50,
@@ -466,7 +445,10 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             playerNameFields.add(playerNameField)
             overlay.add(playerNameField)
         }
+        if (networkPlayers.size >=1 ) {
+            startButton.isVisible = true
+        }else
+            startButton.isVisible = false
     }
-
 
 }
