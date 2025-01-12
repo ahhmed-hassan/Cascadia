@@ -591,7 +591,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
      */
     fun refreshPlayerList(playerList : MutableList<String>) {
         onAllRefreshables {
-            //refreshAfterPlayerJoined(playerList)
+            refreshAfterPlayerJoined(playerList)
         }
     }
 

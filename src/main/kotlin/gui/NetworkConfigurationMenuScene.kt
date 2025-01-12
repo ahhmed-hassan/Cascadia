@@ -86,8 +86,8 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     private val createId = TextField(
         width = 200,
         height = 50,
-        posX = 200,
-        posY = 360,
+        posX = 1050,
+        posY = 400,
         text = "Create Game ID",
         visual = ColorVisual(255, 255, 255)
     )
@@ -268,13 +268,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         visual = ColorVisual(255, 255, 255)
     ).apply {
         onMouseClicked = {
-            val playerNames = playerNameFields.filter { it.text.isNotBlank() }.map { it.text }
-            val playerTypes = playerButtons.filter { it.text.isNotBlank() }.map { it.text }
-            val param = mapPlayerToPlayerTypes(playerNames,playerTypes)
-            val rules = determineRules()
-            //rootService.gameService.startNewGame(playerNames = param, scoreRules = rules, isRandomRules = randomRule, orderIsRandom = randomOrder)
-            hostGame(param, rules)
-            rules.clear()
+            rootService.networkService.startNewHostedGame(orderIsRandom = randomOrder, isRandomRules = randomRule, scoreRules = rules)
         }
     }
 
@@ -288,15 +282,21 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         visual = ColorVisual(255, 255, 255)
     ).apply {
         onMouseClicked = {
-            rootService.networkService.startNewHostedGame(orderIsRandom = randomOrder, isRandomRules = randomRule, scoreRules = rules)
+            val playerNames = playerNameFields.filter { it.text.isNotBlank() }.map { it.text }
+            val playerTypes = playerButtons.filter { it.text.isNotBlank() }.map { it.text }
+            val param = mapPlayerToPlayerTypes(playerNames,playerTypes)
+            val rules = determineRules()
+            //rootService.gameService.startNewGame(playerNames = param, scoreRules = rules, isRandomRules = randomRule, orderIsRandom = randomOrder)
+            hostGame(param, rules)
+            rules.clear()
         }
     }
 
     private val networkStatusArea = TextArea(
         width = 300,
         height = 35,
-        posX = 210,
-        posY = 450,
+        posX = 1050,
+        posY = 500,
     ).apply {
         isDisabled = true
         // only visible when the text is changed to something non-empty
@@ -309,8 +309,8 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     private val cancelButton = Button(
         width = 140,
         height = 35,
-        posX = 210,
-        posY = 550,
+        posX = 1050,
+        posY = 600,
         text = "Cancel"
     ).apply {
         visual = ColorVisual(221, 136, 136)
@@ -445,6 +445,28 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         createHostGameButton.isVisible = disconnected
     }
 
+    /**
+     * Refreshes the player list when a new player joins.
+     *
+     * @param playerList A list of player names.
+     */
+    override fun refreshAfterPlayerJoined(playerList: MutableList<String>) {
+        playerNameFields.forEach { overlay.remove(it) }
+        playerNameFields.clear()
+
+        playerList.forEachIndexed { index, playerName ->
+            val playerNameField = TextField(
+                width = 200,
+                height = 50,
+                posX = 200,
+                posY = 400 + index * 100,
+                text = playerName,
+                visual = ColorVisual(255, 255, 255)
+            )
+            playerNameFields.add(playerNameField)
+            overlay.add(playerNameField)
+        }
+    }
 
 
 }

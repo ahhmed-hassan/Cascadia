@@ -86,6 +86,6 @@ interface Refreshables {
     /**
      *
      */
-    //fun refreshAfterPlayerJoined(networkPlayers : MutableList<String>)
+    fun refreshAfterPlayerJoined(networkPlayers : MutableList<String>) {}
 
 }

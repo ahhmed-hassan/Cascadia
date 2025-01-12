@@ -15,8 +15,6 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
 
     private val playerNameFields = mutableListOf<TextField>()
     private val playerButtons = mutableListOf<Button>()
-    private var randomOrder = false
-
 
     private val overlay = Pane<UIComponent>(
         posX = 200,
@@ -54,6 +52,25 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
         visual = ColorVisual(255, 255, 255)
     )
 
+    private val simSpeed = Label(
+        posX = 1000,
+        posY = 100,
+        width = 400,
+        height = 300,
+        text = "Bot Simulation Speed",
+        font = Font(32)
+    )
+
+    private val simEntry = ComboBox(
+        posX = 1050,
+        posY = 300,
+        width = 200,
+        height = 50,
+        items = listOf(0.5f, 1.0f, 1.5f, 2.0f, 2.5f, 3.0f),
+    ).apply {
+        selectedItem = 0.5f
+    }
+
     private fun createPlayerButtons(posY: Int): Button {
         val playerTypeButton = Button(
             width = 50,
@@ -85,21 +102,6 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
         return playerTypeButton
     }
 
-    val randomOrderButton = ToggleButton(
-        width = 250,
-        height = 50,
-        posX = 600,
-        posY = 700,
-        text = "Random Order",
-        font = Font(24),
-        visual = ColorVisual(255, 255, 255)
-    ).apply {
-        onMouseClicked = {
-            randomOrder = !randomOrder
-            visual = if (randomOrder) ColorVisual(Color.GRAY) else ColorVisual(255, 255, 255)
-        }
-    }
-
     val startButton = Button(
         width = 250,
         height = 50,
@@ -126,7 +128,7 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
     private val networkStatusArea = TextArea(
         width = 300,
         height = 35,
-        posX = 600,
+        posX = 1050,
         posY = 450,
     ).apply {
         isDisabled = true
@@ -140,7 +142,7 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
     private val cancelButton = Button(
         width = 140,
         height = 35,
-        posX = 600,
+        posX = 1050,
         posY = 550,
         text = "Cancel"
     ).apply {
@@ -157,7 +159,8 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
             titleLabel,
             playersField,
             gameId,
-            randomOrderButton,
+            simSpeed,
+            simEntry,
             startButton,
             cancelButton,
             networkStatusArea
@@ -198,4 +201,6 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
         cancelButton.isVisible = !disconnected
         startButton.isVisible = disconnected
     }
+
+
 }
