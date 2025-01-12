@@ -232,7 +232,9 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
                         .take(3) // Limit the list to the first 3 matching tokens.
 
                     // Execute the replacement of the identified tokens in the shop.
-                    rootService.gameService.executeTokenReplacement(indices, true, false)
+                    rootService.gameService.executeTokenReplacement(indices,
+                        true,
+                        false)
                 }
             }
         }
@@ -370,7 +372,9 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         }
 
         // Execute token replacement using the provided indices, marking the nature token as used.
-        rootService.gameService.executeTokenReplacement(message.swappedSelectedTokens, true, true)
+        rootService.gameService.executeTokenReplacement(message.swappedSelectedTokens,
+            true,
+            true)
 
         // Update the game's wildlife token list with the swapped tokens from the message.
         game.wildlifeTokenList = message.swappedWildlifeTokens.map { animal ->
@@ -506,10 +510,12 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
     }
 
     /**
-     * Sends a `ResolveOverpopulationMessage` to indicate that the current player has resolved an overpopulation scenario.
+     * Sends a `ResolveOverpopulationMessage` to indicate that the current player has resolved an overpopulation
+     * scenario.
      *
      * This function constructs and sends a `ResolveOverpopulationMessage` to the connected network client.
-     * It ensures that the current connection state is appropriate for resolving overpopulation and that a network client exists.
+     * It ensures that the current connection state is appropriate for resolving overpopulation
+     * and that a network client exists.
      *
      * @throws IllegalStateException if the connection state is not `SWAPPING_WILDLIFE_TOKENS`.
      * @throws IllegalArgumentException if no network client is found.
@@ -611,7 +617,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
 
     /**
      * Updates the [connectionState] to [newState] and notifies
-     * all refreshables via [Refreshable.refreshConnectionState]
+     * all refreshables via Refreshables.refreshConnectionState
      */
     fun updateConnectionState(newState: ConnectionState) {
         this.connectionState = newState

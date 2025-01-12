@@ -28,6 +28,7 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     private var rules = mutableListOf<Boolean>()
     private var randomRule = false
     private var randomOrder = false
+    private var simulationSpeed : Float = 0.0f
 
     private val overlay = Pane<UIComponent>(
         posX = 200,
@@ -328,8 +329,8 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             val param = mapPlayerToPlayerTypes(playerNames,playerTypes)
             val rules = determineRules()
             if (randomOrderToggle.isSelected) { randomOrder = true }
-            if (randomRuleToggle.isSelected) { randomRule = true}
-            //missing parameter randomOrder, randomRule
+            if (randomOrderToggle.isSelected) { randomRule = true }
+            simulationSpeed = checkNotNull(simEntry.selectedItem)
             rootService.gameService.startNewGame(
                 playerNames = param,
                 scoreRules = rules,
@@ -518,5 +519,9 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         val swapVisual = playerButtons[swap1].visual
         playerButtons[swap1].visual = playerButtons[swap2].visual
         playerButtons[swap2].visual = swapVisual
+    }
+
+    fun getSpeed(): Float {
+        return simulationSpeed
     }
 }

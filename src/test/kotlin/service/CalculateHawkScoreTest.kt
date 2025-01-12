@@ -2,7 +2,9 @@ package service
 import entity.*
 import kotlin.test.*
 
-
+/**
+ *  Test class for the calculateHawkScore method in the class scoringService.
+ */
 class CalculateHawkScoreTest {
 
     /**

@@ -2,8 +2,11 @@ package gui
 
 import entity.Animal
 import entity.HabitatTile
+import entity.PlayerType
 import entity.Terrain
+import service.EasyBotService
 import service.RootService
+import tools.aqua.bgw.animation.DelayAnimation
 import tools.aqua.bgw.components.ComponentView
 import tools.aqua.bgw.components.container.HexagonGrid
 import tools.aqua.bgw.components.gamecomponentviews.HexagonView
@@ -23,10 +26,17 @@ import tools.aqua.bgw.visual.CompoundVisual
 import tools.aqua.bgw.visual.ImageVisual
 import tools.aqua.bgw.visual.TextVisual
 import java.awt.Color
+import java.lang.Thread.sleep
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlinx.coroutines.*
 
-class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Refreshables {
+class GameScene (
+    val rootService: RootService,
+    private val hotSeatConfigurationMenuScene: HotSeatConfigurationMenuScene,
+    private val networkJoinMenuScene: NetworkJoinMenuScene,
+    private val networkConfigurationMenuScene: NetworkConfigurationMenuScene
+) : BoardGameScene(1920, 1080), Refreshables {
 
     private val habitats : BidirectionalMap<HabitatTile,HexagonView> = BidirectionalMap()
     private var selectedHabitat : Int = 0
@@ -37,6 +47,8 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
     private var custom : Boolean = false
     private var currentXCamera = 0
     private var currentYCamera = 0
+    private var speed = 0
+    private val easyBotService = EasyBotService (rootService)
 
     private val shopHabitats = GridPane<HexagonView> (
         posX = 1400,
@@ -389,6 +401,9 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         val game = rootService.currentGame
         checkNotNull(game)
 
+        speed = hotSeatConfigurationMenuScene.getSpeed().toInt() * 1000
+
+        //add the playArea to the CameraPane
         targetLayout.add(playArea)
 
         getRuleSets()
@@ -477,6 +492,11 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
             replaceWildlifeButton.isDisabled = true
             confirmReplacementButton.isDisabled = true
         }
+
+        if (game.currentPlayer.playerType == PlayerType.EASY){
+            disableAll()
+            easyBotService.takeTurn()
+        }
     }
 
     override fun refreshAfterHabitatTileAdded() {
@@ -517,6 +537,10 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
                 }
             }
         }
+
+        if (game.currentPlayer.playerType == PlayerType.EASY){
+
+        }
     }
 
     override fun refreshAfterTileRotation() {
@@ -528,16 +552,6 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
 
        // get the list of terrains from Habitat
         val sideLabels = rotateTile.terrains.map { terrain: Terrain -> terrain.name.substring(0,1) }
-
-        //Do we want to change the Position of terrain in PlayerActionService ?
-//        val rotation = game.selectedTile?.rotationOffset
-//        checkNotNull(rotation)
-
-
-//        //for rotation change the order of terrains
-//        for (i in 0...rotation){
-//            sideLabels = listOf( sideLabels.last()) + sideLabels.dropLast(1)
-//        }
 
         // create new Hexagon for the rotated Tile
         val newHexagon = createLabeledHexagonView(
@@ -554,6 +568,10 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
 
         playableTile[0,0] = null
         playableTile[0,0] = habitats[rotateTile] as HexagonView
+
+        if (game.currentPlayer.playerType == PlayerType.EASY){
+
+        }
     }
 
     override fun refreshAfterTokenTilePairChosen() {
@@ -593,28 +611,41 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
             }
             isDisabled = false
         }
+
+        if (game.currentPlayer.playerType == PlayerType.EASY){
+
+        }
     }
 
     override fun refreshAfterWildlifeTokenAdded(habitatTile: HabitatTile) {
         val game = rootService.currentGame
         checkNotNull(game)
 
+        //update the view of the Habitat where we placed our token
         playableToken[0,0] = null
         habitats[habitatTile] = createLabeledHexagonView(
             color = habitatTile.isKeystoneTile,
             labels = habitatTile.terrains.map { terrain: Terrain -> terrain.name.substring(0,1) },
             token = habitatTile.wildlifeToken?.animal.toString().substring(0,1)
         )
+
+        if (game.currentPlayer.playerType == PlayerType.EASY){
+            disableAll()
+            easyBotService.takeTurn()
+            runBlocking {
+                launch {
+                    delay(speed.toLong())
+                }
+            }
+        }
     }
 
     override fun refreshAfterWildlifeTokenReplaced() {
         val game = rootService.currentGame
         checkNotNull(game)
 
-
         //add the views to the shop
         for (i in 0..3){
-            //shopTokens[i,0]?.onMouseClicked = null
             //create HexagonViews for the Token
             shopTokens[i,0] = game.shop[i].second?.animal?.let { createTokens(it.name) }
             shopTokens[i,0]?.apply {
@@ -624,6 +655,12 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
             }
         }
         selectedShopToken.clear()
+
+        runBlocking {
+            launch {
+                delay(speed.toLong())
+            }
+        }
     }
 
     override fun refreshAfterNextTurn() {
@@ -635,6 +672,8 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         currentXCamera = 0
         currentYCamera = 0
 
+        showRuleSetButton.isDisabled = false
+        cameraPane.isDisabled = false
         shopTokens.isDisabled = false
         shopHabitats.isDisabled = false
         shopTokens.isVisible = true
@@ -692,8 +731,22 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
             replaceWildlifeButton.isDisabled = false
             confirmReplacementButton.isDisabled = false
         }
+
+
+        if (game.currentPlayer.playerType == PlayerType.EASY){
+            disableAll()
+            easyBotService.takeTurn()
+        }
     }
 
+    /**
+     * [createPossibleHexagons] creates the HexagonView based on the Information of the HabitatTile
+     *
+     * @param color is true if the HabitatTile is a Keystone
+     * @param labels is the list of terrains
+     * @param tokens list of possible Animals to place
+     * @param token is the Token placed on this Tile
+     */
     private fun createLabeledHexagonView(
         color: Boolean,
         labels: List<String>,
@@ -725,12 +778,14 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
             )
         }
 
+        // if is keystone than it gets color White else Light Gray
         val color1 = if (color) {
             Color.WHITE
         } else {
             Color.LIGHT_GRAY
         }
 
+        //if there is no Token placed on this tile, then we can see the possible Animals
         val tokenText = token.ifEmpty {
             tokens.toString()
         }
@@ -744,6 +799,11 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         )
     }
 
+    /**
+     * [createTokens] creates a HexagonView based on the AnimalName
+     *
+     * @param animal the string of the Animal
+     */
     private fun createTokens(animal : String): HexagonView {
         return HexagonView(
             size = 50,
@@ -754,7 +814,12 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         )
     }
 
-    //for all possible Position to play the Hexagon, mark it
+    /**
+     * [createPossibleHexagons] for given positions where we can play the Habitat, we mark them so
+     * onMouseClick we can place the Habitat
+     *
+     * @param position List of possible Positions
+     */
     private fun createPossibleHexagons(position : List<Pair<Int,Int>>) {
         for (i in position) {
             val hex = HexagonView(
@@ -772,7 +837,7 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
     }
 
     /**
-     * [getRuleSets] loads the correct images for ruleSets
+     * [getRuleSets] loads the correct images for ruleSets of the current game
      */
     private fun getRuleSets(){
         val game = rootService.currentGame
@@ -846,6 +911,11 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         }
     }
 
+    /**
+     * [hasThreeSameWildlifeTokens] checks if hte shop has three equal tokens.
+     *
+     * @return Boolean if there are three equal token and the list of their position
+     */
     private fun hasThreeSameWildlifeTokens(): Pair<Boolean, List<Int>> {
         val game = rootService.currentGame
         checkNotNull(game)
@@ -869,8 +939,9 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
         }
     }
 
-
-
+    /**
+     * [updateButtonStates] update which Buttons need to be enabled or disabled based on action
+     */
     private fun updateButtonStates(action: String) {
         when (action) {
             "replaceWildlife" -> {
@@ -892,9 +963,26 @@ class GameScene (val rootService: RootService) : BoardGameScene(1920, 1080), Ref
                 replaceWildlifeButton.isDisabled = true
                 chooseCustomPair.isDisabled = true
                 resolveOverpopButton.isDisabled = true
-                //shopTokens.isDisabled = true
                 confirmReplacementButton.isDisabled = true
             }
         }
+    }
+
+    private fun disableAll(){
+        listOf(
+            cameraPane,
+            replaceWildlifeButton,
+            confirmReplacementButton,
+            chooseCustomPair,
+            resolveOverpopButton,
+            showRuleSetButton,
+            discardToken,
+            shopTokens,
+            shopHabitats,
+            //playArea,
+            playableTile,
+            playableToken,
+            ruleSetOverlay
+        ).onEach { it.isDisabled = true}
     }
 }
