@@ -19,8 +19,11 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
      * @throws IllegalArgumentException if the chosenPair is out of bounds
      */
     fun chooseTokenTilePair(chosenPair: Int) {
+
         val game = rootService.currentGame
         checkNotNull(game)
+
+        val myTurn = rootService.networkService.connectionState == ConnectionState.PLAYING_MY_TURN
 
         // check if chosenPair is not out of bounds
         require(chosenPair in 0..3) { "Index for pair must be between 0 and 3" }
@@ -35,6 +38,11 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         //mark the chosen Token-Tile Pair as selected
         game.selectedTile = shopTile
         game.selectedToken = shopToken
+
+        if(myTurn) {
+            rootService.networkService.placedTileIndex = chosenPair
+            rootService.networkService.selectedTokenIndex = chosenPair
+        }
 
         //Delete pair out of shop by assigning a null pair
         game.shop[chosenPair] = Pair(null, null)
@@ -62,6 +70,8 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         val game = rootService.currentGame
         checkNotNull(game)
 
+        val myTurn = rootService.networkService.connectionState == ConnectionState.PLAYING_MY_TURN
+
         // check if player allowed to choose tile
         check(game.selectedTile == null && game.selectedToken == null && !game.hasPlayedTile) {
             "Player already selected a pair"
@@ -75,6 +85,12 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         // select custom pair
         game.selectedTile = game.shop[tileIndex].first
         game.selectedToken = game.shop[tokenIndex].second
+
+        if(myTurn) {
+            rootService.networkService.placedTileIndex = tileIndex
+            rootService.networkService.selectedTokenIndex = tokenIndex
+            rootService.networkService.usedNatureToken = true
+        }
 
         // remove chosen elements from shop
         game.shop[tileIndex] = Pair(null, game.shop[tileIndex].second)
@@ -128,13 +144,12 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         // check if enough tokens are left for replacement, if not the player may try again with a smaller amount
         check(game.wildlifeTokenList.size >= tokenIndices.size) {
             "Not enough wildlifeTokens for replacement left. " +
-                    "Replacement of up to ${game.wildlifeTokenList.size} Tokens still possible. " +
-                        "TokenIndices equals ${tokenIndices.size}"
+                    "Replacement of up to ${game.wildlifeTokenList.size} Tokens still possible."
         }
 
         // player is allowed to freely resolve an overpopulation of three once
         if (tokenIndices.size == 3 &&
-            //rootService.gameService.checkForSameAnimal(tokenIndices) &&
+            rootService.gameService.checkForSameAnimal(tokenIndices) &&
             !game.hasReplacedThreeToken
         ) {
             game.hasReplacedThreeToken = true
@@ -153,7 +168,6 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         }
 
 
-
     }
 
     /**
@@ -164,6 +178,9 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
      * After this function the [entity.CascadiaGame.selectedTile] is set to null
      */
     fun addTileToHabitat(habitatCoordinates: Pair<Int, Int>) {
+
+        val myTurn = rootService.networkService.connectionState == ConnectionState.PLAYING_MY_TURN
+
         val offsets = listOf(Pair(-1, 1), Pair(0, 1), Pair(1, 0), Pair(1, -1), Pair(0, -1), Pair(-1, 0))
         val possibleNeighbours = offsets.map {
             habitatCoordinates.first + it.first to habitatCoordinates.second + it.second
@@ -179,6 +196,10 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         game.currentPlayer.habitat[habitatCoordinates] = selectedTile
         game.selectedTile = null
         game.hasPlayedTile = true
+
+        if(myTurn) {
+            rootService.networkService.tileCoordinates = habitatCoordinates
+        }
         onAllRefreshables { refreshAfterHabitatTileAdded() }
     }
 
@@ -196,6 +217,8 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         checkNotNull(selectedToken)
         val currentPlayer = game.currentPlayer
 
+        val myTurn = rootService.networkService.connectionState == ConnectionState.PLAYING_MY_TURN
+
         //Check if a wildlife token is already placed on this tile
         require(tile.wildlifeToken == null) { "There is already a wildlife token on this tile!" }
 
@@ -207,10 +230,14 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         if (tile.isKeystoneTile) {
             currentPlayer.natureToken += 1
         }
-
+        if(myTurn) {
+            rootService.networkService.tokenCoordinates =
+                game.currentPlayer.habitat.entries.firstOrNull{ it.value == tile }?.key
+        }
         game.selectedToken = null
 
         onAllRefreshables { refreshAfterWildlifeTokenAdded(tile) }
+
         rootService.gameService.nextTurn()
     }
 
@@ -229,11 +256,16 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
 
         val selectedTile = checkNotNull(game.selectedTile) { "Only the selected tile can be rotated!" }
 
+        val myTurn = rootService.networkService.connectionState == ConnectionState.PLAYING_MY_TURN
+
         selectedTile.rotationOffset = (selectedTile.rotationOffset - 1).mod(selectedTile.terrains.size)
         selectedTile.terrains.add(
             selectedTile.terrains.lastIndex,
             selectedTile.terrains.removeFirst()
         )
+        if(myTurn) {
+            rootService.networkService.tileRotation++
+        }
 
         onAllRefreshables { refreshAfterTileRotation() }
     }
@@ -249,10 +281,16 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         val selectedToken = game.selectedToken
         checkNotNull(selectedToken)
 
+        val myTurn = rootService.networkService.connectionState == ConnectionState.PLAYING_MY_TURN
+
         game.wildlifeTokenList.add(selectedToken)
         game.wildlifeTokenList.shuffle()
         game.selectedToken = null
 
+        if(myTurn) {
+            rootService.networkService.selectedTokenIndex = null
+            rootService.networkService.sendPlacedMessage()
+        }
         rootService.gameService.nextTurn()
     }
 
