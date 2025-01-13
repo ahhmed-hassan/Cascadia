@@ -42,52 +42,35 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         val ruleSet = if (isRandomRules) { List(5) { (0..1).random() == 1 }}
                       else { require(scoreRules.size == 5) { "The scoring rules must be 5" }; scoreRules}
 
-        //Player names must be unique, and size of the original key list must match the size of the unique set of keys.
         require(playerNames.keys.size == playerNames.keys.toSet().size) { "Player names must be unique." }
 
         val networkService = NetworkService(rootService)
         //Ensure that no network players exist if the game connection state indicates Hotseat mode
         if (networkService.connectionState == ConnectionState.DISCONNECTED) {
             val networkPlayers = playerNames.values.count { it == PlayerType.NETWORK }
-            if (networkPlayers > 0) { throw IllegalArgumentException("In Hotseat, no player can be of type NETWORK.")}
-        }
+            if (networkPlayers > 0) { throw IllegalArgumentException("In Hotseat, no player can be of type NETWORK.")}}
 
-        //Determine the player order based on the orderIsRandom parameter
-        val playerOrder = if (orderIsRandom) { playerNames.keys.shuffled() }
-                          else { playerNames.keys.toList() }
+        val playerOrder = if (orderIsRandom) { playerNames.keys.shuffled() } else { playerNames.keys.toList() }
 
         //Habitat tile distribution according to the number of players
         val totalTiles = getTileNumber(playerNames.size)
-
-        // Load Habitat Tiles
         val habitatTiles = getHabitatTiles().toMutableList()
         habitatTiles.shuffle()
-
-        //Limit the habitatTiles list to the required number of tiles
         val totalTilesInGame = habitatTiles.take(totalTiles).toMutableList()
 
-        //Create WildLifeTokens (20 each of Bear, Elk, Salmon, Hawk, Fox)
         val wildlifeTokens = createWildlifeToken()
 
-        // Create shop with first 4 tiles and first 4 wildlife tokens
         val shop = totalTilesInGame.take(4).mapIndexed { index, tile ->
-            tile as HabitatTile? to wildlifeTokens[index] as WildlifeToken?
-        }.toMutableList()
-        //Remove the used habitat tiles and wildlife tokens from the main list.
+            tile as HabitatTile? to wildlifeTokens[index] as WildlifeToken? }.toMutableList()
         totalTilesInGame.removeAll(shop.map { it.first })
         wildlifeTokens.removeAll(shop.map { it.second })
 
-        // Load Start Tiles
         val startTiles = getStartTiles().toMutableList()
         startTiles.shuffle()
 
-        // Create player list
-        val playerList = playerOrder.map { name ->
-            val playerType = requireNotNull(playerNames[name])
-            Player(name, mutableMapOf(), playerType)
-        }
+        val playerList = playerOrder.map { name -> val playerType = requireNotNull(playerNames[name])
+            Player(name, mutableMapOf(), playerType) }
 
-        //Create the game
         val game = CascadiaGame(
             startTiles,
             ruleSet,
@@ -107,10 +90,8 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
 
         rootService.currentGame = game
 
-        // Resolve overpopulation of four in the shop after game created
         if (checkForSameAnimal()) { resolveOverpopulation() }
 
-        // This block is only activated if the game is a network game and startTileOrder is provided.
         if (startTileOrder != null && startTileOrder.size == playerList.size) {
             for (i in playerList.indices) {
                 val tileIndex = startTileOrder[i]  // e.g., 2 => startTiles[2]
@@ -118,27 +99,20 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
                 // Retrieve the starting tiles assigned to the player based on the tile index.
                 val playerStartTile = startTiles[tileIndex]
 
-                //Place the top tile in the player's habitat (central)
                 player.habitat[0 to 0] = playerStartTile[0]
-                //Place the lower-right tile in the player's habitat
                 player.habitat[1 to -1] = playerStartTile[1]
-                //Place the lower-left tile in the player's habitat
                 player.habitat[1 to 0] = playerStartTile[2]
             }
         } else {
             for (i in playerList.indices) {
-                //Retrieve the player's name based on the pre-determined player order.
-                //then, find the corresponding Player object from the player list
-                //and retrieve the associated starting habitat tiles for this player.
+                //Retrieve the player's name based on the pre-determined player order. then, find the corresponding
+                // Player object from the player list and retrieve the associated starting habitat tiles for the player
                 val playerName = playerOrder[i]
                 val player = playerList.first { it.name == playerName }
                 val playerStartTile = startTiles[i]
 
-                //Place the top tile in the player's habitat (central)
                 player.habitat[0 to 0] = playerStartTile[0]
-                //Place the lower-right tile in the player's habitat
                 player.habitat[1 to -1] = playerStartTile[1]
-                //Place the lower-left tile in the player's habitat
                 player.habitat[1 to 0] = playerStartTile[2]
             }
         }
