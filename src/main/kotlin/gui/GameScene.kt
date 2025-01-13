@@ -48,7 +48,7 @@ class GameScene (
     private var currentXCamera = 0
     private var currentYCamera = 0
     private var speed = 0
-    private val easyBotService = EasyBotService (rootService)
+    private val easyBotService = rootService.easyBotService
 
     private val shopHabitats = GridPane<HexagonView> (
         posX = 1400,
@@ -400,6 +400,7 @@ class GameScene (
     override fun refreshAfterGameStart() {
         val game = rootService.currentGame
         checkNotNull(game)
+        println("RefreshStart")
 
         speed = hotSeatConfigurationMenuScene.getSpeed().toInt() * 1000
 
@@ -495,13 +496,18 @@ class GameScene (
 
         if (game.currentPlayer.playerType == PlayerType.EASY){
             disableAll()
-            easyBotService.takeTurn()
+            playAnimation(DelayAnimation(speed).apply {
+                onFinished = {
+                    easyBotService.takeTurn()
+                }
+            })
         }
     }
 
     override fun refreshAfterHabitatTileAdded() {
         val game = rootService.currentGame
         checkNotNull(game)
+        println("RefreshTileAdd")
 
         playableTile[0,0] = null
         playArea.clear()
@@ -577,6 +583,7 @@ class GameScene (
     override fun refreshAfterTokenTilePairChosen() {
         val game = rootService.currentGame
         checkNotNull(game)
+        println("RefreshChosen")
 
         shopTokens.isVisible = false
         shopHabitats.isVisible = false
@@ -620,6 +627,7 @@ class GameScene (
     override fun refreshAfterWildlifeTokenAdded(habitatTile: HabitatTile) {
         val game = rootService.currentGame
         checkNotNull(game)
+        println("RefreshToken")
 
         //update the view of the Habitat where we placed our token
         playableToken[0,0] = null
@@ -666,6 +674,7 @@ class GameScene (
     override fun refreshAfterNextTurn() {
         val game = rootService.currentGame
         checkNotNull(game)
+        println("RefreshNext")
 
         //reset the camera to original position
         cameraPane.reposition(0,0)
@@ -735,7 +744,11 @@ class GameScene (
 
         if (game.currentPlayer.playerType == PlayerType.EASY){
             disableAll()
-            easyBotService.takeTurn()
+            playAnimation(DelayAnimation(speed).apply {
+                onFinished = {
+                    easyBotService.takeTurn()
+                }
+            })
         }
     }
 

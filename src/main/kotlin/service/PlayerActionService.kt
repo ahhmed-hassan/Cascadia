@@ -22,7 +22,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
 
         val game = rootService.currentGame
         checkNotNull(game)
-
+        println("TilePair")
         val myTurn = rootService.networkService.connectionState == ConnectionState.PLAYING_MY_TURN
 
         // check if chosenPair is not out of bounds
@@ -69,6 +69,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         // check if game exists
         val game = rootService.currentGame
         checkNotNull(game)
+        println("CustomTilePair")
 
         val myTurn = rootService.networkService.connectionState == ConnectionState.PLAYING_MY_TURN
 
@@ -178,7 +179,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
      * After this function the [entity.CascadiaGame.selectedTile] is set to null
      */
     fun addTileToHabitat(habitatCoordinates: Pair<Int, Int>) {
-
+        println("addTile")
         val myTurn = rootService.networkService.connectionState == ConnectionState.PLAYING_MY_TURN
 
         val offsets = listOf(Pair(-1, 1), Pair(0, 1), Pair(1, 0), Pair(1, -1), Pair(0, -1), Pair(-1, 0))
@@ -216,6 +217,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         val selectedToken = game.selectedToken
         checkNotNull(selectedToken)
         val currentPlayer = game.currentPlayer
+        println("AddToken")
 
         val myTurn = rootService.networkService.connectionState == ConnectionState.PLAYING_MY_TURN
 
@@ -280,6 +282,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         checkNotNull(game)
         val selectedToken = game.selectedToken
         checkNotNull(selectedToken)
+        println("discardToken")
 
         val myTurn = rootService.networkService.connectionState == ConnectionState.PLAYING_MY_TURN
 

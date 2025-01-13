@@ -5,7 +5,7 @@ import entity.PlayerType
 /**
  * Service for an easy bot
  */
-class EasyBotService(private val rootService: RootService) {
+class EasyBotService(private val rootService: RootService) : AbstractRefreshingService(){
     val playerActionService = PlayerActionService(rootService)
     val gameService = GameService(rootService)
 
