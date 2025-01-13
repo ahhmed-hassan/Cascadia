@@ -195,7 +195,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         ) { "A habitat tile shall only be placed to an already placed one" }
         game.currentPlayer.habitat[habitatCoordinates] = selectedTile
         game.selectedTile = null
-
+        game.hasPlayedTile = true
         if(myTurn) {
             rootService.networkService.tileCoordinates = habitatCoordinates
         }
@@ -233,6 +233,8 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         if(myTurn) {
             rootService.networkService.tokenCoordinates =
                 game.currentPlayer.habitat.entries.firstOrNull{ it.value == tile }?.key
+
+            rootService.networkService.sendPlacedMessage()
         }
         game.selectedToken = null
 

@@ -93,8 +93,8 @@ class NetworkClient (playerName: String, host: String, secret: String, val netwo
 
             // Spieler hinzufügen, sofern max. Kapazität noch nicht erreicht
             if (players.size < maxPlayers) {
-                players.add(notification.sender)
-                networkService.refreshPlayerList(players)
+                networkService.playersList.add(notification.sender)
+                networkService.refreshPlayerList(networkService.playersList)
 
             } else {
                 disconnectAndError("Maximum number of players has been reached.")
