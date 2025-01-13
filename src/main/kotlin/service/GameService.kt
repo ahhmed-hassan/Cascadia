@@ -38,41 +38,26 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
     ) {
         require(playerNames.size in 2..4) { "The number of players must be between 2 and 4" }
 
-        //Check the size of the rules and determine if they are randomized or provided by the user
-        val ruleSet = if (isRandomRules) {
-            List(5) { (0..1).random() == 1 } // true is 1 (Cards B), false is 0 (Cards A)
-        } else {
-            require(scoreRules.size == 5) { "The scoring rules must be 5" }
-            scoreRules
-        }
+        // true is 1 (Cards B), false is 0 (Cards A)
+        val ruleSet = if (isRandomRules) { List(5) { (0..1).random() == 1 }}
+                      else { require(scoreRules.size == 5) { "The scoring rules must be 5" }; scoreRules}
 
-        //Player names must be unique,
-        // size of the original key list must match the size of the unique set of keys.
+        //Player names must be unique, and size of the original key list must match the size of the unique set of keys.
         require(playerNames.keys.size == playerNames.keys.toSet().size) { "Player names must be unique." }
 
         val networkService = NetworkService(rootService)
         //Ensure that no network players exist if the game connection state indicates Hotseat mode
         if (networkService.connectionState == ConnectionState.DISCONNECTED) {
             val networkPlayers = playerNames.values.count { it == PlayerType.NETWORK }
-            if (networkPlayers > 0) {
-                throw IllegalArgumentException("In a Hotseat game, no player can be of type NETWORK.")
-            }
+            if (networkPlayers > 0) { throw IllegalArgumentException("In Hotseat, no player can be of type NETWORK.")}
         }
 
         //Determine the player order based on the orderIsRandom parameter
-        val playerOrder = if (orderIsRandom) {
-            playerNames.keys.shuffled()
-        } else {
-            playerNames.keys.toList()
-        }
+        val playerOrder = if (orderIsRandom) { playerNames.keys.shuffled() }
+                          else { playerNames.keys.toList() }
 
         //Habitat tile distribution according to the number of players
-        val totalTiles = when (playerNames.size) {
-            2 -> 43
-            3 -> 63
-            4 -> 83
-            else -> throw IllegalArgumentException("Invalid number of players, player count must be between 2 and 4")
-        }
+        val totalTiles = getTileNumber(playerNames.size)
 
         // Load Habitat Tiles
         val habitatTiles = getHabitatTiles().toMutableList()
@@ -82,15 +67,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         val totalTilesInGame = habitatTiles.take(totalTiles).toMutableList()
 
         //Create WildLifeTokens (20 each of Bear, Elk, Salmon, Hawk, Fox)
-        val wildlifeTokens = mutableListOf<WildlifeToken>()
-        repeat(20) {
-            wildlifeTokens.add(WildlifeToken(Animal.BEAR))
-            wildlifeTokens.add(WildlifeToken(Animal.ELK))
-            wildlifeTokens.add(WildlifeToken(Animal.FOX))
-            wildlifeTokens.add(WildlifeToken(Animal.HAWK))
-            wildlifeTokens.add(WildlifeToken(Animal.SALMON))
-        }
-        wildlifeTokens.shuffle()
+        val wildlifeTokens = createWildlifeToken()
 
         // Create shop with first 4 tiles and first 4 wildlife tokens
         val shop = totalTilesInGame.take(4).mapIndexed { index, tile ->
@@ -166,6 +143,28 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
             }
         }
         onAllRefreshables { refreshAfterGameStart() }
+    }
+
+    private fun createWildlifeToken() : MutableList<WildlifeToken> {
+        val wildlifeToken = mutableListOf<WildlifeToken>()
+        repeat(20) {
+            wildlifeToken.add(WildlifeToken(Animal.BEAR))
+            wildlifeToken.add(WildlifeToken(Animal.ELK))
+            wildlifeToken.add(WildlifeToken(Animal.FOX))
+            wildlifeToken.add(WildlifeToken(Animal.HAWK))
+            wildlifeToken.add(WildlifeToken(Animal.SALMON))
+        }
+        wildlifeToken.shuffle()
+        return wildlifeToken
+    }
+
+    private fun getTileNumber(playerCount : Int) : Int {
+        when (playerCount) {
+            2 -> return 43
+            3 -> return 63
+            4 -> return 83
+            else -> throw IllegalArgumentException("Invalid number of players, player count must be between 2 and 4")
+        }
     }
 
     /**
