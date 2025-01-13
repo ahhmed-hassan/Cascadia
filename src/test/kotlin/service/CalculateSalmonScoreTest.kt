@@ -1,7 +1,8 @@
 package service
 
 import entity.*
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 /**
  *  Test class for method [ScoringService.calculateSalmonScore] in service
@@ -19,9 +20,11 @@ class CalculateSalmonScoreTest {
         val testScoringService = ScoringService(testRootService)
         val testGameService = GameService(testRootService)
 
-        testGameService.startNewGame(mapOf(Pair("testPlayer", PlayerType.LOCAL), Pair("testPlayer2", PlayerType.EASY)),
+        testGameService.startNewGame(
+            mapOf(Pair("testPlayer", PlayerType.LOCAL), Pair("testPlayer2", PlayerType.EASY)),
             scoreRules = listOf(false, false, false, false, false),
-            orderIsRandom = false, isRandomRules = false)
+            orderIsRandom = false, isRandomRules = false
+        )
 
         val testGame = testRootService.currentGame
         checkNotNull(testGame)
@@ -29,66 +32,66 @@ class CalculateSalmonScoreTest {
         setUpHabitat(testPlayer)
 
         // test with no salmon run
-        assertEquals(0, testScoringService.calculateSalmonScore(testPlayer))
+        assertEquals(0, testScoringService.calculateSalmonScore(testPlayer.habitat))
 
         // test run of one
-        var changeTile = checkNotNull(testPlayer.habitat[Pair(0,0)])
+        var changeTile = checkNotNull(testPlayer.habitat[Pair(0, 0)])
         changeTile.wildlifeToken = WildlifeToken(Animal.SALMON)
 
-        assertEquals(2, testScoringService.calculateSalmonScore(testPlayer))
+        assertEquals(2, testScoringService.calculateSalmonScore(testPlayer.habitat))
 
         // test run of two
-        changeTile = checkNotNull(testPlayer.habitat[Pair(1,-1)])
+        changeTile = checkNotNull(testPlayer.habitat[Pair(1, -1)])
         changeTile.wildlifeToken = WildlifeToken(Animal.SALMON)
 
-        assertEquals(5, testScoringService.calculateSalmonScore(testPlayer))
+        assertEquals(5, testScoringService.calculateSalmonScore(testPlayer.habitat))
 
         // test run of three
-        changeTile = checkNotNull(testPlayer.habitat[Pair(1,0)])
+        changeTile = checkNotNull(testPlayer.habitat[Pair(1, 0)])
         changeTile.wildlifeToken = WildlifeToken(Animal.SALMON)
 
-        assertEquals(8, testScoringService.calculateSalmonScore(testPlayer))
+        assertEquals(8, testScoringService.calculateSalmonScore(testPlayer.habitat))
 
         // test insularity of triangular run
-        changeTile = checkNotNull(testPlayer.habitat[Pair(1,1)])
+        changeTile = checkNotNull(testPlayer.habitat[Pair(1, 1)])
         changeTile.wildlifeToken = WildlifeToken(Animal.SALMON)
 
         // adding a fourth salmon to a triangular run of three yields no points
-        assertEquals(0, testScoringService.calculateSalmonScore(testPlayer))
+        assertEquals(0, testScoringService.calculateSalmonScore(testPlayer.habitat))
 
         // test run of four
-        changeTile = checkNotNull(testPlayer.habitat[Pair(1,1)])
+        changeTile = checkNotNull(testPlayer.habitat[Pair(1, 1)])
         changeTile.wildlifeToken = WildlifeToken(Animal.SALMON)
-        changeTile = checkNotNull(testPlayer.habitat[Pair(1,2)])
+        changeTile = checkNotNull(testPlayer.habitat[Pair(1, 2)])
         changeTile.wildlifeToken = WildlifeToken(Animal.SALMON)
-        changeTile = checkNotNull(testPlayer.habitat[Pair(1,-1)])
+        changeTile = checkNotNull(testPlayer.habitat[Pair(1, -1)])
         changeTile.wildlifeToken = WildlifeToken(Animal.ELK)
 
-        assertEquals(12, testScoringService.calculateSalmonScore(testPlayer))
+        assertEquals(12, testScoringService.calculateSalmonScore(testPlayer.habitat))
 
         //test run of five
-        changeTile = checkNotNull(testPlayer.habitat[Pair(1,3)])
+        changeTile = checkNotNull(testPlayer.habitat[Pair(1, 3)])
         changeTile.wildlifeToken = WildlifeToken(Animal.SALMON)
 
-        assertEquals(16, testScoringService.calculateSalmonScore(testPlayer))
+        assertEquals(16, testScoringService.calculateSalmonScore(testPlayer.habitat))
 
         //test run of six
-        changeTile = checkNotNull(testPlayer.habitat[Pair(1,4)])
+        changeTile = checkNotNull(testPlayer.habitat[Pair(1, 4)])
         changeTile.wildlifeToken = WildlifeToken(Animal.SALMON)
 
-        assertEquals(20, testScoringService.calculateSalmonScore(testPlayer))
+        assertEquals(20, testScoringService.calculateSalmonScore(testPlayer.habitat))
 
         //test run of seven
-        changeTile = checkNotNull(testPlayer.habitat[Pair(1,5)])
+        changeTile = checkNotNull(testPlayer.habitat[Pair(1, 5)])
         changeTile.wildlifeToken = WildlifeToken(Animal.SALMON)
 
-        assertEquals(25, testScoringService.calculateSalmonScore(testPlayer))
+        assertEquals(25, testScoringService.calculateSalmonScore(testPlayer.habitat))
 
         //test run of more than seven
-        changeTile = checkNotNull(testPlayer.habitat[Pair(1,6)])
+        changeTile = checkNotNull(testPlayer.habitat[Pair(1, 6)])
         changeTile.wildlifeToken = WildlifeToken(Animal.SALMON)
 
-        assertEquals(25, testScoringService.calculateSalmonScore(testPlayer))
+        assertEquals(25, testScoringService.calculateSalmonScore(testPlayer.habitat))
     }
 
 
@@ -102,9 +105,11 @@ class CalculateSalmonScoreTest {
         val testScoringService = ScoringService(testRootService)
         val testGameService = GameService(testRootService)
 
-        testGameService.startNewGame(mapOf(Pair("testPlayer1", PlayerType.LOCAL), Pair("testPlayer2", PlayerType.EASY)),
+        testGameService.startNewGame(
+            mapOf(Pair("testPlayer1", PlayerType.LOCAL), Pair("testPlayer2", PlayerType.EASY)),
             scoreRules = listOf(true, true, true, true, true),
-            orderIsRandom = false, isRandomRules = false, )
+            orderIsRandom = false, isRandomRules = false,
+        )
 
         val testGame = testRootService.currentGame
         checkNotNull(testGame)
@@ -112,57 +117,57 @@ class CalculateSalmonScoreTest {
         setUpHabitat(testPlayer)
 
         // test with no salmon run
-        assertEquals(0, testScoringService.calculateSalmonScore(testPlayer))
+        assertEquals(0, testScoringService.calculateSalmonScore(testPlayer.habitat))
 
         // test run of one
-        var changeTile = checkNotNull(testPlayer.habitat[Pair(0,0)])
+        var changeTile = checkNotNull(testPlayer.habitat[Pair(0, 0)])
         changeTile.wildlifeToken = WildlifeToken(Animal.SALMON)
 
-        assertEquals(2, testScoringService.calculateSalmonScore(testPlayer))
+        assertEquals(2, testScoringService.calculateSalmonScore(testPlayer.habitat))
 
         // test run of two
-        changeTile = checkNotNull(testPlayer.habitat[Pair(1,-1)])
+        changeTile = checkNotNull(testPlayer.habitat[Pair(1, -1)])
         changeTile.wildlifeToken = WildlifeToken(Animal.SALMON)
 
-        assertEquals(4, testScoringService.calculateSalmonScore(testPlayer))
+        assertEquals(4, testScoringService.calculateSalmonScore(testPlayer.habitat))
 
         // test run of three
-        changeTile = checkNotNull(testPlayer.habitat[Pair(1,0)])
+        changeTile = checkNotNull(testPlayer.habitat[Pair(1, 0)])
         changeTile.wildlifeToken = WildlifeToken(Animal.SALMON)
 
-        assertEquals(9, testScoringService.calculateSalmonScore(testPlayer))
+        assertEquals(9, testScoringService.calculateSalmonScore(testPlayer.habitat))
 
         // test insularity of triangular run of three
-        changeTile = checkNotNull(testPlayer.habitat[Pair(1,1)])
+        changeTile = checkNotNull(testPlayer.habitat[Pair(1, 1)])
         changeTile.wildlifeToken = WildlifeToken(Animal.SALMON)
 
         // adding a fourth salmon to a triangular run of three yields no points
-        assertEquals(0, testScoringService.calculateSalmonScore(testPlayer))
+        assertEquals(0, testScoringService.calculateSalmonScore(testPlayer.habitat))
 
         // test run of four
         // change current run of three to not be a triangle
-        changeTile = checkNotNull(testPlayer.habitat[Pair(1,-1)])
+        changeTile = checkNotNull(testPlayer.habitat[Pair(1, -1)])
         changeTile.wildlifeToken = WildlifeToken(Animal.ELK)
-        changeTile = checkNotNull(testPlayer.habitat[Pair(1,1)])
+        changeTile = checkNotNull(testPlayer.habitat[Pair(1, 1)])
         changeTile.wildlifeToken = WildlifeToken(Animal.SALMON)
 
         // add fourth salmon
-        changeTile = checkNotNull(testPlayer.habitat[Pair(1,2)])
+        changeTile = checkNotNull(testPlayer.habitat[Pair(1, 2)])
         changeTile.wildlifeToken = WildlifeToken(Animal.SALMON)
 
-        assertEquals(11, testScoringService.calculateSalmonScore(testPlayer))
+        assertEquals(11, testScoringService.calculateSalmonScore(testPlayer.habitat))
 
         //test run of five
-        changeTile = checkNotNull(testPlayer.habitat[Pair(1,3)])
+        changeTile = checkNotNull(testPlayer.habitat[Pair(1, 3)])
         changeTile.wildlifeToken = WildlifeToken(Animal.SALMON)
 
-        assertEquals(17, testScoringService.calculateSalmonScore(testPlayer))
+        assertEquals(17, testScoringService.calculateSalmonScore(testPlayer.habitat))
 
         //test run of more than five
-        changeTile = checkNotNull(testPlayer.habitat[Pair(1,4)])
+        changeTile = checkNotNull(testPlayer.habitat[Pair(1, 4)])
         changeTile.wildlifeToken = WildlifeToken(Animal.SALMON)
 
-        assertEquals(17, testScoringService.calculateSalmonScore(testPlayer))
+        assertEquals(17, testScoringService.calculateSalmonScore(testPlayer.habitat))
 
     }
 
@@ -172,28 +177,34 @@ class CalculateSalmonScoreTest {
      *
      *  @return an instance of [Player] with a test habitat
      */
-    private fun setUpHabitat(testPlayer : Player) {
+    private fun setUpHabitat(testPlayer: Player) {
 
         // create tiles
         val testTiles = mutableListOf<HabitatTile>()
         for (i in 1..9) {
-            testTiles.add(HabitatTile(i,
-                false,
-                0,
-                listOf(Animal.SALMON, Animal.ELK),
-                WildlifeToken(Animal.ELK),
-                mutableListOf(Terrain.WETLAND,
-                    Terrain.WETLAND,
-                    Terrain.WETLAND,
-                    Terrain.WETLAND,
-                    Terrain.WETLAND,
-                    Terrain.WETLAND,)))
+            testTiles.add(
+                HabitatTile(
+                    i,
+                    false,
+                    0,
+                    listOf(Animal.SALMON, Animal.ELK),
+                    WildlifeToken(Animal.ELK),
+                    mutableListOf(
+                        Terrain.WETLAND,
+                        Terrain.WETLAND,
+                        Terrain.WETLAND,
+                        Terrain.WETLAND,
+                        Terrain.WETLAND,
+                        Terrain.WETLAND,
+                    )
+                )
+            )
         }
 
         // set up custom habitat
         testPlayer.habitat.clear()
         testPlayer.habitat[Pair(0, 0)] = testTiles[0]
-        testPlayer.habitat[Pair(1,-1)] = testTiles[1]
+        testPlayer.habitat[Pair(1, -1)] = testTiles[1]
         testPlayer.habitat[Pair(1, 0)] = testTiles[2]
         testPlayer.habitat[Pair(1, 1)] = testTiles[3]
         testPlayer.habitat[Pair(1, 2)] = testTiles[4]

@@ -9,6 +9,8 @@ import java.util.concurrent.ConcurrentLinkedQueue
 class HardBotService(private val rootService: RootService) {
     val gameService = GameService(rootService)
 
+    val animalPlacingChance = 80
+
     fun takeTurn() {
         val game = rootService.currentGame
         checkNotNull(game)
@@ -32,20 +34,21 @@ class HardBotService(private val rootService: RootService) {
 
         val queue = ConcurrentLinkedQueue<HardBotJob>()
         var timeIsUp = false
+        val threads = mutableListOf<Thread>()
 
         launch {
             delay(8000)
             //Todo: start first calcualtion
             delay(1000)
             timeIsUp = true
-            queue.clear()
+            threads.forEach { it.interrupt() }
             delay(50)
             //Todo: start second calcualtion
             delay(500)
             //TODO: TakeRealTurn()
+            print("It Worked!")
         }
 
-        val maxNumberOfThreads = Runtime.getRuntime().availableProcessors()
 
         val possibilities = calculateAllPossibilities(game, animalTokens)
 
@@ -81,6 +84,15 @@ class HardBotService(private val rootService: RootService) {
                 }
             }
         }
+        val maxNumberOfThreads = Runtime.getRuntime().availableProcessors()
+        for (i in 1..maxNumberOfThreads) {
+            threads.add(
+                Thread {
+                    simulate(queue)
+                }
+            )
+        }
+        threads.forEach { it.start() }
     }
 
     private fun simulate(queue: ConcurrentLinkedQueue<HardBotJob>) {
@@ -89,20 +101,47 @@ class HardBotService(private val rootService: RootService) {
             val job = queue.poll()
             if (job == null) {
                 Thread.onSpinWait()
-            } else {
-                (1 until job.round).forEach { _ ->
-                    val tilePositions = gameService.getAllPossibleCoordinatesForTilePlacing(job.habitat)
-                    val tile = job.shop[0].first
-                    val animal = job.shop[0].second
-                    checkNotNull(tile)
-                    checkNotNull(animal)
-                    job.habitat[tilePositions.random()] = tile
-
-
-                }
+                continue
             }
+            (1 until job.round).forEach { _ ->
+                val tilePositions = gameService.getAllPossibleCoordinatesForTilePlacing(job.habitat)
+                val tile = job.shop[0].first
+                val animal = job.shop[0].second
+                checkNotNull(tile)
+                checkNotNull(animal)
+                for (i in 1..(0..5).random()) {
+                    rotateTile(tile)
+                }
+                job.habitat[tilePositions.random()] = tile
 
+                if (animalPlacingChance >= (0..100).random()) {
+                    val animalPositions = gameService.getAllPossibleTilesForWildlife(animal.animal, job.habitat)
+                    if (animalPositions.isNotEmpty()) {
+                        animalPositions.random().wildlifeToken = animal
+                    }
+                }
+
+                job.shop[0] = Pair(job.habitatTiles.removeFirstOrNull(), job.animals.removeFirstOrNull())
+            }
+            val points = scoringService(job.habitat)
+            job.employer.score += points
+            job.employer.numberOfScores += 1
         }
+    }
+
+    private fun scoringService(habitat: MutableMap<Pair<Int, Int>, HabitatTile>): Int {
+        val service = rootService.scoringService
+        var points = 0
+        points += service.calculateBearScore(habitat)
+        points += service.calculateSalmonScore(habitat)
+        points += service.calculateElkScore(habitat)
+        points += service.calculateFoxScore(habitat)
+        points += service.calculateHawkScore(habitat)
+
+        Terrain.values().forEach {
+            points += service.calculateLongestTerrain(it, habitat)
+        }
+        return points
     }
 
     private fun createJob(
