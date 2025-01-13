@@ -145,6 +145,10 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         onAllRefreshables { refreshAfterGameStart() }
     }
 
+
+    /**
+     * create the list of wildLifeToken needed for a Cascadia game
+     */
     private fun createWildlifeToken() : MutableList<WildlifeToken> {
         val wildlifeToken = mutableListOf<WildlifeToken>()
         repeat(20) {
@@ -158,6 +162,14 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         return wildlifeToken
     }
 
+
+    /**
+     * estimate the number of habitat tiles depending on the number of players for a Cascadia game
+     *
+     * @param playerCount is the number of players in the game
+     *
+     * @throws IllegalArgumentException if PlayerCount not in between 2 and 4
+     */
     private fun getTileNumber(playerCount : Int) : Int {
         when (playerCount) {
             2 -> return 43
