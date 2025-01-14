@@ -1,8 +1,12 @@
 package service
 
-import entity.*
+import entity.PlayerType
 import kotlin.test.*
 
+/**
+ * This test class validates the functionality of [service.GameService.startNewGame], ensuring that the game is
+ * properly initialized and is working for further use.
+ */
 class StartNewGameTest {
     private var rootService = RootService()
 

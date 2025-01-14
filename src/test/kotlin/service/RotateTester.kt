@@ -45,6 +45,7 @@ class RotateTester {
             )
         )
 
+        rootService.networkService.connectionState = ConnectionState.PLAYING_MY_TURN
         rootService.playerActionService.rotateTile()
         assertEquals(
             5, rootService.currentGame?.selectedTile?.rotationOffset,
@@ -59,6 +60,7 @@ class RotateTester {
             "The list elements are not rotated properly"
         )
 
+        rootService.networkService.connectionState = ConnectionState.WAITING_FOR_OPPONENTS_TURN
         rootService.playerActionService.rotateTile()
         assertEquals(
             4, rootService.currentGame?.selectedTile?.rotationOffset,
@@ -72,6 +74,16 @@ class RotateTester {
             expectedListAfterTwoRotations, rootService.currentGame?.selectedTile?.terrains,
             "The list elements are not rotated properly"
         )
+    }
+
+    /**
+     * Testing with invalid game
+     */
+    @Test
+    fun inValidGame() {
+        rootService.currentGame = null
+        val notStartedGame = assertThrows<IllegalStateException> { rootService.playerActionService.rotateTile() }
+        assertEquals("No game started yet", notStartedGame.message)
     }
 
     /**
