@@ -233,7 +233,9 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         }
         if (myTurn) {
             rootService.networkService.tokenCoordinates =
-                game.currentPlayer.habitat.entries.firstOrNull { it.value == tile }?.key
+                game.currentPlayer.habitat.entries.firstOrNull{ it.value == tile }?.key
+
+            rootService.networkService.sendPlacedMessage()
         }
         game.selectedToken = null
 
