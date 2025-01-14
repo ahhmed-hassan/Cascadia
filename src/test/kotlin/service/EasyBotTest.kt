@@ -39,9 +39,7 @@ class EasyBotTest : Refreshables {
                     isRandomRules = true
                 )
 
-                for (round in 1..playerMap.size * 20) {
-                    if (gameIsActive) rootService.easyBotService.takeTurn()
-                }
+                (1..playerMap.size * 20).forEach { _ -> if (gameIsActive) rootService.easyBotService.takeTurn()}
             }
         }
 
@@ -60,9 +58,8 @@ class EasyBotTest : Refreshables {
                 isRandomRules = true
             )
 
-            for (round in 1..2) {
-                if (gameIsActive) rootService.easyBotService.takeTurn()
-            }
+            (1..2).forEach { _ -> if (gameIsActive) rootService.easyBotService.takeTurn()}
+
         }
     }
 

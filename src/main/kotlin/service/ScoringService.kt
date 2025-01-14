@@ -461,15 +461,16 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
         }
 
         if (!isB) {
-            points += when (notAdjacent.size) {
-                1 -> 2
-                2 -> 5
-                3 -> 6
-                4 -> 11
-                5 -> 14
-                6 -> 18
-                7 -> 22
-                else -> 26
+            when (notAdjacent.size) {
+                0 -> points += 0
+                1 -> points += 2
+                2 -> points += 5
+                3 -> points += 6
+                4 -> points += 11
+                5 -> points += 14
+                6 -> points += 18
+                7 -> points += 22
+                else -> points += 26
             }
         } else {
             //implementing one set of pairs for rule b
