@@ -1,7 +1,6 @@
 package service
 
 import entity.*
-import kotlin.random.Random
 import kotlin.test.*
 
 /**
@@ -45,7 +44,7 @@ class testNetworkConnection {
 
 
         initConnections()
-        assertEquals(2, rootServiceHost.networkService.playersList.size);
+        assertEquals(2, rootServiceHost.networkService.playersList.size)
 
 
         val scoreRulse = listOf(false, false, true, false, false)
@@ -144,7 +143,7 @@ class testNetworkConnection {
     @Test
     fun testResolveOverPopulation() {
         initConnections()
-        assertEquals(2, rootServiceHost.networkService.playersList.size);
+        assertEquals(2, rootServiceHost.networkService.playersList.size)
         val scoreRulse = listOf(false, false, true, false, false)
         rootServiceHost.networkService.startNewHostedGame(orderIsRanom = false,
             isRandomRules = false, scoreRules = scoreRulse)
@@ -241,7 +240,7 @@ class testNetworkConnection {
     @Test
     fun testSwappedWithNatureToken() {
         initConnections()
-        assertEquals(2, rootServiceHost.networkService.playersList.size);
+        assertEquals(2, rootServiceHost.networkService.playersList.size)
         val scoreRulse = listOf(false, false, true, false, false)
         rootServiceHost.networkService.startNewHostedGame(orderIsRanom = false,
             isRandomRules = false, scoreRules = scoreRulse)
@@ -334,7 +333,7 @@ class testNetworkConnection {
     @Test
     fun testPlaceMessage() {
         initConnections()
-        assertEquals(2, rootServiceHost.networkService.playersList.size);
+        assertEquals(2, rootServiceHost.networkService.playersList.size)
         val scoreRulse = listOf(false, false, true, false, false)
 
         rootServiceHost.networkService.startNewHostedGame(orderIsRanom = false,
