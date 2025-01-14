@@ -26,6 +26,8 @@ class DiscardTokenTest {
         val game = rootServ.currentGame
         checkNotNull(game)
 
+        rootServ.networkService.connectionState = ConnectionState.PLAYING_MY_TURN
+
         assertEquals(null, game.selectedToken)
 
         game.selectedToken = WildlifeToken(Animal.FOX)

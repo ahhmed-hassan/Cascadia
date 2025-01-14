@@ -43,17 +43,15 @@ class ChooseCustomPairTest {
         }
 
         currentPlayer.natureToken += 1
-
+        rootServ.networkService.connectionState = ConnectionState.PLAYING_MY_TURN
 
         assertEquals(null, game.selectedTile)
         assertEquals(null, game.selectedToken)
         assertEquals(false, game.hasPlayedTile)
         assertEquals(1, currentPlayer.natureToken)
-        
 
         val chosenTile = game.shop[0].first
         val chosenToken = game.shop[2].second
-
 
         rootServ.playerActionService.chooseCustomPair(0, 2)
 
