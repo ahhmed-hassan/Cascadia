@@ -47,7 +47,6 @@ class testNetworkConnection {
         initConnections()
         assertEquals(2, rootServiceHost.networkService.playersList.size)
         val scoreRules = listOf(false, false, true, false, false)
-
         rootServiceHost.networkService.startNewHostedGame(orderIsRanom = false, isRandomRules = false,
             scoreRules = scoreRules
         )
@@ -58,14 +57,12 @@ class testNetworkConnection {
 
         val hostGame = rootServiceHost.currentGame
         val guestGame = rootServiceGuest.currentGame
-
         assertNotNull(hostGame)
         assertNotNull(guestGame)
 
         // Hole den aktuellen Spieler von Host und Guest
         val hostCurrentPlayer = hostGame.currentPlayer
         val guestCurrentPlayer = guestGame.currentPlayer
-
         assertNotNull(hostCurrentPlayer)
         assertNotNull(guestCurrentPlayer)
 
@@ -80,12 +77,10 @@ class testNetworkConnection {
         assertEquals(hostCurrentPlayer.name, guestCurrentPlayer.name)
 
         for (position in habitatPositions) {
-
             val hostTile = hostCurrentPlayer.habitat[position]
             val guestTile = guestCurrentPlayer.habitat[position]
 
             // Sicherstellen, dass beide Kacheln existieren und gleich sind
-
             assertNotNull(hostTile) { "Host has no tile at $position" }
             assertNotNull(guestTile) { "Guest has no tile at $position" }
             assertEquals(hostTile.id, guestTile.id)
