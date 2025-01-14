@@ -114,7 +114,7 @@ class LongestTerrainTester {
     @Test
     fun testLongestMountainPath() {
         val longestMountainPath = rootService.scoringService.calculateLongestTerrain(
-            Terrain.MOUNTAIN, player
+            Terrain.MOUNTAIN, player.habitat
         )
         assertEquals(6, longestMountainPath)
     }
@@ -125,7 +125,7 @@ class LongestTerrainTester {
     @Test
     fun testLongestForestPath() {
         val longestForestPath = rootService.scoringService.calculateLongestTerrain(
-            Terrain.FOREST, player
+            Terrain.FOREST, player.habitat
         )
         assertEquals(4, longestForestPath)
     }
@@ -136,7 +136,7 @@ class LongestTerrainTester {
     @Test
     fun testLongestPrairiePath() {
         val longestPrairiePath = rootService.scoringService.calculateLongestTerrain(
-            Terrain.PRAIRIE, player
+            Terrain.PRAIRIE, player.habitat
         )
         assertEquals(7, longestPrairiePath)
     }
@@ -147,7 +147,7 @@ class LongestTerrainTester {
     @Test
     fun testLongestRiverPath() {
         val longestRiverPath = rootService.scoringService.calculateLongestTerrain(
-            Terrain.RIVER, player
+            Terrain.RIVER, player.habitat
         )
         assertEquals(5, longestRiverPath)
     }
@@ -158,7 +158,7 @@ class LongestTerrainTester {
     @Test
     fun testLongestWetlandPath() {
         val longestWetlandPath = rootService.scoringService.calculateLongestTerrain(
-            Terrain.WETLAND, player
+            Terrain.WETLAND, player.habitat
         )
         assertEquals(8, longestWetlandPath)
     }
@@ -168,7 +168,8 @@ class LongestTerrainTester {
      */
     @Test
     fun testNoWetLands() {
-        val player = Player("dummy",
+        val player = Player(
+            "dummy",
             mutableMapOf(
                 (0 to 0) to dummyTile(
                     List(6) { Terrain.RIVER }
@@ -181,6 +182,6 @@ class LongestTerrainTester {
                 )
             ),
             PlayerType.NORMAL)
-        assertEquals(0, rootService.scoringService.calculateLongestTerrain(Terrain.WETLAND, player))
+        assertEquals(0, rootService.scoringService.calculateLongestTerrain(Terrain.WETLAND, player.habitat))
     }
 }
