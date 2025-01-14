@@ -134,7 +134,7 @@ class NetworkClient (playerName: String, host: String, secret: String, val netwo
         { "Not Opponent's turn" }
 
         BoardGameApplication.runOnGUIThread {
-            networkService.resolvedOverPopulationMessage(message, sender)
+            networkService.resolvedOverPopulationMessage(sender)
         }
     }
 

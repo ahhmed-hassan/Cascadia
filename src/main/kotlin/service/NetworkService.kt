@@ -215,7 +215,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
      * @throws IllegalStateException if there is no current game or the sender is not the current player.
      *
      */
-    fun resolvedOverPopulationMessage(message: ResolveOverpopulationMessage, sender: String) {
+    fun resolvedOverPopulationMessage(sender: String) {
 
         val game = rootService.currentGame
         checkNotNull(game) { "there is no active game." }
