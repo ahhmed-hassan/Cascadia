@@ -46,21 +46,15 @@ class testNetworkConnection {
     fun testHostAndJoinGame() {
         initConnections()
         assertEquals(2, rootServiceHost.networkService.playersList.size)
+        val scoreRules = listOf(false, false, true, false, false)
 
-
-        val scoreRulse = listOf(false, false, true, false, false)
-
-        rootServiceHost.networkService.startNewHostedGame(
-            orderIsRanom = false,
-            isRandomRules = false,
-            scoreRules = scoreRulse
+        rootServiceHost.networkService.startNewHostedGame(orderIsRanom = false, isRandomRules = false,
+            scoreRules = scoreRules
         )
 
         assertEquals(ConnectionState.PLAYING_MY_TURN, rootServiceHost.networkService.connectionState)
-
         assert(rootServiceGuest.waitForState(ConnectionState.WAITING_FOR_OPPONENTS_TURN)) {
-            error("Nach dem Warten nicht im Zustand angekommen")
-        }
+            error("Nach dem Warten nicht im Zustand angekommen") }
 
         val hostGame = rootServiceHost.currentGame
         val guestGame = rootServiceGuest.currentGame
@@ -94,11 +88,8 @@ class testNetworkConnection {
 
             assertNotNull(hostTile) { "Host has no tile at $position" }
             assertNotNull(guestTile) { "Guest has no tile at $position" }
-
             assertEquals(hostTile.id, guestTile.id)
-
         }
-
         // Überprüfe die `shop`-Listen
         val hostShop = hostGame.shop
         val guestShop = guestGame.shop
@@ -110,10 +101,7 @@ class testNetworkConnection {
 
             // Vergleiche HabitatTile und WildlifeToken
             assertEquals(hostPair.first?.id, guestPair.first?.id, "Mismatch in HabitatTile at index $i")
-
-            assertEquals(
-                hostPair.second?.animal,
-                guestPair.second?.animal,
+            assertEquals(hostPair.second?.animal, guestPair.second?.animal,
                 "Mismatch in WildlifeToken at index $i"
             )
         }
@@ -127,20 +115,16 @@ class testNetworkConnection {
         assertEquals(guestHabitatTileList.size, hostHabitatTileList.size)
 
         for (i in guestHabitatTileList.indices) {
-
             val guestHabitatTile = guestHabitatTileList[i].id
             val hostHabitatTile = hostHabitatTileList[i].id
-
             assertEquals(hostHabitatTile, guestHabitatTile)
         }
 
         assertEquals(guestWildLifeTokens.size, hostWildLifeTokens.size)
 
         for (i in guestWildLifeTokens.indices) {
-
             val guestWildLifeToken = guestWildLifeTokens[i].animal
             val hostWildLifeToken = hostWildLifeTokens[i].animal
-
             assertEquals(hostWildLifeToken, guestWildLifeToken)
         }
 
@@ -153,12 +137,10 @@ class testNetworkConnection {
     fun testResolveOverPopulation() {
         initConnections()
         assertEquals(2, rootServiceHost.networkService.playersList.size)
-        val scoreRulse = listOf(false, false, true, false, false)
+        val scoreRules = listOf(false, false, true, false, false)
 
-        rootServiceHost.networkService.startNewHostedGame(
-            orderIsRanom = false,
-            isRandomRules = false,
-            scoreRules = scoreRulse
+        rootServiceHost.networkService.startNewHostedGame(orderIsRanom = false, isRandomRules = false,
+            scoreRules = scoreRules
         )
 
         assertEquals(ConnectionState.PLAYING_MY_TURN, rootServiceHost.networkService.connectionState)
@@ -195,8 +177,7 @@ class testNetworkConnection {
 
         assertEquals(guestHabitatTileList.size, hostHabitatTileList.size)
 
-        for (i in guestHabitatTileList.indices) {
-            val guestHabitatTile = guestHabitatTileList[i].id
+        for (i in guestHabitatTileList.indices) { val guestHabitatTile = guestHabitatTileList[i].id
             val hostHabitatTile = hostHabitatTileList[i].id
             assertEquals(hostHabitatTile, guestHabitatTile)
         }
@@ -206,8 +187,7 @@ class testNetworkConnection {
         val guestGame2 = rootServiceGuest.currentGame
         assertNotNull(guestGame2)
 
-        for (i in guestWildLifeTokens.indices) {
-            val guestWildLifeToken = guestGame2.wildlifeTokenList[i].animal
+        for (i in guestWildLifeTokens.indices) { val guestWildLifeToken = guestGame2.wildlifeTokenList[i].animal
             val hostWildLifeToken = hostWildLifeTokens[i].animal
             assertEquals(hostWildLifeToken, guestWildLifeToken)
         }
@@ -215,14 +195,10 @@ class testNetworkConnection {
         val hostShop = hostGame.shop
         val guestShop = guestGame2.shop
         assertEquals(hostShop.size, guestShop.size, "Shop sizes do not match")
-        for (i in hostShop.indices) {
-            val hostPair = hostShop[i]
+        for (i in hostShop.indices) { val hostPair = hostShop[i]
             val guestPair = guestShop[i]
             assertEquals(hostPair.first?.id, guestPair.first?.id, "Mismatch in HabitatTile at index $i")
-
-            assertEquals(
-                hostPair.second?.animal,
-                guestPair.second?.animal,
+            assertEquals(hostPair.second?.animal, guestPair.second?.animal,
                 "Mismatch in WildlifeToken at index $i"
             )
         }
