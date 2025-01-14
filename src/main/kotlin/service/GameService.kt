@@ -446,49 +446,9 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
     fun getAllPossibleCoordinatesForTilePlacing(
         habitat: MutableMap<Pair<Int, Int>, HabitatTile>
     ): List<Pair<Int, Int>> {
-        val coordinates = hashSetOf<Pair<Int, Int>>()
-
-        habitat.forEach {
-            val key = it.key
-            if (habitat[Pair(key.first + 1, key.second - 1)] == null) coordinates.add(
-                Pair(
-                    key.first + 1,
-                    key.second - 1
-                )
-            )
-            if (habitat[Pair(key.first, key.second - 1)] == null) coordinates.add(
-                Pair(
-                    key.first,
-                    key.second - 1
-                )
-            )
-            if (habitat[Pair(key.first - 1, key.second)] == null) coordinates.add(
-                Pair(
-                    key.first - 1,
-                    key.second
-                )
-            )
-            if (habitat[Pair(key.first - 1, key.second + 1)] == null) coordinates.add(
-                Pair(
-                    key.first - 1,
-                    key.second + 1
-                )
-            )
-            if (habitat[Pair(key.first, key.second + 1)] == null) coordinates.add(
-                Pair(
-                    key.first,
-                    key.second + 1
-                )
-            )
-            if (habitat[Pair(key.first + 1, key.second)] == null) coordinates.add(
-                Pair(
-                    key.first + 1,
-                    key.second
-                )
-            )
-        }
-        return coordinates.toList()
-    }
+        return habitat.keys.flatMap { ScoringService.getNeighbours(it) }
+            .filterNot { habitat.containsKey(it) }.toList()
+     }
 
     /**
      * Creates a List of all HabitatTiles, where the current Player can place the given Animal
