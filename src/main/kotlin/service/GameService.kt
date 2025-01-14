@@ -65,7 +65,6 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         wildlifeTokens.removeAll(shop.map { it.second })
 
         val startTiles = getStartTiles().toMutableList()
-        //startTiles.shuffle()
 
         val playerList = playerOrder.map { name -> val playerType = requireNotNull(playerNames[name])
             Player(name, mutableMapOf(), playerType) }
@@ -156,7 +155,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
      *
      * @return the list of habitat tiles from the .csv
      */
-    private fun getHabitatTiles(): List<HabitatTile> {
+    fun getHabitatTiles(): List<HabitatTile> {
         val habitatTiles = mutableListOf<HabitatTile>()
         File("build/resources/main/tiles.csv").bufferedReader().useLines { lines ->
             lines.drop(1) //skip the first line (header)
