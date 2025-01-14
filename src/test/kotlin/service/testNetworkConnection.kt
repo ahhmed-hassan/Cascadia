@@ -1,7 +1,10 @@
 package service
 
 import entity.*
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 /**
  *  Test class for testing the connection to the network.
@@ -30,7 +33,7 @@ class testNetworkConnection {
         assertNotNull(hostClient)
         rootServiceGuest.networkService.joinGame(NETWORK_SECRET, "Mehi", hostClient.sessionID!!, PlayerType.NETWORK)
 
-        assert(rootServiceGuest.waitForState(ConnectionState.WAITING_FOR_INIT)){
+        assert(rootServiceGuest.waitForState(ConnectionState.WAITING_FOR_INIT)) {
             error("Nach dem Warten nicht im Zustand angekommen")
         }
 
@@ -41,21 +44,21 @@ class testNetworkConnection {
      */
     @Test
     fun testHostAndJoinGame() {
-
-
         initConnections()
         assertEquals(2, rootServiceHost.networkService.playersList.size)
 
 
         val scoreRulse = listOf(false, false, true, false, false)
 
-        rootServiceHost.networkService.startNewHostedGame(orderIsRanom = false,
-                                                          isRandomRules = false,
-                                                          scoreRules = scoreRulse)
+        rootServiceHost.networkService.startNewHostedGame(
+            orderIsRanom = false,
+            isRandomRules = false,
+            scoreRules = scoreRulse
+        )
 
         assertEquals(ConnectionState.PLAYING_MY_TURN, rootServiceHost.networkService.connectionState)
 
-        assert(rootServiceGuest.waitForState(ConnectionState.WAITING_FOR_OPPONENTS_TURN)){
+        assert(rootServiceGuest.waitForState(ConnectionState.WAITING_FOR_OPPONENTS_TURN)) {
             error("Nach dem Warten nicht im Zustand angekommen")
         }
 
@@ -108,9 +111,11 @@ class testNetworkConnection {
             // Vergleiche HabitatTile und WildlifeToken
             assertEquals(hostPair.first?.id, guestPair.first?.id, "Mismatch in HabitatTile at index $i")
 
-            assertEquals(hostPair.second?.animal,
-                         guestPair.second?.animal,
-                 "Mismatch in WildlifeToken at index $i")
+            assertEquals(
+                hostPair.second?.animal,
+                guestPair.second?.animal,
+                "Mismatch in WildlifeToken at index $i"
+            )
         }
 
         val hostHabitatTileList = hostGame.habitatTileList
@@ -150,12 +155,14 @@ class testNetworkConnection {
         assertEquals(2, rootServiceHost.networkService.playersList.size)
         val scoreRulse = listOf(false, false, true, false, false)
 
-        rootServiceHost.networkService.startNewHostedGame(orderIsRanom = false,
-                                                          isRandomRules = false,
-                                                          scoreRules = scoreRulse)
+        rootServiceHost.networkService.startNewHostedGame(
+            orderIsRanom = false,
+            isRandomRules = false,
+            scoreRules = scoreRulse
+        )
 
         assertEquals(ConnectionState.PLAYING_MY_TURN, rootServiceHost.networkService.connectionState)
-        assert(rootServiceGuest.waitForState(ConnectionState.WAITING_FOR_OPPONENTS_TURN)){
+        assert(rootServiceGuest.waitForState(ConnectionState.WAITING_FOR_OPPONENTS_TURN)) {
             error("Nach dem Warten nicht im Zustand angekommen")
         }
 
@@ -166,20 +173,18 @@ class testNetworkConnection {
 
         val hostCurrentPlayer = hostGame.currentPlayer
         val guestCurrentPlayer = guestGame.currentPlayer
-
         assertNotNull(hostCurrentPlayer)
         assertNotNull(guestCurrentPlayer)
 
         val tokenTileList = createTileTokenPairs(true)
         hostGame.shop.clear()
-        tokenTileList.forEach { pair ->  hostGame.shop.add(pair)}
+        tokenTileList.forEach { pair -> hostGame.shop.add(pair) }
         guestGame.shop.clear()
-        tokenTileList.forEach { pair ->  guestGame.shop.add(pair)}
-
+        tokenTileList.forEach { pair -> guestGame.shop.add(pair) }
 
         rootServiceHost.gameService.resolveOverpopulation()
         assertEquals(ConnectionState.SWAPPING_WILDLIFE_TOKENS, rootServiceHost.networkService.connectionState)
-        assert(rootServiceGuest.waitForState(ConnectionState.WAITING_FOR_OPPONENTS_TURN)){
+        assert(rootServiceGuest.waitForState(ConnectionState.WAITING_FOR_OPPONENTS_TURN)) {
             error("Nach dem Warten nicht im Zustand angekommen")
         }
 
@@ -215,9 +220,11 @@ class testNetworkConnection {
             val guestPair = guestShop[i]
             assertEquals(hostPair.first?.id, guestPair.first?.id, "Mismatch in HabitatTile at index $i")
 
-            assertEquals(hostPair.second?.animal,
-                         guestPair.second?.animal,
-                 "Mismatch in WildlifeToken at index $i")
+            assertEquals(
+                hostPair.second?.animal,
+                guestPair.second?.animal,
+                "Mismatch in WildlifeToken at index $i"
+            )
         }
     }
 
@@ -303,17 +310,21 @@ class testNetworkConnection {
      * @param overpop is a flag to create an overpopulation of four in pairs
      *
      */
-    private fun createTileTokenPairs(overpop : Boolean = false) : List<Pair<HabitatTile,WildlifeToken>> {
-        val tile1 = HabitatTile( 1, false, 0, listOf(Animal.FOX), null,
+    private fun createTileTokenPairs(overpop: Boolean = false): List<Pair<HabitatTile, WildlifeToken>> {
+        val tile1 = HabitatTile(
+            1, false, 0, listOf(Animal.FOX), null,
             mutableListOf(Terrain.FOREST)
         )
-        val tile2 = HabitatTile( 2, false, 0, listOf(Animal.FOX), null,
+        val tile2 = HabitatTile(
+            2, false, 0, listOf(Animal.FOX), null,
             mutableListOf(Terrain.RIVER)
         )
-        val tile3 = HabitatTile( 3, false, 0, listOf(Animal.FOX), null,
+        val tile3 = HabitatTile(
+            3, false, 0, listOf(Animal.FOX), null,
             mutableListOf(Terrain.PRAIRIE)
         )
-        val tile4 = HabitatTile( 4, false, 0, listOf(Animal.FOX), null,
+        val tile4 = HabitatTile(
+            4, false, 0, listOf(Animal.FOX), null,
             mutableListOf(Terrain.PRAIRIE)
         )
         if (overpop) {
@@ -322,14 +333,14 @@ class testNetworkConnection {
             val token3 = WildlifeToken(Animal.FOX)
             val token4 = WildlifeToken(Animal.FOX)
 
-            return listOf(Pair(tile1, token1), Pair(tile2, token2), Pair(tile3, token3), Pair(tile4, token4) )
+            return listOf(Pair(tile1, token1), Pair(tile2, token2), Pair(tile3, token3), Pair(tile4, token4))
         } else {
             val token1 = WildlifeToken(Animal.HAWK)
             val token2 = WildlifeToken(Animal.FOX)
             val token3 = WildlifeToken(Animal.BEAR)
             val token4 = WildlifeToken(Animal.ELK)
 
-            return listOf(Pair(tile1, token1), Pair(tile2, token2), Pair(tile3, token3), Pair(tile4, token4) )
+            return listOf(Pair(tile1, token1), Pair(tile2, token2), Pair(tile3, token3), Pair(tile4, token4))
         }
     }
 
@@ -342,12 +353,14 @@ class testNetworkConnection {
         assertEquals(2, rootServiceHost.networkService.playersList.size)
         val scoreRulse = listOf(false, false, true, false, false)
 
-        rootServiceHost.networkService.startNewHostedGame(orderIsRanom = false,
-                                                          isRandomRules = false,
-                                                          scoreRules = scoreRulse)
+        rootServiceHost.networkService.startNewHostedGame(
+            orderIsRanom = false,
+            isRandomRules = false,
+            scoreRules = scoreRulse
+        )
 
         assertEquals(ConnectionState.PLAYING_MY_TURN, rootServiceHost.networkService.connectionState)
-        assert(rootServiceGuest.waitForState(ConnectionState.WAITING_FOR_OPPONENTS_TURN)){
+        assert(rootServiceGuest.waitForState(ConnectionState.WAITING_FOR_OPPONENTS_TURN)) {
             error("Nach dem Warten nicht im Zustand angekommen")
         }
 
@@ -371,9 +384,9 @@ class testNetworkConnection {
         val tokenTileList = createTileTokenPairs().toMutableList()
         hostGame.shop.clear()
 
-        tokenTileList.forEach { pair ->  hostGame.shop.add(pair)}
+        tokenTileList.forEach { pair -> hostGame.shop.add(pair) }
         guestGame.shop.clear()
-        tokenTileList.forEach { pair ->  guestGame.shop.add(pair)}
+        tokenTileList.forEach { pair -> guestGame.shop.add(pair) }
 
         rootServiceHost.playerActionService.chooseTokenTilePair(1)
         assertEquals(rootServiceHost.networkService.placedTileIndex, 1)
@@ -383,7 +396,8 @@ class testNetworkConnection {
         // assertEquals(rootServiceHost.networkService.placedTileIndex, 1)
         // assertEquals(rootServiceHost.networkService.selectedTokenIndex, 2)
         // assertTrue(rootServiceHost.networkService.usedNatureToken)
-        val tile2 = HabitatTile( 2, false, 0, listOf(Animal.FOX), null,
+        val tile2 = HabitatTile(
+            2, false, 0, listOf(Animal.FOX), null,
             mutableListOf(Terrain.RIVER)
         )
         rootServiceHost.playerActionService.addTileToHabitat(0 to -1)
@@ -404,7 +418,7 @@ class testNetworkConnection {
 
     }
 
-    private fun RootService.waitForState(state: ConnectionState, timeout: Int = 5000):Boolean {
+    private fun RootService.waitForState(state: ConnectionState, timeout: Int = 5000): Boolean {
         var timePassed = 0
         while (timePassed < timeout) {
             if (networkService.connectionState == state)
