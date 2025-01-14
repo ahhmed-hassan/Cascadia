@@ -38,8 +38,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
     ) {
         require(playerNames.size in 2..4) { "The number of players must be between 2 and 4" }
 
-        // true is 1 (Cards B), false is 0 (Cards A)
-        val ruleSet = if (isRandomRules) { List(5) { (0..1).random() == 1 }}
+        val ruleSet = if (isRandomRules) { List(5) { (0..1).random() == 1 }} // true is B, false is A
                       else { require(scoreRules.size == 5) { "The scoring rules must be 5" }; scoreRules}
 
         require(playerNames.keys.size == playerNames.keys.toSet().size) { "Player names must be unique." }
@@ -92,25 +91,21 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
 
         if (checkForSameAnimal()) { resolveOverpopulation() }
 
+        // Retrieve the starting tiles assigned to the player based on the tile index.
         if (startTileOrder != null && startTileOrder.size == playerList.size) {
             for (i in playerList.indices) {
                 val tileIndex = startTileOrder[i]  // e.g., 2 => startTiles[2]
                 val player = playerList[i]         // i-th player
-                // Retrieve the starting tiles assigned to the player based on the tile index.
                 val playerStartTile = startTiles[tileIndex]
-
                 player.habitat[0 to 0] = playerStartTile[0]
                 player.habitat[1 to -1] = playerStartTile[1]
                 player.habitat[1 to 0] = playerStartTile[2]
             }
         } else {
             for (i in playerList.indices) {
-                //Retrieve the player's name based on the pre-determined player order. then, find the corresponding
-                // Player object from the player list and retrieve the associated starting habitat tiles for the player
                 val playerName = playerOrder[i]
                 val player = playerList.first { it.name == playerName }
                 val playerStartTile = startTiles[i]
-
                 player.habitat[0 to 0] = playerStartTile[0]
                 player.habitat[1 to -1] = playerStartTile[1]
                 player.habitat[1 to 0] = playerStartTile[2]
