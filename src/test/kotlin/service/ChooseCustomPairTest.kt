@@ -44,10 +44,12 @@ class ChooseCustomPairTest {
 
         currentPlayer.natureToken += 1
 
+
         assertEquals(null, game.selectedTile)
         assertEquals(null, game.selectedToken)
         assertEquals(false, game.hasPlayedTile)
         assertEquals(1, currentPlayer.natureToken)
+        
 
         val chosenTile = game.shop[0].first
         val chosenToken = game.shop[2].second
@@ -58,5 +60,8 @@ class ChooseCustomPairTest {
         assertEquals(chosenTile, game.selectedTile)
         assertEquals(chosenToken, game.selectedToken)
         assertEquals(0, currentPlayer.natureToken)
+
+        //Test: Check if the player can choose a pair twice
+        assertThrows<IllegalStateException> { rootServ.playerActionService.chooseCustomPair(0, 1) }
     }
 }
