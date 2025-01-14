@@ -43,7 +43,6 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
 
         require(playerNames.keys.size == playerNames.keys.toSet().size) { "Player names must be unique." }
 
-        //val networkService = NetworkService(rootService)
         //Ensure that no network players exist if the game connection state indicates Hotseat mode
         if (rootService.networkService.connectionState == ConnectionState.DISCONNECTED) {
             val networkPlayers = playerNames.values.count { it == PlayerType.NETWORK }
@@ -53,8 +52,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
 
         //Habitat tile distribution according to the number of players
         val totalTiles = getTileNumber(playerNames.size)
-        val habitatTiles = getHabitatTiles().toMutableList()
-        habitatTiles.shuffle()
+        val habitatTiles = getHabitatTiles().shuffled().toMutableList()
         val totalTilesInGame = habitatTiles.take(totalTiles).toMutableList()
 
         val wildlifeTokens = createWildlifeToken()
@@ -97,8 +95,6 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
                 val player = playerList[i]         // i-th player
                 // Retrieve the starting tiles assigned to the player based on the tile index.
                 val playerStartTile = startTiles[tileIndex-1]
-
-                //Place the top tile in the player's habitat (central)
                 player.habitat[0 to 0] = playerStartTile[0]
                 player.habitat[1 to -1] = playerStartTile[1]
                 player.habitat[1 to 0] = playerStartTile[2]
@@ -374,12 +370,9 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         networkReplacement: Boolean = false,
         natureTokenUsed: Boolean = false
     ) {
-
-        //check for existing game
         val game = checkNotNull(rootService.currentGame)
-
         val myTurn1 = rootService.networkService.connectionState == ConnectionState.PLAYING_MY_TURN
-        val myTurn2 = rootService.networkService.connectionState == ConnectionState.SWAPPING_WILDLIFE_TOKENS
+        var myTurn2 = rootService.networkService.connectionState == ConnectionState.SWAPPING_WILDLIFE_TOKENS
 
         // perform replacement
         tokenIndices.forEach {
@@ -395,16 +388,14 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
 
         if (natureTokenUsed) {
             // return discarded wildlifeTokens
-            for (token in game.discardedToken) {
-                checkNotNull(token)
-                game.wildlifeTokenList.add(token)
+            game.discardedToken.forEach{
+                checkNotNull(it)
+                game.wildlifeTokenList.add(it)
             }
             game.discardedToken = mutableListOf()
             if (!networkReplacement) {
                 game.wildlifeTokenList.shuffle()
-                if (myTurn1) {
-                    rootService.networkService.sendSwappedWithNatureTokenMessage(tokenIndices)
-                }
+                sendSwapMessage(myTurn1, tokenIndices)
             }
 
             // resolve possible overpopulation of four
@@ -418,17 +409,15 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
             }
             // return discarded wildlifeTokens
             else {
-                for (token in game.discardedToken) {
-                    checkNotNull(token)
-                    game.wildlifeTokenList.add(token)
+                game.discardedToken.forEach{
+                    checkNotNull(it)
+                    game.wildlifeTokenList.add(it)
                 }
                 game.discardedToken = mutableListOf()
                 if (!networkReplacement) {
                     game.wildlifeTokenList.shuffle()
-                    val myTurn2 = rootService.networkService.connectionState == ConnectionState.SWAPPING_WILDLIFE_TOKENS
-                    if (myTurn2) {
-                        rootService.networkService.sendShuffledWildlifeTokensMessage()
-                    }
+                    myTurn2 = rootService.networkService.connectionState == ConnectionState.SWAPPING_WILDLIFE_TOKENS
+                    sendShuffleMessage(myTurn2)
                 }
             }
         }
@@ -436,6 +425,20 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         // refresh GUI Elements
         onAllRefreshables { refreshAfterWildlifeTokenReplaced() }
 
+    }
+
+    /**
+     * helperfunction to reduce complexity and nesting in exectueTokenReplacement.
+     */
+    private fun sendSwapMessage( condition : Boolean, tokenIndices: List<Int>) {
+        if (condition) { rootService.networkService.sendSwappedWithNatureTokenMessage(tokenIndices) }
+    }
+
+    /**
+     * helperfunction to reduce complexity and nesting in exectueTokenReplacement.
+     */
+    private fun sendShuffleMessage( condition : Boolean) {
+        if (condition) { rootService.networkService.sendShuffledWildlifeTokensMessage() }
     }
 
     /**
