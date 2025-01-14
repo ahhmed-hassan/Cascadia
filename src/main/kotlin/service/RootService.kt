@@ -16,6 +16,7 @@ class RootService {
     val scoringService = ScoringService(this)
     val networkService = NetworkService(this)
     val hardBotService = HardBotService(this)
+    val easyBotService = EasyBotService(this)
 
     var currentGame: CascadiaGame? = null
 

@@ -55,12 +55,12 @@ class LongestTerrainTester {
     fun setup() {
         val tilesAndCoordinates: Map<Pair<Int, Int>, HabitatTile> = mapOf(
             (-2 to -1) to dummyTile(
-                Terrain.PRAIRIE + List(3) { Terrain.RIVER } + List(2) { Terrain.PRAIRIE }),
+                Terrain.PRAIRIE.plus(List(3) { Terrain.RIVER }) +  List(2) { Terrain.PRAIRIE }),
             (-2 to 0) to dummyTile(
                 List(3) { Terrain.PRAIRIE } + List(3) { Terrain.FOREST }),
             /*second Row*/
             (-1 to -2) to dummyTile(
-                Terrain.RIVER + List(3) { Terrain.PRAIRIE } + Terrain.RIVER + Terrain.RIVER),
+                Terrain.RIVER + List(3) { Terrain.PRAIRIE } + Terrain.RIVER.plus(Terrain.RIVER)),
             (-1 to -1) to dummyTile(
                 List(2) { Terrain.RIVER } + List(3) { Terrain.PRAIRIE } + Terrain.RIVER),
             (-1 to 0) to dummyTile(
