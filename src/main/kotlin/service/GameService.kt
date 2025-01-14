@@ -43,7 +43,6 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
 
         require(playerNames.keys.size == playerNames.keys.toSet().size) { "Player names must be unique." }
 
-        //val networkService = NetworkService(rootService)
         //Ensure that no network players exist if the game connection state indicates Hotseat mode
         if (rootService.networkService.connectionState == ConnectionState.DISCONNECTED) {
             val networkPlayers = playerNames.values.count { it == PlayerType.NETWORK }
@@ -53,8 +52,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
 
         //Habitat tile distribution according to the number of players
         val totalTiles = getTileNumber(playerNames.size)
-        val habitatTiles = getHabitatTiles().toMutableList()
-        habitatTiles.shuffle()
+        val habitatTiles = getHabitatTiles().shuffled().toMutableList()
         val totalTilesInGame = habitatTiles.take(totalTiles).toMutableList()
 
         val wildlifeTokens = createWildlifeToken()
@@ -97,8 +95,6 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
                 val player = playerList[i]         // i-th player
                 // Retrieve the starting tiles assigned to the player based on the tile index.
                 val playerStartTile = startTiles[tileIndex-1]
-
-                //Place the top tile in the player's habitat (central)
                 player.habitat[0 to 0] = playerStartTile[0]
                 player.habitat[1 to -1] = playerStartTile[1]
                 player.habitat[1 to 0] = playerStartTile[2]
@@ -431,10 +427,16 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
 
     }
 
+    /**
+     * helperfunction to reduce complexity and nesting in exectueTokenReplacement.
+     */
     private fun sendSwapMessage( condition : Boolean, tokenIndices: List<Int>) {
         if (condition) { rootService.networkService.sendSwappedWithNatureTokenMessage(tokenIndices) }
     }
 
+    /**
+     * helperfunction to reduce complexity and nesting in exectueTokenReplacement.
+     */
     private fun sendShuffleMessage( condition : Boolean) {
         if (condition) { rootService.networkService.sendShuffledWildlifeTokensMessage() }
     }
