@@ -28,7 +28,6 @@ class RootService {
         playerActionService.addRefreshable(newRefreshable)
         scoringService.addRefreshable(newRefreshable)
         networkService.addRefreshable(newRefreshable)
-        easyBotService.addRefreshable(newRefreshable)
     }
 
     /**
