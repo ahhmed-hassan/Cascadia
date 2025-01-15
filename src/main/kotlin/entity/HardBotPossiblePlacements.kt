@@ -1,13 +1,13 @@
 package entity
 
 class HardBotPossiblePlacements(
-    val tile: HabitatTile,
+    val tileId: Int,
     val tilePlacement: Pair<Int, Int>,
     val rotation: Int,
     val wildlifeToken: WildlifeToken? = null,
-    val wildlifePlacement: HabitatTile? = null,
+    val wildlifePlacementId: Int? = null,
     val customPair: Pair<Int, Int>? = null,
-    val replacedWildlife: BooleanArray? = null,
+    val replacedWildlife: Boolean,
     val wildLifeChance: Number? = null,
     val usedNaturalToken: Int
 ) {

@@ -1,10 +1,14 @@
 package service
 
 import entity.*
+import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.internal.synchronized
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.atomic.AtomicBoolean
 
 class HardBotService(private val rootService: RootService) {
     val gameService = GameService(rootService)
@@ -24,6 +28,7 @@ class HardBotService(private val rootService: RootService) {
         thread.join()
     }
 
+    @OptIn(InternalCoroutinesApi::class)
     private fun takeAsyncTurn(game: CascadiaGame) = runBlocking {
 
         val tiles = game.habitatTileList.shuffled()
@@ -33,22 +38,26 @@ class HardBotService(private val rootService: RootService) {
             if (tiles.size % numberOfPlayers == 0) tiles.size / numberOfPlayers else tiles.size / numberOfPlayers + 1
 
         val queue = ConcurrentLinkedQueue<HardBotJob>()
-        var timeIsUp = false
-        val threads = mutableListOf<Thread>()
+        val timeIsUp = AtomicBoolean(false)
+        val threads = Collections.synchronizedList(mutableListOf<Thread>())
 
-        launch {
+        val sceduler = launch {
+            println("Launched")
             delay(8000)
             //Todo: start first calcualtion
             delay(1000)
-            timeIsUp = true
-            threads.forEach { it.interrupt() }
+            timeIsUp.set(false)
+            synchronized(threads) {
+                threads.forEach { it.interrupt() }
+            }
             delay(50)
             //Todo: start second calcualtion
             delay(500)
             //TODO: TakeRealTurn()
-            print("It Worked!")
+            println("It Worked!")
         }
-
+        println(Thread.currentThread().name)
+        println("test")
 
         val possibilities = calculateAllPossibilities(game, animalTokens)
 
@@ -56,46 +65,45 @@ class HardBotService(private val rootService: RootService) {
             if (currentRound == 1) {
                 possibilities.forEach { placement ->
                     createJob(
-                        tiles = tiles.map { it.copy() }.toMutableList(),
-                        player = game.currentPlayer,
-                        round = currentRound,
                         employer = placement,
-                        animals = animalTokens.shuffled().toMutableList(),
+                        game = game,
                         queue = queue,
-                        shop = game.shop.map { pair -> Pair(pair.first?.copy(), pair.second?.copy()) }.toMutableList(),
-                        tile = placement.tile
+                        round = currentRound
                     )
                 }
             } else {
-                while (!timeIsUp) {
+                while (!timeIsUp.get()) {
                     possibilities.forEach { possibility ->
                         createJob(
-                            tiles = tiles.map { it.copy() }.toMutableList(),
-                            player = game.currentPlayer,
-                            round = currentRound,
-                            animals = animalTokens.shuffled().toMutableList(),
-                            queue = queue,
                             employer = possibility,
-                            shop = game.shop.map { pair -> Pair(pair.first?.copy(), pair.second?.copy()) }
-                                .toMutableList(),
-                            tile = possibility.tile
+                            game = game,
+                            queue = queue,
+                            round = currentRound
                         )
                     }
                 }
             }
         }
-        val maxNumberOfThreads = Runtime.getRuntime().availableProcessors()
+
+        var maxNumberOfThreads = Runtime.getRuntime().availableProcessors()
         for (i in 1..maxNumberOfThreads) {
             threads.add(
                 Thread {
-                    simulate(queue)
+                    val rootService = RootService()
+                    rootService.gameService.startNewGame(
+                        playerNames = mapOf("A" to PlayerType.NORMAL, "B" to PlayerType.NORMAL),
+                        scoreRules = listOf(),
+                        orderIsRandom = true,
+                        isRandomRules = true,
+                    )
+                    simulate(queue, rootService)
                 }
             )
         }
         threads.forEach { it.start() }
     }
 
-    private fun simulate(queue: ConcurrentLinkedQueue<HardBotJob>) {
+    private fun simulate(queue: ConcurrentLinkedQueue<HardBotJob>, rootService: RootService) {
         val gameService = rootService.gameService
         while (!Thread.interrupted()) {
             val job = queue.poll()
@@ -123,13 +131,13 @@ class HardBotService(private val rootService: RootService) {
 
                 job.shop[0] = Pair(job.habitatTiles.removeFirstOrNull(), job.animals.removeFirstOrNull())
             }
-            val points = scoringService(job.habitat)
+            val points = scoringService(job.habitat, rootService)
             job.employer.score += points
             job.employer.numberOfScores += 1
         }
     }
 
-    private fun scoringService(habitat: MutableMap<Pair<Int, Int>, HabitatTile>): Int {
+    private fun scoringService(habitat: MutableMap<Pair<Int, Int>, HabitatTile>, rootService: RootService): Int {
         val service = rootService.scoringService
         var points = 0
         points += service.calculateBearScore(habitat)
@@ -138,97 +146,93 @@ class HardBotService(private val rootService: RootService) {
         points += service.calculateFoxScore(habitat)
         points += service.calculateHawkScore(habitat)
 
-        Terrain.values().forEach {
-            points += service.calculateLongestTerrain(it, habitat)
-        }
+//        points += service.calculateLongestTerrain(Terrain.WETLAND, habitat)
+//        points += service.calculateLongestTerrain(Terrain.RIVER, habitat)
+//        points += service.calculateLongestTerrain(Terrain.FOREST, habitat)
+//        points += service.calculateLongestTerrain(Terrain.PRAIRIE, habitat)
+//        points += service.calculateLongestTerrain(Terrain.MOUNTAIN, habitat)
+
         return points
     }
 
     private fun createJob(
-        tiles: MutableList<HabitatTile>,
-        player: Player,
-        round: Int,
-        animals: MutableList<WildlifeToken>,
-        queue: ConcurrentLinkedQueue<HardBotJob>,
         employer: HardBotPossiblePlacements,
-        shop: MutableList<Pair<HabitatTile?, WildlifeToken?>>,
-        tile: HabitatTile
+        game: CascadiaGame,
+        queue: ConcurrentLinkedQueue<HardBotJob>,
+        round: Int
     ) {
-        val habitat = player.habitat.mapValues { entry -> entry.value.copy() }.toMutableMap()
-        val naturalTokens = player.natureToken - employer.usedNaturalToken
+        val currentPlayer = game.currentPlayer
+        val habitat = deepCopyHabitat(currentPlayer.habitat)
+        val habitatTiles = mutableListOf<HabitatTile>()
+        game.habitatTileList.forEach { habitatTiles.add(deepCopyHabitatTile(it)) }
+        habitatTiles.shuffle()
+        val animals = game.wildlifeTokenList.shuffled().toMutableList()
+        val shop = deepCopyShop(game.shop)
 
-        val replacedWildlife = employer.replacedWildlife
-        val wildlifeToken = employer.wildlifeToken
-        if (replacedWildlife != null && wildlifeToken != null) {
-            val index = shop.indexOfFirst { it.first == tile } //TODO: find out it it needs a -1
-            if (replacedWildlife[index]) {
-                shop[index].second?.let { animals.add(it) }
-                shop[index] = Pair(shop[index].first, wildlifeToken)
-                animals.remove(wildlifeToken)
-            }
+        val tile = shop.find { it.first?.id == employer.tileId }?.first
+        checkNotNull(tile)
 
-            for (i in replacedWildlife.indices) {
-                if (replacedWildlife[i] && i != index) {
-                    shop[i].second?.let { animals.add(animals.size - 1, it) }
-                    shop[i] = Pair(shop[i].first, animals.removeFirst())
-                }
-            }
-        } else {
-            if (replacedWildlife != null) {
-                for (i in replacedWildlife.indices) {
-                    if (replacedWildlife[i]) {
-                        shop[i].second?.let { animals.add(animals.size - 1, it) }
-                        shop[i] = Pair(shop[i].first, animals.removeFirst())
-                    }
-                }
+        if (employer.replacedWildlife) {
+            val customPair = checkNotNull(employer.customPair)
+            val wildlifeToken = checkNotNull(employer.wildlifeToken)
+            animals.add(checkNotNull(shop[customPair.second].second))
+            shop[customPair.second] =
+                Pair(shop[customPair.second].first, animals.find { it.animal == wildlifeToken.animal })
+            animals.remove(shop[customPair.second].second)
+            for (i in 0..3) {
+                if (i == customPair.second) continue
+                shop[i] = Pair(shop[i].first, animals.removeFirst())
             }
         }
 
         val customPair = employer.customPair
-        val shopTilePos: Int
-        val shopAnimalPos: Int
         if (customPair != null) {
-            shopTilePos = customPair.first
-            shopAnimalPos = customPair.second
+            habitat[employer.tilePlacement] = checkNotNull(shop[customPair.first].first)
+            habitat.forEach { habitatTile ->
+                if (habitatTile.value.id == employer.wildlifePlacementId) {
+                    habitatTile.value.wildlifeToken = shop[customPair.second].second
+                }
+            }
+            shop[customPair.first] = Pair(habitatTiles.removeFirst(), shop[customPair.first].second)
+            shop[customPair.second] = Pair(shop[customPair.second].first, animals.removeFirst())
         } else {
-            shopTilePos = shop.indexOfFirst { it.first == tile }
-            shopAnimalPos = shopTilePos
+            val index = shop.indexOfFirst { it.first == tile }
+            habitat[employer.tilePlacement] = checkNotNull(shop[index].first)
+            habitat.forEach { habitatTile ->
+                if (habitatTile.value.id == employer.wildlifePlacementId) {
+                    habitatTile.value.wildlifeToken = shop[index].second
+                }
+            }
+            shop[index] = Pair(habitatTiles.removeFirst(), animals.removeFirst())
         }
-        shop[shopTilePos] = Pair(tiles.removeAt((0 until tiles.size).random()), shop[shopTilePos].second)
-        shop[shopAnimalPos] = Pair(shop[shopAnimalPos].first, animals.removeAt((0 until animals.size).random()))
-
-        for (i in 0 until employer.rotation) rotateTile(tile)
-        habitat[employer.tilePlacement] = tile
-        val wildLifePlacement = employer.wildlifePlacement
-        if (wildLifePlacement != null) {
-            wildLifePlacement.wildlifeToken = wildlifeToken
-        }
-        queue.add(
-            HardBotJob(
-                naturalTokens = naturalTokens,
-                habitat = habitat,
-                round = round,
-                habitatTiles = tiles,
-                animals = animals,
-                employer = employer,
-                shop = shop
-            )
+        val job = HardBotJob(
+            naturalTokens = currentPlayer.natureToken - employer.usedNaturalToken,
+            habitat = habitat,
+            round = round,
+            habitatTiles = habitatTiles,
+            animals = animals,
+            employer = employer,
+            shop = shop
         )
+
+        queue.add(job)
     }
 
     private fun calculateAllPossibilities(
         game: CascadiaGame,
         tokenList: MutableList<WildlifeToken>
     ): MutableList<HardBotPossiblePlacements> {
-        val shop = game.shop
         val player = game.currentPlayer
         val possibleTilePlaces = gameService.getAllPossibleCoordinatesForTilePlacing(player.habitat)
+
+        player.natureToken = 10
 
         val list = ConcurrentLinkedQueue<HardBotPossiblePlacements>()
         val threads = mutableListOf<Thread>()
 
         threads.add(Thread {
-            val habitat = player.habitat.mapValues { entry -> entry.value.copy() }.toMutableMap()
+            val habitat = deepCopyHabitat(player.habitat)
+            val shop = deepCopyShop(game.shop)
             shop.forEach { pair ->
                 val first = pair.first
                 val second = pair.second
@@ -241,12 +245,13 @@ class HardBotService(private val rootService: RootService) {
                         for (rotation in 0..5) {
                             list.add(
                                 HardBotPossiblePlacements(
-                                    tile = first,
+                                    tileId = first.id,
                                     tilePlacement = tilePlace,
                                     rotation = rotation,
                                     wildlifeToken = second,
                                     usedNaturalToken = 0,
-                                    wildlifePlacement = animalPlace,
+                                    wildlifePlacementId = animalPlace.id,
+                                    replacedWildlife = false
                                 )
                             )
                         }
@@ -254,10 +259,11 @@ class HardBotService(private val rootService: RootService) {
                     for (rotation in 0..5) {
                         list.add(
                             HardBotPossiblePlacements(
-                                tile = first,
+                                tileId = first.id,
                                 tilePlacement = tilePlace,
                                 rotation = rotation,
                                 usedNaturalToken = 0,
+                                replacedWildlife = false
                             )
                         )
                     }
@@ -268,8 +274,8 @@ class HardBotService(private val rootService: RootService) {
 
         if (player.natureToken > 0) {
             threads.add(Thread {
-                val habitat = player.habitat.mapValues { entry -> entry.value.copy() }.toMutableMap()
-
+                val habitat = deepCopyHabitat(player.habitat)
+                val shop = deepCopyShop(game.shop)
                 var selectedToken: WildlifeToken? = null
                 var selectedTokenIndex = 0
                 for (animal in Animal.values()) {
@@ -295,11 +301,7 @@ class HardBotService(private val rootService: RootService) {
                                 ((n - k) * (n - k - 1) * (n - k - 2) * (n - k - 3)) / (n * (n - 1) * (n - 2) * (n - 3))
                         tokenChance = 1 - tokenChanceComplement
 
-                        val replacedToken = tokenList.first { it.animal == animal }
-                        tokenList.remove(replacedToken)
-                        shop[0] = Pair(game.shop[0].first, replacedToken)
-
-                        selectedToken = shop[0].second
+                        selectedToken = tokenList.first { it.animal == animal }
                     } else {
                         continue
                     }
@@ -320,14 +322,15 @@ class HardBotService(private val rootService: RootService) {
                                 for (rotation in 0..5) {
                                     list.add(
                                         HardBotPossiblePlacements(
-                                            tile = selectedTile,
+                                            tileId = selectedTile.id,
                                             tilePlacement = tilePlace,
                                             rotation = rotation,
                                             wildlifeToken = selectedToken,
                                             usedNaturalToken = if (tokenChance == 1) 1; else 2,
-                                            wildlifePlacement = animalPlace,
+                                            wildlifePlacementId = animalPlace.id,
                                             wildLifeChance = tokenChance,
                                             customPair = Pair(i, selectedTokenIndex),
+                                            replacedWildlife = tokenChance != 1
                                         )
                                     )
                                 }
@@ -352,9 +355,37 @@ class HardBotService(private val rootService: RootService) {
 
     private fun rotateTile(tile: HabitatTile) {
         tile.rotationOffset = (tile.rotationOffset - 1) % 6
+        val first = tile.terrains.removeFirst()
         tile.terrains.add(
             tile.terrains.lastIndex,
-            tile.terrains.removeFirst()
+            first
         )
     }
+
+    private fun deepCopyHabitatTile(habitatTile: HabitatTile): HabitatTile {
+        return HabitatTile(
+            id = habitatTile.id,
+            isKeystoneTile = habitatTile.isKeystoneTile,
+            rotationOffset = habitatTile.rotationOffset,
+            wildlifeSymbols = habitatTile.wildlifeSymbols.toList(),
+            wildlifeToken = habitatTile.wildlifeToken?.copy(),
+            terrains = habitatTile.terrains.toMutableList()
+        )
+    }
+
+    private fun deepCopyHabitat(habitat: MutableMap<Pair<Int, Int>, HabitatTile>): MutableMap<Pair<Int, Int>, HabitatTile> {
+        val newHabitat = mutableMapOf<Pair<Int, Int>, HabitatTile>()
+        habitat.forEach { tile -> newHabitat[tile.key] = deepCopyHabitatTile(tile.value) }
+        return newHabitat
+    }
+
+    private fun deepCopyShop(shop: MutableList<Pair<HabitatTile?, WildlifeToken?>>): MutableList<Pair<HabitatTile?, WildlifeToken?>> {
+        val newShop = mutableListOf<Pair<HabitatTile?, WildlifeToken?>>()
+        shop.forEach {
+            it.second?.let { it1 -> Pair(it.first?.let { it2 -> deepCopyHabitatTile(it2) }, it1.copy()) }
+                ?.let { it2 -> newShop.add(it2) }
+        }
+        return newShop
+    }
+
 }
