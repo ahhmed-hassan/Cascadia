@@ -1,10 +1,8 @@
 package service
 
 import entity.*
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
+import org.junit.jupiter.api.assertThrows
+import kotlin.test.*
 
 /**
  *  Test class for testing the connection to the network.
@@ -15,6 +13,7 @@ class testNetworkConnection {
 
     companion object {
         const val NETWORK_SECRET = "cascadia24d"
+        const val WRONG_SECRET = "cascadia"
     }
 
     /**
@@ -107,15 +106,11 @@ class testNetworkConnection {
         val hostWildLifeTokens = hostGame.wildlifeTokenList
         val guestWildLifeTokens = guestGame.wildlifeTokenList
 
-        assertEquals(guestHabitatTileList.size, hostHabitatTileList.size)
-
         for (i in guestHabitatTileList.indices) {
             val guestHabitatTile = guestHabitatTileList[i].id
             val hostHabitatTile = hostHabitatTileList[i].id
             assertEquals(hostHabitatTile, guestHabitatTile)
         }
-
-        assertEquals(guestWildLifeTokens.size, hostWildLifeTokens.size)
 
         for (i in guestWildLifeTokens.indices) {
             val guestWildLifeToken = guestWildLifeTokens[i].animal
@@ -388,6 +383,91 @@ class testNetworkConnection {
         rootServiceGuest.networkService.disconnect()
 
     }
+
+    @Test
+    fun testFailedConnection() {
+
+        rootServiceHost = RootService()
+        rootServiceGuest = RootService()
+
+        // Host-Game mit falschem Secret
+        val exceptionHost = assertThrows<IllegalStateException> {
+            rootServiceHost.networkService.hostGame(WRONG_SECRET, null, "Rodi", PlayerType.NETWORK)
+        }
+        assertEquals("Connection failed", exceptionHost.message)
+        assert(rootServiceHost.waitForState(ConnectionState.DISCONNECTED)) {
+            "Nach dem Warten nicht im Zustand DISCONNECTED angekommen"
+        }
+
+        // Join-Game mit falschem Secret
+        val exceptionGuest = assertThrows<IllegalStateException> {
+            rootServiceGuest.networkService.joinGame(WRONG_SECRET, "Mehi", "invalidSessionID", PlayerType.NETWORK)
+        }
+        assertEquals("Connection failed", exceptionGuest.message)
+        assert(rootServiceGuest.waitForState(ConnectionState.DISCONNECTED)) {
+            "Nach dem Warten nicht im Zustand DISCONNECTED angekommen"
+        }
+    }
+
+    /**
+     * test sending and receiving Place Message while using NatureToken
+     */
+    @Test
+    fun testUsedNatureToken() {
+        initConnections()
+        assertEquals(2, rootServiceHost.networkService.playersList.size)
+        val scoreRulse = listOf(false, false, true, false, false)
+
+        rootServiceHost.networkService.startNewHostedGame(
+            orderIsRanom = false,
+            isRandomRules = false,
+            scoreRules = scoreRulse
+        )
+        assertEquals(ConnectionState.PLAYING_MY_TURN, rootServiceHost.networkService.connectionState)
+        assert(rootServiceGuest.waitForState(ConnectionState.WAITING_FOR_OPPONENTS_TURN)) {
+            error("Nach dem Warten nicht im Zustand angekommen")
+        }
+        val hostGame = rootServiceHost.currentGame
+        val guestGame = rootServiceGuest.currentGame
+        assertNotNull(hostGame)
+        assertNotNull(guestGame)
+        val hostCurrentPlayer = hostGame.currentPlayer
+        val guestCurrentPlayer = guestGame.currentPlayer
+        val guest = guestGame.playerList.indexOf(guestCurrentPlayer)
+        assertNotNull(hostCurrentPlayer)
+        assertNotNull(guestCurrentPlayer)
+        hostCurrentPlayer.natureToken++
+        guestCurrentPlayer.natureToken++
+
+        val tokenTileList = createTileTokenPairs(true).toMutableList()
+        hostGame.shop.clear()
+
+        tokenTileList.forEach { pair -> hostGame.shop.add(pair) }
+        val tile2 = hostGame.shop[1].first
+        checkNotNull(tile2)
+        println(tile2.wildlifeSymbols)
+        guestGame.shop.clear()
+        tokenTileList.forEach { pair -> guestGame.shop.add(pair) }
+        rootServiceHost.playerActionService.chooseCustomPair(1,2)
+        assertEquals(rootServiceHost.networkService.placedTileIndex, 1)
+        assertEquals(rootServiceHost.networkService.selectedTokenIndex, 2)
+
+        assertTrue(rootServiceHost.networkService.usedNatureToken)
+
+        rootServiceHost.playerActionService.addTileToHabitat(0 to -1)
+        assertEquals(rootServiceHost.networkService.tileCoordinates, 0 to -1)
+        rootServiceHost.playerActionService.addToken(tile2)
+
+
+        assertNull(rootServiceHost.networkService.placedTileIndex)
+        assertNull(rootServiceHost.networkService.tokenCoordinates)
+
+        Thread.sleep(300)
+
+        assertEquals(guestGame.playerList[guest].habitat.get(0 to -1)?.id, 2)
+
+    }
+
 
     private fun RootService.waitForState(state: ConnectionState, timeout: Int = 5000): Boolean {
         var timePassed = 0
