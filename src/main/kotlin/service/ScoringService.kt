@@ -146,6 +146,62 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
             }
             return points
         }
+
+        /**
+         * helper function for calculateHawkScore
+         *
+         * @param size the amount of hawk that are notAdjacent
+         *
+         * @return the points of a player
+         */
+        private fun calculateHawkScoreRuleA(size:Int) : Int {
+            var points = 0
+            when (size) {
+                0 -> points += 0
+                1 -> points += 2
+                2 -> points += 5
+                3 -> points += 6
+                4 -> points += 11
+                5 -> points += 14
+                6 -> points += 18
+                7 -> points += 22
+                else -> points += 26
+            }
+            return points
+        }
+
+        /**
+         * helper function for calculateHawkScore
+         *
+         * @param notAdjacent gives a set with Hawks that are notAdjacent
+         * @param hawkCoordinate gives a set of every hawk in the habitat
+         *
+         * @return inSight return every hawk that is also in sight with another hawk
+         */
+        private fun calculateHawkScoreRuleB(notAdjacent : MutableSet<Pair<Int,Int>>,
+                                            hawkCoordinate: MutableSet<Pair<Int,Int>>) : MutableSet<Pair<Int,Int>> {
+            //implementing one set of pairs for rule b
+            val inSight: MutableSet<Pair<Int, Int>> = mutableSetOf()
+            //checks if a hawk is also in direct sight to another hawk
+            for (coordinate in notAdjacent) {
+                for (innerCoordinate in hawkCoordinate) {
+                    //vertical
+                    if (coordinate.second == innerCoordinate.second) { inSight.add(coordinate) }
+                    //horizontal
+                    if (coordinate.first == innerCoordinate.first) { inSight.add(coordinate) }
+                    //diagonal plus
+                    if (coordinate.first - innerCoordinate.first == coordinate.second - innerCoordinate.second) {
+                        inSight.add(coordinate)
+                    }
+                    //diagonal minus
+                    if (coordinate.first - innerCoordinate.first == -(coordinate.second - innerCoordinate.second)) {
+                        inSight.add(coordinate)
+                    }
+                }
+            }
+            return inSight
+        }
+
         /**
          * creates the pattern needed for ruleset B
          * @param coordinate coordinate of the highest tile in the pattern
@@ -493,39 +549,13 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
         }
 
         if (!isB) {
-            when (notAdjacent.size) {
-                0 -> points += 0
-                1 -> points += 2
-                2 -> points += 5
-                3 -> points += 6
-                4 -> points += 11
-                5 -> points += 14
-                6 -> points += 18
-                7 -> points += 22
-                else -> points += 26
-            }
+           points += calculateHawkScoreRuleA(notAdjacent.size)
         } else {
-            //implementing one set of pairs for rule b
-            val inSight: MutableSet<Pair<Int, Int>> = mutableSetOf()
-            //checks if a hawk is also in direct sight to another hawk
-            for (coordinate in notAdjacent) {
-                for (innerCoordinate in hawkCoordinate) {
-                    //vertical
-                    if (coordinate.second == innerCoordinate.second) { inSight.add(coordinate) }
-                    //horizontal
-                    if (coordinate.first == innerCoordinate.first) { inSight.add(coordinate) }
-                    //diagonal plus
-                    if (coordinate.first - innerCoordinate.first == coordinate.second - innerCoordinate.second) {
-                        inSight.add(coordinate)
-                    }
-                    //diagonal minus
-                    if (coordinate.first - innerCoordinate.first == -(coordinate.second - innerCoordinate.second)) {
-                        inSight.add(coordinate)
-                    }
-                }
-            }
+
+            val inSight = calculateHawkScoreRuleB(notAdjacent, hawkCoordinate)
+
             //scores for ruleset b
-            when (notAdjacent.size) {
+            when (inSight.size) {
                 2 -> points += 5
                 3 -> points += 9
                 4 -> points += 12
