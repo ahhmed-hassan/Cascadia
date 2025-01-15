@@ -4,7 +4,6 @@ import entity.Animal
 import entity.HabitatTile
 import entity.PlayerType
 import entity.Terrain
-import service.EasyBotService
 import service.RootService
 import tools.aqua.bgw.animation.DelayAnimation
 import tools.aqua.bgw.components.ComponentView
@@ -26,10 +25,8 @@ import tools.aqua.bgw.visual.CompoundVisual
 import tools.aqua.bgw.visual.ImageVisual
 import tools.aqua.bgw.visual.TextVisual
 import java.awt.Color
-import java.lang.Thread.sleep
 import kotlin.math.cos
 import kotlin.math.sin
-import kotlinx.coroutines.*
 
 class GameScene (
     val rootService: RootService,
@@ -48,7 +45,6 @@ class GameScene (
     private var currentXCamera = 0
     private var currentYCamera = 0
     private var speed = 0
-    private val easyBotService = rootService.easyBotService
 
     private val shopHabitats = GridPane<HexagonView> (
         posX = 1400,
@@ -498,7 +494,7 @@ class GameScene (
             disableAll()
             playAnimation(DelayAnimation(speed).apply {
                 onFinished = {
-                    easyBotService.takeTurn()
+                    rootService.easyBotService.takeTurn()
                 }
             })
         }
@@ -547,6 +543,7 @@ class GameScene (
         if (game.currentPlayer.playerType == PlayerType.EASY){
 
         }
+        println("RefreshTileAdd")
     }
 
     override fun refreshAfterTileRotation() {
@@ -578,12 +575,12 @@ class GameScene (
         if (game.currentPlayer.playerType == PlayerType.EASY){
 
         }
+        println("RefreshAfterTileRotation")
     }
 
     override fun refreshAfterTokenTilePairChosen() {
         val game = rootService.currentGame
         checkNotNull(game)
-        println("RefreshChosen")
 
         shopTokens.isVisible = false
         shopHabitats.isVisible = false
@@ -622,12 +619,12 @@ class GameScene (
         if (game.currentPlayer.playerType == PlayerType.EASY){
 
         }
+        println("RefreshChosen")
     }
 
     override fun refreshAfterWildlifeTokenAdded(habitatTile: HabitatTile) {
         val game = rootService.currentGame
         checkNotNull(game)
-        println("RefreshToken")
 
         //update the view of the Habitat where we placed our token
         playableToken[0,0] = null
@@ -638,14 +635,9 @@ class GameScene (
         )
 
         if (game.currentPlayer.playerType == PlayerType.EASY){
-            disableAll()
-            easyBotService.takeTurn()
-            runBlocking {
-                launch {
-                    delay(speed.toLong())
-                }
-            }
+
         }
+        println("RefreshToken")
     }
 
     override fun refreshAfterWildlifeTokenReplaced() {
@@ -664,17 +656,11 @@ class GameScene (
         }
         selectedShopToken.clear()
 
-        runBlocking {
-            launch {
-                delay(speed.toLong())
-            }
-        }
     }
 
     override fun refreshAfterNextTurn() {
         val game = rootService.currentGame
         checkNotNull(game)
-        println("RefreshNext")
 
         //reset the camera to original position
         cameraPane.reposition(0,0)
@@ -746,10 +732,11 @@ class GameScene (
             disableAll()
             playAnimation(DelayAnimation(speed).apply {
                 onFinished = {
-                    easyBotService.takeTurn()
+                    rootService.easyBotService.takeTurn()
                 }
             })
         }
+        println("RefreshNext")
     }
 
     /**
@@ -983,7 +970,7 @@ class GameScene (
 
     private fun disableAll(){
         listOf(
-            cameraPane,
+            //cameraPane,
             replaceWildlifeButton,
             confirmReplacementButton,
             chooseCustomPair,
