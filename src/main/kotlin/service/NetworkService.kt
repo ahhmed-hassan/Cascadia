@@ -47,6 +47,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         if (!connect(secret, name, playerType)) {
             error("Connection failed")
         }
+        this.playersList.add(name)
         updateConnectionState(ConnectionState.CONNECTED)
 
         if (sessionID.isNullOrBlank()) {
@@ -310,6 +311,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
                 rootService.playerActionService.addTileToHabitat(habitatCoordinates)
                 val targetTile = game.currentPlayer.habitat[wildlifeTokenCoordinates]
                 checkNotNull(targetTile)
+                println(targetTile.wildlifeToken)
                 rootService.playerActionService.addToken(targetTile)
             } else {
                 // Execute actions if no nature token is used.
