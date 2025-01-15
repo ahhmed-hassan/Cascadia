@@ -84,6 +84,69 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
         }
 
         /**
+         * help function for calculateElkScore
+         *
+         * @param i amount of tiles in the pattern
+         * @param coordinate of an Elk tile
+         * @param elkCoordinate every coordinate with an elk on it
+         * @param directions the neighbours from a tile
+         *
+         * @return points of a player
+         */
+        private fun calculateElkScoreRuleA(i: Int, elkCoordinate : MutableSet<Pair<Int, Int>>,
+                                           directions : List<Pair<Int, Int>>, coordinate: Pair<Int, Int>) :Int {
+            var points = 0;
+                //checks if there is a row in each direction
+                for (direction in directions) {
+                    val straightLine = (0..i).all { element ->
+                        elkCoordinate.contains( Pair( coordinate.first + (element * direction.first),
+                            coordinate.second + (element * direction.second)))
+                    }
+                    //when a straight line was found check its length and remove it from the elkCoordinate pair
+                    if (straightLine) {
+                        points += when (i) {
+                            3 -> 13
+                            2 -> 9
+                            1 -> 5
+                            else ->  2
+                        }
+                        (0..i).forEach { element ->
+                            elkCoordinate.remove( Pair(coordinate.first + element * direction.first,
+                                coordinate.second + element * direction.second))
+                        }
+                    }
+                }
+            return points
+        }
+
+        /**
+         * help function for calculateElkScore
+         *
+         * @param i amount of tiles in the pattern
+         * @param coordinate of an Elk tile
+         * @param elkCoordinate every coordinate with an elk on it
+         *
+         * @return points of a player
+         */
+        private fun calculateElkScoreRuleB(i:Int,coordinate: Pair<Int, Int>,
+                                           elkCoordinate : MutableSet<Pair<Int, Int>>) :Int {
+            var points = 0;
+            //creates the pattern with every rotation
+            for (j in 0..2) {
+                //creates the pattern that fits the amount of tiles for 3 different rotations
+                val pattern = createPattern(coordinate, i, j)
+                if (pattern.all { it in elkCoordinate }) {
+                    when (i) {
+                        3 -> {points += 13; elkCoordinate.removeAll(pattern)}
+                        2 -> {points += 9; elkCoordinate.removeAll(pattern)}
+                        1 -> {points += 5; elkCoordinate.removeAll(pattern)}
+                        0 -> {points += 2; elkCoordinate.removeAll(pattern)}
+                    }
+                }
+            }
+            return points
+        }
+        /**
          * creates the pattern needed for ruleset B
          * @param coordinate coordinate of the highest tile in the pattern
          * @param number the amount of tiles you want to have in the pattern
@@ -394,44 +457,13 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
             for (i in 3 downTo 0) {
                 //checks for every Elk if it is in a row with i other Elks
                 for (coordinate in elkCoordinate.toSet()) {
-                    //checks if there is a row in each direction
-                    for (direction in directions) {
-                        val straightLine = (0..i).all { element ->
-                            elkCoordinate.contains( Pair( coordinate.first + (element * direction.first),
-                                                          coordinate.second + (element * direction.second)))
-                        }
-                        //when a straight line was found check its length and remove it from the elkCoordinate pair
-                        if (straightLine) {
-                            points += when (i) {
-                                3 -> 13
-                                2 -> 9
-                                1 -> 5
-                                else ->  2
-                            }
-                            (0..i).forEach { element ->
-                                elkCoordinate.remove( Pair(coordinate.first + element * direction.first,
-                                                           coordinate.second + element * direction.second))
-                            }
-                        }
-                    }
+                    points += calculateElkScoreRuleA(i, elkCoordinate, directions, coordinate)
                 }
             }
         } else {
             for (i in 3 downTo 0) {
                 for (coordinate in elkCoordinate.toSet()) {
-                    //creates the pattern with every rotation
-                    for (j in 0..2) {
-                        //creates the pattern that fits the amount of tiles for 3 different rotations
-                        val pattern = createPattern(coordinate, i, j)
-                        if (pattern.all { it in elkCoordinate }) {
-                            when (i) {
-                                3 -> {points += 13; elkCoordinate.removeAll(pattern)}
-                                2 -> {points += 9; elkCoordinate.removeAll(pattern)}
-                                1 -> {points += 5; elkCoordinate.removeAll(pattern)}
-                                0 -> {points += 2; elkCoordinate.removeAll(pattern)}
-                            }
-                        }
-                    }
+                    points += calculateElkScoreRuleB(i, coordinate, elkCoordinate)
                 }
             }
         }
