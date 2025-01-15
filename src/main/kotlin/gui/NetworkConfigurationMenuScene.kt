@@ -64,7 +64,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         font = Font(32)
     )
 
-    private val simEntry = ComboBox<Float>(
+    private val simEntry = ComboBox(
         posX = 1050,
         posY = 300,
         width = 200,
@@ -91,12 +91,12 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         visual = ColorVisual(255, 255, 255)
     )
 
-    private fun createPlayerButtons(posY: Int): Button {
+    private fun createPlayerButtons(): Button {
         val playerTypeButton = Button(
             width = 50,
             height = 50,
             posX = 450,
-            posY = posY,
+            posY = 300,
             text = "H",
             visual = ImageVisual("human.png")
         ).apply {
@@ -247,7 +247,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         visual = ColorVisual(255, 255, 255)
     )
 
-    val startButton = Button(
+    private val startButton = Button(
         width = 250,
         height = 50,
         posX = 1100,
@@ -266,7 +266,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         }
     }
 
-    val createHostGameButton = Button(
+    private val createHostGameButton = Button(
         width = 250,
         height = 50,
         posX = 800,
@@ -340,7 +340,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             networkStatusArea,
         )
         addComponents(overlay)
-        val buttons = createPlayerButtons(300)
+        val buttons = createPlayerButtons()
         playerNameFields.add(playersField)
         playerButtons.add(buttons)
         overlay.add(buttons)
@@ -409,13 +409,6 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         return pairs
     }
 
-    /**
-     * Hosts a new game session using the player names and rules.
-     *
-     * @param playerNames A map of player names and their player types.
-     * @param rules A list of boolean values that defines the scoring rules for the game.
-     */
-
 
     override fun refreshConnectionState(newState: ConnectionState) {
         networkStatusArea.text = newState.toUIText()
@@ -428,7 +421,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     /**
      * Refreshes the player list when a new player joins.
      *
-     * @param playerList A list of player names.
+     * @param networkPlayers A list of player names.
      */
     override fun refreshAfterPlayerJoined(networkPlayers: MutableList<String>) {
         playerNameFields.forEach { overlay.remove(it) }
@@ -446,10 +439,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             playerNameFields.add(playersField)
             overlay.add(playerNameField)
         }
-        if (networkPlayers.size >=1 ) {
-            startButton.isVisible = true
-        }else
-            startButton.isVisible = false
+        startButton.isVisible = networkPlayers.size >=1
     }
 
 }

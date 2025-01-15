@@ -53,7 +53,7 @@ class EasyBotService(private val rootService: RootService) {
         //Maybe uses natureToken
         if (player.natureToken >= 1 && useNaturalTokenChance >= (1..100).random()) {
             if ((1..2).random() == 1) {
-                //replace WildelifeTokens
+                //replace WildlifeTokens
 
                 val list = mutableListOf<Int>()
                 for (i in 0..3) {
