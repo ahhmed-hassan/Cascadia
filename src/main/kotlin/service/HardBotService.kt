@@ -1,9 +1,6 @@
 package service
 
 import entity.*
-import kotlinx.coroutines.InternalCoroutinesApi
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.internal.synchronized
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.util.*
@@ -13,7 +10,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 class HardBotService(private val rootService: RootService) {
     val gameService = GameService(rootService)
 
-    val animalPlacingChance = 80
+    private val animalPlacingChance = 80
 
     fun takeTurn() {
         val game = rootService.currentGame
@@ -21,15 +18,35 @@ class HardBotService(private val rootService: RootService) {
 
         require(game.currentPlayer.playerType == PlayerType.NORMAL)
 
+        val queue = ConcurrentLinkedQueue<HardBotJob>()
+        val timeIsUp = AtomicBoolean(false)
+        val threads = Collections.synchronizedList(mutableListOf<Thread>())
+        val possibilities = mutableListOf<HardBotPossiblePlacements>()
+
         val thread = Thread {
-            takeAsyncTurn(game)
+            takeAsyncTurn(game, queue, timeIsUp, threads, possibilities)
         }
         thread.start()
+        Thread.sleep(8000)
+        timeIsUp.set(true)
+        threads.forEach { it.interrupt() }
         thread.join()
+        println("All stopped")
+        possibilities.forEach {
+            if (it.wildLifeChance != null) {
+                if (it.wildLifeChance != 1.0)
+                    println("Score: " + it.getScore() + " Chance: " + it.wildLifeChance)
+            }
+        }
     }
 
-    @OptIn(InternalCoroutinesApi::class)
-    private fun takeAsyncTurn(game: CascadiaGame) = runBlocking {
+    private fun takeAsyncTurn(
+        game: CascadiaGame,
+        queue: ConcurrentLinkedQueue<HardBotJob>,
+        timeIsUp: AtomicBoolean,
+        threads: MutableList<Thread>,
+        possibilities: MutableList<HardBotPossiblePlacements>
+    ) = runBlocking {
 
         val tiles = game.habitatTileList.shuffled()
         val animalTokens = game.wildlifeTokenList.shuffled().toMutableList()
@@ -37,29 +54,8 @@ class HardBotService(private val rootService: RootService) {
         val currentRound =
             if (tiles.size % numberOfPlayers == 0) tiles.size / numberOfPlayers else tiles.size / numberOfPlayers + 1
 
-        val queue = ConcurrentLinkedQueue<HardBotJob>()
-        val timeIsUp = AtomicBoolean(false)
-        val threads = Collections.synchronizedList(mutableListOf<Thread>())
-
-        val sceduler = launch {
-            println("Launched")
-            delay(8000)
-            //Todo: start first calcualtion
-            delay(1000)
-            timeIsUp.set(false)
-            synchronized(threads) {
-                threads.forEach { it.interrupt() }
-            }
-            delay(50)
-            //Todo: start second calcualtion
-            delay(500)
-            //TODO: TakeRealTurn()
-            println("It Worked!")
-        }
-        println(Thread.currentThread().name)
-        println("test")
-
-        val possibilities = calculateAllPossibilities(game, animalTokens)
+        possibilities.addAll(calculateAllPossibilities(game, animalTokens))
+        println("There are " + possibilities.size + " possible Placements!")
 
         launch {
             if (currentRound == 1) {
@@ -72,6 +68,7 @@ class HardBotService(private val rootService: RootService) {
                     )
                 }
             } else {
+                println("Start creating new Jobs")
                 while (!timeIsUp.get()) {
                     possibilities.forEach { possibility ->
                         createJob(
@@ -82,11 +79,12 @@ class HardBotService(private val rootService: RootService) {
                         )
                     }
                 }
+                println("Stopped creating new Jobs")
             }
         }
 
-        val maxNumberOfThreads = Runtime.getRuntime().availableProcessors()
-        println("Available Processors: $maxNumberOfThreads")
+        val maxNumberOfThreads = (Runtime.getRuntime().availableProcessors() - 1).coerceAtLeast(1)
+        println("Available Threads: $maxNumberOfThreads")
         for (i in 1..maxNumberOfThreads) {
             threads.add(
                 Thread {
@@ -106,6 +104,7 @@ class HardBotService(private val rootService: RootService) {
 
     private fun simulate(queue: ConcurrentLinkedQueue<HardBotJob>, rootService: RootService) {
         val gameService = rootService.gameService
+        var count = 0
         while (!Thread.interrupted()) {
             val job = queue.poll()
             if (job == null) {
@@ -135,6 +134,12 @@ class HardBotService(private val rootService: RootService) {
             val points = scoringService(job.habitat, rootService)
             job.employer.score += points
             job.employer.numberOfScores += 1
+            count++
+            if (count % 1000 == 0) {
+                println(
+                    Thread.currentThread().name + " is in round $count of simulating!"
+                )
+            }
         }
     }
 
@@ -284,23 +289,23 @@ class HardBotService(private val rootService: RootService) {
                 var selectedToken: WildlifeToken? = null
                 var selectedTokenIndex = 0
                 for (animal in Animal.values()) {
-                    var tokenChance: Number?
+                    var tokenChance: Double?
                     if (animal in shop.map {
                             val token = checkNotNull(it.second)
                             token.animal
                         }) {
-                        tokenChance = 1
+                        tokenChance = 1.0
                         val firstPair = shop.find { checkNotNull(it.second).animal == animal }
                         selectedToken = checkNotNull(firstPair).second
                         selectedTokenIndex = shop.indexOf(firstPair)
                     } else if (player.natureToken > 1) {
-                        val k = tokenList.filter {
+                        val k: Double = tokenList.filter {
                             it.animal == animal
-                        }.size
-                        if (k == 0) continue
-                        val n = tokenList.size
-                        val tokenChanceComplement = 0L +
-                                ((n - k) * (n - k - 1) * (n - k - 2) * (n - k - 3)) / (n * (n - 1) * (n - 2) * (n - 3))
+                        }.size.toDouble()
+                        if (k == 0.0) continue
+                        val n = tokenList.size.toDouble()
+                        val tokenChanceComplement: Double =
+                            ((n - k) * (n - k - 1.0) * (n - k - 2.0) * (n - k - 3.0)) / (n * (n - 1.0) * (n - 2.0) * (n - 3.0))
                         tokenChance = 1 - tokenChanceComplement
 
                         selectedToken = tokenList.first { it.animal == animal }
@@ -328,11 +333,11 @@ class HardBotService(private val rootService: RootService) {
                                             tilePlacement = tilePlace,
                                             rotation = rotation,
                                             wildlifeToken = selectedToken,
-                                            usedNaturalToken = if (tokenChance == 1) 1; else 2,
+                                            usedNaturalToken = if (tokenChance == 1.0) 1; else 2,
                                             wildlifePlacementId = animalPlace.id,
                                             wildLifeChance = tokenChance,
                                             customPair = Pair(i, selectedTokenIndex),
-                                            replacedWildlife = tokenChance != 1
+                                            replacedWildlife = tokenChance != 1.0
                                         )
                                     )
                                 }
