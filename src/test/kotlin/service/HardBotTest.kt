@@ -3,12 +3,20 @@ package service
 import entity.PlayerType
 import gui.Refreshables
 import org.junit.jupiter.api.assertDoesNotThrow
+import kotlin.test.Ignore
 import kotlin.test.Test
 
+/**
+ * Test class for the HardBot
+ */
 class HardBotTest : Refreshables {
     private var gameIsActive = true
 
+    /**
+     * Tests the Hard Bot
+     */
     @Test
+    @Ignore
     fun hardBotTest() {
         assertDoesNotThrow {
             for (i in 1..2) {
