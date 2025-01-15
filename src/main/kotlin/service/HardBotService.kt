@@ -8,8 +8,8 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 
 class HardBotService(private val rootService: RootService) {
-    val gameService = GameService(rootService)
 
+    val gameService = rootService.gameService
     private val animalPlacingChance = 80
 
     fun takeTurn() {
@@ -27,12 +27,43 @@ class HardBotService(private val rootService: RootService) {
             takeAsyncTurn(game, queue, timeIsUp, threads, possibilities)
         }
         thread.start()
-        Thread.sleep(8000)
+        Thread.sleep(9000)
         timeIsUp.set(true)
         threads.forEach { it.interrupt() }
         thread.join()
         println("All stopped")
 
+        var best = possibilities.first()
+        possibilities.forEach {
+            if (!(it.wildLifeChance == null || it.wildLifeChance != 1.0)) {
+                if (it.getScore() > best.getScore()) {
+                    best = it
+                }
+            }
+        }
+
+        if (best.customPair != null) {
+            rootService.playerActionService.chooseCustomPair(best.customPair!!.first, best.customPair!!.second)
+        } else {
+            val index = game.shop.indexOfFirst { it.first?.id == best.tileId }
+            rootService.playerActionService.chooseTokenTilePair(index)
+        }
+
+        for (i in 0..best.rotation) {
+            rootService.playerActionService.rotateTile()
+        }
+
+        rootService.playerActionService.addTileToHabitat(best.tilePlacement)
+
+        if (best.wildlifePlacementId != null) {
+            game.currentPlayer.habitat.forEach { habitatTile ->
+                if (habitatTile.value.id == best.wildlifePlacementId) {
+                    rootService.playerActionService.addToken(habitatTile.value)
+                }
+            }
+        } else {
+            rootService.playerActionService.discardToken()
+        }
     }
 
     private fun takeAsyncTurn(
@@ -229,8 +260,6 @@ class HardBotService(private val rootService: RootService) {
     ): MutableList<HardBotPossiblePlacements> {
         val player = game.currentPlayer
         val possibleTilePlaces = gameService.getAllPossibleCoordinatesForTilePlacing(player.habitat)
-
-        player.natureToken = 10
 
         val list = ConcurrentLinkedQueue<HardBotPossiblePlacements>()
         val threads = mutableListOf<Thread>()

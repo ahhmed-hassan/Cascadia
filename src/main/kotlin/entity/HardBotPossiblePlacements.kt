@@ -14,7 +14,7 @@ class HardBotPossiblePlacements(
     var score = 0
     var numberOfScores = 0
 
-    fun getScore(): Number {
-        return score / numberOfScores
+    fun getScore(): Double {
+        return score.toDouble() / numberOfScores.toDouble()
     }
 }

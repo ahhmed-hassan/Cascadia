@@ -1,25 +1,41 @@
 package service
 
 import entity.PlayerType
+import gui.Refreshables
+import org.junit.jupiter.api.assertDoesNotThrow
 import kotlin.test.Test
 
-class HardBotTest {
+class HardBotTest : Refreshables {
+    private var gameIsActive = true
 
     @Test
     fun hardBotTest() {
-        val rootService = RootService()
+        assertDoesNotThrow {
+            for (i in 1..2) {
+                gameIsActive = true
+                val rootService = RootService()
+                rootService.addRefreshable(this)
+                val players = listOf("A", "B", "C", "D")
 
-        val players = mapOf("A" to PlayerType.NORMAL, "B" to PlayerType.NORMAL)
+                val playerMap = mutableMapOf<String, PlayerType>()
 
-        rootService.gameService.startNewGame(
-            playerNames = players,
-            scoreRules = listOf(),
-            orderIsRandom = true,
-            isRandomRules = true
-        )
+                for (j in 0..(i % 3 + 1)) {
+                    playerMap[players[j]] = PlayerType.NORMAL
+                }
 
-        println("start")
-        rootService.hardBotService.takeTurn()
-        println("finish")
+                rootService.gameService.startNewGame(
+                    playerNames = playerMap,
+                    scoreRules = listOf(),
+                    orderIsRandom = true,
+                    isRandomRules = true
+                )
+
+                (1..playerMap.size * 20).forEach { _ -> if (gameIsActive) rootService.hardBotService.takeTurn() }
+            }
+        }
+    }
+
+    override fun refreshAfterGameEnd(scores: Map<String, ScoringService.Companion.PlayerScore>) {
+        gameIsActive = false
     }
 }
