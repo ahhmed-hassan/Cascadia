@@ -590,7 +590,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
      * @throws IllegalStateException when ConnectionState is not [ConnectionState.DISCONNECTED]
      * @throws IllegalArgumentException when secret or name is blank
      */
-    fun connect(secret: String, name: String, playerType: PlayerType) : Boolean {
+    private fun connect(secret: String, name: String, playerType: PlayerType) : Boolean {
         require(connectionState == ConnectionState.DISCONNECTED && client == null)
         { "already connected to another game" }
 

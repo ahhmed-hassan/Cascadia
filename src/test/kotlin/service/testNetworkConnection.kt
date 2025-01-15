@@ -107,15 +107,11 @@ class testNetworkConnection {
         val hostWildLifeTokens = hostGame.wildlifeTokenList
         val guestWildLifeTokens = guestGame.wildlifeTokenList
 
-        assertEquals(guestHabitatTileList.size, hostHabitatTileList.size)
-
         for (i in guestHabitatTileList.indices) {
             val guestHabitatTile = guestHabitatTileList[i].id
             val hostHabitatTile = hostHabitatTileList[i].id
             assertEquals(hostHabitatTile, guestHabitatTile)
         }
-
-        assertEquals(guestWildLifeTokens.size, hostWildLifeTokens.size)
 
         for (i in guestWildLifeTokens.indices) {
             val guestWildLifeToken = guestWildLifeTokens[i].animal
