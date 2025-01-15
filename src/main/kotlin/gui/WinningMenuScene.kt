@@ -1,6 +1,7 @@
 package gui
 
 import service.RootService
+import service.ScoringService
 import tools.aqua.bgw.components.layoutviews.Pane
 import tools.aqua.bgw.components.uicomponents.Button
 import tools.aqua.bgw.components.uicomponents.Label
@@ -104,6 +105,10 @@ class WinningMenuScene(val rootService: RootService) : MenuScene(1920, 1080), Re
         updateScores()
     }
 
+    override fun refreshAfterGameEnd(scores: Map<String, ScoringService.Companion.PlayerScore>) {
+        updateScores()
+    }
+
     private fun updateScores() {
         val game = rootService.currentGame
         checkNotNull(game) { return }
@@ -117,6 +122,7 @@ class WinningMenuScene(val rootService: RootService) : MenuScene(1920, 1080), Re
             label.text = ""
             sortedScores.getOrNull(index)?.let { (name, score) ->
                 label.text = "${index + 1}. $name : ${score.sum()} (Details: Animals: ${score.animalsScores}, Terrains: ${score.ownLongestTerrainsScores}, Nature Tokens: ${score.natureTokens})"
+                println(label.text)
             }
         }
     }
