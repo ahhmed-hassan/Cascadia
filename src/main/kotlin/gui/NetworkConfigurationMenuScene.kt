@@ -439,7 +439,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
                 width = 200,
                 height = 50,
                 posX = 200,
-                posY = 400 + index * 100,
+                posY = 300 + index * 100,
                 text = playerName,
                 visual = ColorVisual(255, 255, 255)
             )

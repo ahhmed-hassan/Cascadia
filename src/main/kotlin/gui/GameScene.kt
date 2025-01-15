@@ -4,6 +4,7 @@ import entity.Animal
 import entity.HabitatTile
 import entity.PlayerType
 import entity.Terrain
+import service.ConnectionState
 import service.RootService
 import tools.aqua.bgw.animation.DelayAnimation
 import tools.aqua.bgw.components.ComponentView
@@ -14,6 +15,7 @@ import tools.aqua.bgw.components.layoutviews.GridPane
 import tools.aqua.bgw.components.layoutviews.Pane
 import tools.aqua.bgw.components.uicomponents.Button
 import tools.aqua.bgw.components.uicomponents.Label
+import tools.aqua.bgw.components.uicomponents.TextArea
 import tools.aqua.bgw.components.uicomponents.UIComponent
 import tools.aqua.bgw.core.BoardGameScene
 import tools.aqua.bgw.event.KeyCode
@@ -45,6 +47,7 @@ class GameScene(
     private var currentXCamera = 0
     private var currentYCamera = 0
     private var speed = 0
+    private var state : ConnectionState = ConnectionState.DISCONNECTED
 
     private val shopHabitats = GridPane<HexagonView>(
         posX = 1400,
@@ -122,6 +125,21 @@ class GameScene(
         font = Font(24),
         visual = ColorVisual(255, 255, 255)
     )
+
+    private val networkStatusArea = TextArea(
+        width = 200,
+        height = 50,
+        posX = 50,
+        posY = 140,
+        font = Font(24)
+    ).apply {
+        isDisabled = true
+        // only visible when the text is changed to something non-empty
+        isVisible = false
+        textProperty.addListener { _, new ->
+            isVisible = new.isNotEmpty()
+        }
+    }
 
     private val replaceWildlifeButton = Button(
         width = 200,
@@ -256,8 +274,11 @@ class GameScene(
     ).apply {
         onMouseClicked = {
             //check overpopulation
-            rootService.playerActionService.replaceWildlifeTokens(hasThreeSameWildlifeTokens().second)
-            this.isDisabled = true
+            if (state == ConnectionState.PLAYING_MY_TURN) {
+                rootService.playerActionService.replaceWildlifeTokens(hasThreeSameWildlifeTokens().second)
+                this.isDisabled = true
+            } else
+                this.isDisabled = true
         }
     }
 
@@ -392,7 +413,8 @@ class GameScene(
             //playArea,
             playableTile,
             playableToken,
-            ruleSetOverlay
+            ruleSetOverlay,
+            networkStatusArea
         )
 
     }
@@ -526,8 +548,9 @@ class GameScene(
         playableTile[0, 0]?.isDisabled = true
 
         playableToken.isDisabled = false
-        //if (game.currentPlayer.playerType == PlayerType.LOCAL)
-        discardToken.isDisabled = false
+
+        if (game.currentPlayer.playerType == PlayerType.LOCAL || state == ConnectionState.PLAYING_MY_TURN)
+            discardToken.isDisabled = false
 
         //get the List of all Habitats where selected Token can be placed
         val tokenHabitate = game.selectedToken?.let {
@@ -539,7 +562,10 @@ class GameScene(
 
         //enable for each Habitat where Token can be put onMouseClick
         for (habitat in game.currentPlayer.habitat) {
-            if (habitat.value in checkNotNull(tokenHabitate)){// && game.currentPlayer.playerType == PlayerType.LOCAL) {
+            if (habitat.value in checkNotNull(tokenHabitate)
+                && (game.currentPlayer.playerType == PlayerType.LOCAL
+                        || state == ConnectionState.PLAYING_MY_TURN)
+                ) {
                 playArea[habitat.key.second, habitat.key.first] = (habitats[habitat.value] as HexagonView).apply {
                     isDisabled = false
                     onMouseClicked = {
@@ -612,7 +638,6 @@ class GameScene(
         //put the selected Habitat to the left Bottom
         val tileToPlay = game.selectedTile
         checkNotNull(tileToPlay)
-        println(tileToPlay)
         playableTile[0, 0] = (habitats[tileToPlay] as HexagonView).apply {
             onMouseClicked = {
                 rootService.playerActionService.rotateTile()
@@ -737,6 +762,12 @@ class GameScene(
         println("RefreshNext")
     }
 
+    override fun refreshConnectionState(newState: ConnectionState) {
+        networkStatusArea.text = newState.toUIText()
+        state = newState
+        println(state)
+    }
+
     /**
      * [createPossibleHexagons] creates the HexagonView based on the Information of the HabitatTile
      *
@@ -835,9 +866,10 @@ class GameScene(
                     rootService.playerActionService.addTileToHabitat(i)
                 }
             }
-//            if (game.currentPlayer.playerType != PlayerType.LOCAL) {
-//                playArea[i.second, i.first]?.onMouseClicked = null
-//            }
+            if (game.currentPlayer.playerType != PlayerType.LOCAL){
+                if (state != ConnectionState.PLAYING_MY_TURN)
+                    playArea[i.second, i.first]?.onMouseClicked = null
+            }
         }
     }
 
