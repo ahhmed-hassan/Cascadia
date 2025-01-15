@@ -22,7 +22,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
 
         val game = rootService.currentGame
         checkNotNull(game)
-
+        println("TilePair")
         val myTurn = rootService.networkService.connectionState == ConnectionState.PLAYING_MY_TURN
 
         // check if chosenPair is not out of bounds
@@ -39,7 +39,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         game.selectedTile = shopTile
         game.selectedToken = shopToken
 
-        if(myTurn) {
+        if (myTurn) {
             rootService.networkService.placedTileIndex = chosenPair
             rootService.networkService.selectedTokenIndex = chosenPair
         }
@@ -69,6 +69,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         // check if game exists
         val game = rootService.currentGame
         checkNotNull(game)
+        println("CustomTilePair")
 
         val myTurn = rootService.networkService.connectionState == ConnectionState.PLAYING_MY_TURN
 
@@ -86,7 +87,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         game.selectedTile = game.shop[tileIndex].first
         game.selectedToken = game.shop[tokenIndex].second
 
-        if(myTurn) {
+        if (myTurn) {
             rootService.networkService.placedTileIndex = tileIndex
             rootService.networkService.selectedTokenIndex = tokenIndex
             rootService.networkService.usedNatureToken = true
@@ -178,7 +179,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
      * After this function the [entity.CascadiaGame.selectedTile] is set to null
      */
     fun addTileToHabitat(habitatCoordinates: Pair<Int, Int>) {
-
+        println("addTile")
         val myTurn = rootService.networkService.connectionState == ConnectionState.PLAYING_MY_TURN
 
         val offsets = listOf(Pair(-1, 1), Pair(0, 1), Pair(1, 0), Pair(1, -1), Pair(0, -1), Pair(-1, 0))
@@ -197,7 +198,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         game.selectedTile = null
         game.hasPlayedTile = true
 
-        if(myTurn) {
+        if (myTurn) {
             rootService.networkService.tileCoordinates = habitatCoordinates
         }
         onAllRefreshables { refreshAfterHabitatTileAdded() }
@@ -216,6 +217,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         val selectedToken = game.selectedToken
         checkNotNull(selectedToken)
         val currentPlayer = game.currentPlayer
+        println("AddToken")
 
         val myTurn = rootService.networkService.connectionState == ConnectionState.PLAYING_MY_TURN
 
@@ -230,9 +232,11 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         if (tile.isKeystoneTile) {
             currentPlayer.natureToken += 1
         }
-        if(myTurn) {
+        if (myTurn) {
             rootService.networkService.tokenCoordinates =
                 game.currentPlayer.habitat.entries.firstOrNull{ it.value == tile }?.key
+
+            rootService.networkService.sendPlacedMessage()
         }
         game.selectedToken = null
 
@@ -263,7 +267,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
             selectedTile.terrains.lastIndex,
             selectedTile.terrains.removeFirst()
         )
-        if(myTurn) {
+        if (myTurn) {
             rootService.networkService.tileRotation++
         }
 
@@ -280,6 +284,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         checkNotNull(game)
         val selectedToken = game.selectedToken
         checkNotNull(selectedToken)
+        println("discardToken")
 
         val myTurn = rootService.networkService.connectionState == ConnectionState.PLAYING_MY_TURN
 
@@ -287,7 +292,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         game.wildlifeTokenList.shuffle()
         game.selectedToken = null
 
-        if(myTurn) {
+        if (myTurn) {
             rootService.networkService.selectedTokenIndex = null
             rootService.networkService.sendPlacedMessage()
         }

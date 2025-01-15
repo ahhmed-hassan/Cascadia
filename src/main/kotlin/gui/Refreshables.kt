@@ -81,11 +81,11 @@ interface Refreshables {
     /**
      *
      */
-    fun refreshConnectionState(newState : ConnectionState) {}
+    fun refreshConnectionState(newState: ConnectionState) {}
 
     /**
      *
      */
-    fun refreshAfterPlayerJoined(networkPlayers : MutableList<String>) {}
+    fun refreshAfterPlayerJoined(networkPlayers: MutableList<String>) {}
 
 }

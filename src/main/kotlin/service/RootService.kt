@@ -15,8 +15,9 @@ class RootService {
     val playerActionService = PlayerActionService(this)
     val scoringService = ScoringService(this)
     val networkService = NetworkService(this)
+    val easyBotService = EasyBotService(this)
 
-    var currentGame : CascadiaGame? = null
+    var currentGame: CascadiaGame? = null
 
     /**
      * Adds the provided [newRefreshable] to all services connected

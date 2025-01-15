@@ -1,19 +1,20 @@
 package service
 
 import entity.PlayerType
+import tools.aqua.bgw.core.BoardGameApplication.Companion.runOnGUIThread
 
 /**
  * Service for an easy bot
  */
 class EasyBotService(private val rootService: RootService) {
-    val playerActionService = PlayerActionService(rootService)
-    val gameService = GameService(rootService)
+    private val playerActionService = rootService.playerActionService
+    private val gameService = rootService.gameService
 
     //Chances for moves
-    val PLACEWILDLIFECHANCE = 70
-    val USENATURETOKENCHANCE = 10
-    val RESOLVEOVERPOPULATIONCHANCE = 80
-    val REPLACESINGLETOKENCHANCE = 33
+    private val placeWildlifeChance = 70
+    private val useNaturalTokenChance = 10
+    private val resolveOverpopulationChance = 80
+    private val replaceSingleTokenChance = 33
 
     /**
      * takes the Turn for am easy bot
@@ -24,18 +25,19 @@ class EasyBotService(private val rootService: RootService) {
         val player = game.currentPlayer
 
         var hasChosenCustomPair = false
+        var hasReplacedWildlifeTokens = false
 
         /**
          * Resolves the overpopulation of 3 if it is possible and if the chance allows it.
          */
         fun resolveOverpopulation() {
-            if (game.shop.groupBy { it.second }.values.any { it.size == 3 }
-                && RESOLVEOVERPOPULATIONCHANCE <= (1..100).random()
+            if (game.shop.groupBy { it.second?.animal }.values.any { it.size == 3 }
+                && resolveOverpopulationChance >= (1..100).random()
                 && !game.hasReplacedThreeToken) {
 
-                val animal = game.shop.groupBy { it.second }.values.first { it.size == 3 }[0].second
+                val animal = game.shop.groupBy { it.second?.animal }.values.first { it.size == 3 }[0].second?.animal
                 val indices = mutableListOf<Int>()
-                game.shop.forEachIndexed { index, it -> if (it.second == animal) indices.add(index) }
+                game.shop.forEachIndexed { index, it -> if (it.second?.animal == animal) indices.add(index) }
                 playerActionService.replaceWildlifeTokens(indices)
             }
         }
@@ -44,66 +46,89 @@ class EasyBotService(private val rootService: RootService) {
             "PlayerType must be easy bot"
         }
 
-        resolveOverpopulation()
+        delayAction(1000) {
+            resolveOverpopulation()
+        }
 
         //Maybe uses natureToken
-        if (player.natureToken >= 1 && USENATURETOKENCHANCE <= (1..100).random()) {
+        if (player.natureToken >= 1 && useNaturalTokenChance >= (1..100).random()) {
             if ((1..2).random() == 1) {
                 //replace WildelifeTokens
 
                 val list = mutableListOf<Int>()
                 for (i in 0..3) {
-                    if (REPLACESINGLETOKENCHANCE <= (1..100).random()) {
+                    if (replaceSingleTokenChance >= (1..100).random()) {
                         list.add(i)
                     }
                 }
-                playerActionService.replaceWildlifeTokens(list)
+                delayAction(2000) {
+                    playerActionService.replaceWildlifeTokens(list)
+                }
+                hasReplacedWildlifeTokens = true
             } else {
                 //choose CustomPair
 
-                var tile = 0
-                var animal = 0
+                var tile: Int
+                var animal: Int
 
                 do {
                     tile = (0..3).random()
                     animal = (0..3).random()
                 } while (tile == animal)
-
-                playerActionService.chooseCustomPair(tile, animal)
+                delayAction(3000) {
+                    playerActionService.chooseCustomPair(tile, animal)
+                }
                 hasChosenCustomPair = true
             }
         }
 
-        resolveOverpopulation()
+        if (hasReplacedWildlifeTokens) resolveOverpopulation()
 
         //chooses a pair if it has not happened yet
         if (!hasChosenCustomPair) {
-            playerActionService.chooseTokenTilePair((0..3).random())
+            delayAction(3000) {
+                playerActionService.chooseTokenTilePair((0..3).random())
+            }
         }
 
         //maybe rotates the tile before placing
         val rotation = (0..5).random()
         for (i in 1..rotation) {
-            playerActionService.rotateTile()
+            delayAction(4000) {
+                playerActionService.rotateTile()
+            }
         }
 
         //place the tile
-        playerActionService.addTileToHabitat(
-            gameService.getAllPossibleCoordinatesForTilePlacing(player.habitat).random()
-        )
+        delayAction(5000) {
+            playerActionService.addTileToHabitat(
+                gameService.getAllPossibleCoordinatesForTilePlacing(player.habitat).random()
+            )
+        }
 
         //maybe places the wildlife
-        if (PLACEWILDLIFECHANCE <= (1..100).random()) {
-            val selectedToken = game.selectedToken
-            checkNotNull(selectedToken)
-            val tiles = gameService.getAllPossibleTilesForWildlife(selectedToken.animal, player.habitat)
-            if (tiles.isNotEmpty()) {
-                playerActionService.addToken(tiles.random())
-            } else {
-                playerActionService.discardToken()
+        if (placeWildlifeChance >= (1..100).random()) {
+            delayAction(6000) {
+                val selectedToken = game.selectedToken
+                checkNotNull(selectedToken)
+                val tiles = gameService.getAllPossibleTilesForWildlife(selectedToken.animal, player.habitat)
+                if (tiles.isNotEmpty()) {
+                        playerActionService.addToken(tiles.random())
+                } else {
+                        playerActionService.discardToken()
+                }
             }
         } else {
-            playerActionService.discardToken()
+            delayAction(7000) {
+                playerActionService.discardToken()
+            }
         }
+    }
+
+    private fun delayAction(delayMs: Long, action: () -> Unit) {
+        Thread {
+            Thread.sleep(delayMs)
+            runOnGUIThread { action() }
+        }.start()
     }
 }
