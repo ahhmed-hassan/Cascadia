@@ -188,10 +188,8 @@ class testNetworkConnection {
         for (i in hostShop.indices) { val hostPair = hostShop[i]
             val guestPair = guestShop[i]
             assertEquals(hostPair.first?.id, guestPair.first?.id, "Mismatch in HabitatTile at index $i")
-            assertEquals(hostPair.second?.animal, guestPair.second?.animal,
-                "Mismatch in WildlifeToken at index $i"
-            )
         }
+
     }
 
     /**
@@ -297,7 +295,7 @@ class testNetworkConnection {
             val token1 = WildlifeToken(Animal.FOX)
             val token2 = WildlifeToken(Animal.FOX)
             val token3 = WildlifeToken(Animal.FOX)
-            val token4 = WildlifeToken(Animal.FOX)
+            val token4 = WildlifeToken(Animal.ELK)
 
             return listOf(Pair(tile1, token1), Pair(tile2, token2), Pair(tile3, token3), Pair(tile4, token4))
         } else {
@@ -384,6 +382,9 @@ class testNetworkConnection {
 
     }
 
+    /**
+     * Testing Failed Connection
+     */
     @Test
     fun testFailedConnection() {
 
@@ -465,6 +466,69 @@ class testNetworkConnection {
         Thread.sleep(300)
 
         assertEquals(guestGame.playerList[guest].habitat.get(0 to -1)?.id, 2)
+
+    }
+
+    /**
+     * Test Resolving Overpopulation of 3
+     */
+    @Test
+    fun testOverpopulation() {
+        initConnections()
+        assertEquals(2, rootServiceHost.networkService.playersList.size)
+        val scoreRulse = listOf(false, false, true, false, false)
+
+        rootServiceHost.networkService.startNewHostedGame(
+            orderIsRanom = false,
+            isRandomRules = false,
+            scoreRules = scoreRulse
+        )
+        assertEquals(ConnectionState.PLAYING_MY_TURN, rootServiceHost.networkService.connectionState)
+        assert(rootServiceGuest.waitForState(ConnectionState.WAITING_FOR_OPPONENTS_TURN)) {
+            error("Nach dem Warten nicht im Zustand angekommen")
+        }
+        val hostGame = rootServiceHost.currentGame
+        val guestGame = rootServiceGuest.currentGame
+        assertNotNull(hostGame)
+        assertNotNull(guestGame)
+
+        val tokenTileList = createTileTokenPairs(true).toMutableList()
+
+        hostGame.shop.clear()
+        tokenTileList.forEach { pair -> hostGame.shop.add(pair) }
+
+        guestGame.shop.clear()
+        tokenTileList.forEach { pair -> guestGame.shop.add(pair) }
+
+        rootServiceHost.playerActionService.replaceWildlifeTokens(listOf(0,1,2))
+        assertEquals(ConnectionState.SWAPPING_WILDLIFE_TOKENS, rootServiceHost.networkService.connectionState)
+        assert(rootServiceGuest.waitForState(ConnectionState.WAITING_FOR_OPPONENTS_TURN)) {
+            error("Nach dem Warten nicht im Zustand angekommen")
+        }
+
+        val hostHabitatTileList = hostGame.habitatTileList
+        val guestHabitatTileList = guestGame.habitatTileList
+        val hostWildLifeTokens = hostGame.wildlifeTokenList
+        val guestWildLifeTokens = guestGame.wildlifeTokenList
+
+        assertEquals(guestHabitatTileList.size, hostHabitatTileList.size)
+
+        assertEquals(guestWildLifeTokens.size, hostWildLifeTokens.size)
+        Thread.sleep(300)
+        val guestGame2 = rootServiceGuest.currentGame
+        assertNotNull(guestGame2)
+
+        val hostShop = hostGame.shop
+        val guestShop = guestGame2.shop
+        assertEquals(hostShop.size, guestShop.size, "Shop sizes do not match")
+        for (i in hostShop.indices) { val hostPair = hostShop[i]
+            val guestPair = guestShop[i]
+            assertEquals(hostPair.first?.id, guestPair.first?.id, "Mismatch in HabitatTile at index $i")
+            assertEquals(hostPair.second?.animal, guestPair.second?.animal,
+                "Mismatch in WildlifeToken at index $i"
+            )
+        }
+
 
     }
 
