@@ -32,12 +32,7 @@ class HardBotService(private val rootService: RootService) {
         threads.forEach { it.interrupt() }
         thread.join()
         println("All stopped")
-        possibilities.forEach {
-            if (it.wildLifeChance != null) {
-                if (it.wildLifeChance != 1.0)
-                    println("Score: " + it.getScore() + " Chance: " + it.wildLifeChance)
-            }
-        }
+
     }
 
     private fun takeAsyncTurn(
