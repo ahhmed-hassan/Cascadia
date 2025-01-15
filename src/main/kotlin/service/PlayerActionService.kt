@@ -39,7 +39,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         game.selectedTile = shopTile
         game.selectedToken = shopToken
 
-        if(myTurn) {
+        if (myTurn) {
             rootService.networkService.placedTileIndex = chosenPair
             rootService.networkService.selectedTokenIndex = chosenPair
         }
@@ -87,7 +87,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         game.selectedTile = game.shop[tileIndex].first
         game.selectedToken = game.shop[tokenIndex].second
 
-        if(myTurn) {
+        if (myTurn) {
             rootService.networkService.placedTileIndex = tileIndex
             rootService.networkService.selectedTokenIndex = tokenIndex
             rootService.networkService.usedNatureToken = true
@@ -198,7 +198,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         game.selectedTile = null
         game.hasPlayedTile = true
 
-        if(myTurn) {
+        if (myTurn) {
             rootService.networkService.tileCoordinates = habitatCoordinates
         }
         onAllRefreshables { refreshAfterHabitatTileAdded() }
@@ -232,9 +232,11 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         if (tile.isKeystoneTile) {
             currentPlayer.natureToken += 1
         }
-        if(myTurn) {
+        if (myTurn) {
             rootService.networkService.tokenCoordinates =
                 game.currentPlayer.habitat.entries.firstOrNull{ it.value == tile }?.key
+
+            rootService.networkService.sendPlacedMessage()
         }
         game.selectedToken = null
 
@@ -265,7 +267,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
             selectedTile.terrains.lastIndex,
             selectedTile.terrains.removeFirst()
         )
-        if(myTurn) {
+        if (myTurn) {
             rootService.networkService.tileRotation++
         }
 
@@ -290,7 +292,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         game.wildlifeTokenList.shuffle()
         game.selectedToken = null
 
-        if(myTurn) {
+        if (myTurn) {
             rootService.networkService.selectedTokenIndex = null
             rootService.networkService.sendPlacedMessage()
         }

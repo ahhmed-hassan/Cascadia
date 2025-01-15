@@ -26,6 +26,8 @@ class DiscardTokenTest {
         val game = rootServ.currentGame
         checkNotNull(game)
 
+
+
         assertEquals(null, game.selectedToken)
 
         game.selectedToken = WildlifeToken(Animal.FOX)

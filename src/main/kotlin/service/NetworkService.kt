@@ -47,6 +47,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         if (!connect(secret, name, playerType)) {
             error("Connection failed")
         }
+        this.playersList.add(name)
         updateConnectionState(ConnectionState.CONNECTED)
 
         if (sessionID.isNullOrBlank()) {
@@ -144,7 +145,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
      * @throws IllegalStateException if no client is connected, ensuring the client object is properly initialized.
      *
      */
-    fun startNewJoinedGame(message: GameInitMessage) {
+    fun startNewJoinedGame(message: edu.udo.cs.sopra.ntf.messages.GameInitMessage) {
         check(connectionState == ConnectionState.WAITING_FOR_INIT) {
             "Not waiting for game init message."
         }
@@ -174,6 +175,23 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         rootService.currentGame?.wildlifeTokenList = message.initWildlifeTokens.map { animal ->
             WildlifeToken(LocalAnimal.valueOf(animal.name))
         }.toMutableList()
+        val allHabitatTiles = rootService.gameService.getHabitatTiles()
+        val newHabitatTileList = message.habitatTileList.mapNotNull { id ->
+            allHabitatTiles.find { it.id == id } // Finde das Tile mit der entsprechenden ID
+        }
+        val currentGame = checkNotNull(rootService.currentGame)
+        currentGame.habitatTileList = newHabitatTileList.toMutableList()
+        currentGame.shop?.clear()
+        currentGame.let { game ->
+            val shop = game.habitatTileList.take(4).mapIndexed { index, tile ->
+                (tile ?: null) to game.wildlifeTokenList.getOrNull(index)
+            }.toMutableList()
+            game.shop = shop
+        }
+
+        //Remove the used habitat tiles and wildlife tokens from the main list.
+        currentGame.habitatTileList.removeAll(currentGame.shop.map { it.first })
+        currentGame.wildlifeTokenList.removeAll(currentGame.shop.map { it.second })
 
         // Check if current player is the first player to play
         if (index == 0) {
@@ -197,7 +215,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
      * @throws IllegalStateException if there is no current game or the sender is not the current player.
      *
      */
-    fun resolvedOverPopulationMessage(message: ResolveOverpopulationMessage, sender: String) {
+    fun resolvedOverPopulationMessage(sender: String) {
 
         val game = rootService.currentGame
         checkNotNull(game) { "there is no active game." }
@@ -260,10 +278,10 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         if (game.currentPlayer.name != sender) {
             throw IllegalStateException("the sender is not the current player")
         }
-
         game.wildlifeTokenList = message.shuffledWildlifeTokens.map { animal ->
             WildlifeToken(LocalAnimal.valueOf(animal.name))
         }.toMutableList()
+
     }
 
     /**
@@ -288,13 +306,14 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
             throw IllegalStateException("the sender is not the current player.")
         }
 
+        // Ensure the placed tile is within valid indices.
+        check(message.placedTile in game.shop.indices)
+        game.shop[message.placedTile].first?.wildlifeToken = null
+
         // Validate and extract tile coordinates.
         val qCoordTile = requireNotNull(message.qcoordTile) { "qCoordTile must not be null" }
         val rCoordTile = requireNotNull(message.rcoordTile) { "rCoordTile must not be null" }
         val habitatCoordinates = Pair(qCoordTile, rCoordTile)
-
-        // Ensure the placed tile is within valid indices.
-        check(message.placedTile in game.shop.indices)
 
         if (message.selectedToken != null) {
             // Validate the selected token's index and coordinates if a token is provided.
@@ -333,9 +352,6 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
             WildlifeToken(LocalAnimal.valueOf(animal.name))
         }.toMutableList()
 
-        // Advance to the next turn in the game.
-        rootService.gameService.nextTurn()
-
         // Update the connection state based on the current player.
         if (client?.playerName == game.currentPlayer.name) {
             updateConnectionState(ConnectionState.PLAYING_MY_TURN)
@@ -371,6 +387,9 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
             require(index in game.shop.indices) { "Invalid token index: $index" }
         }
 
+        require(game.currentPlayer.natureToken > 0)
+        game.currentPlayer.natureToken--
+
         // Execute token replacement using the provided indices, marking the nature token as used.
         rootService.gameService.executeTokenReplacement(message.swappedSelectedTokens,
             true,
@@ -395,9 +414,11 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
     private fun sendGameInitMessage() {
         // Ensure there is an active game and retrieve the current game instance.
         val game = checkNotNull(rootService.currentGame) { "Game not found" }
-
+        val shopTileIds = game.shop.map { it.first?.id }
+        val shopTokenAnimals = game.shop.map { it.second?.animal }
+        val shop = shopTokenAnimals.map { token -> token?.let { Animal.valueOf(it.name) } }
         // Extract IDs of habitat tiles.
-        val habitateTileIds = game.habitatTileList.map { it.id }
+        val habitateTileIds = shopTileIds.filterNotNull() + game.habitatTileList.map { it.id }
 
         // Extract player names from the player list.
         val playerNames = game.playerList.map { it.name }
@@ -411,7 +432,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         val startTiles = (1..playerNames.size).toList()
 
         // Extract wildlife tokens from the game and map them to their animal type.
-        val wildLifeTokens = game.wildlifeTokenList.map { token ->
+        val wildLifeTokens = shop.filterNotNull() + game.wildlifeTokenList.map { token ->
             Animal.valueOf(token.animal.name)
         }
 
@@ -521,12 +542,19 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
      * @throws IllegalArgumentException if no network client is found.
      */
     fun sendResolvedOverPopulationMessage() {
-        require(connectionState == ConnectionState.SWAPPING_WILDLIFE_TOKENS) { "not my turn" }
+        require(connectionState == ConnectionState.SWAPPING_WILDLIFE_TOKENS ||
+                connectionState == ConnectionState.PLAYING_MY_TURN) { "not my turn" }
+
+        if (connectionState == ConnectionState.PLAYING_MY_TURN) {
+            updateConnectionState(ConnectionState.SWAPPING_WILDLIFE_TOKENS)
+        }
         val message = ResolveOverpopulationMessage()
 
         // Ensure there is a network client and send the message.
         val networkClient = checkNotNull(client) { "No network client found" }
         networkClient.sendGameActionMessage(message)
+
+
     }
 
     /**

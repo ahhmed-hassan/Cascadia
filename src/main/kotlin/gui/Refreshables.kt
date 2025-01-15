@@ -1,6 +1,5 @@
 package gui
 
-import entity.HabitatTile
 import service.AbstractRefreshingService
 import service.ConnectionState
 import service.ScoringService
@@ -61,7 +60,7 @@ interface Refreshables {
     /**
      *
      */
-    fun refreshAfterWildlifeTokenAdded(habitatTile: HabitatTile) {}
+    fun refreshAfterWildlifeTokenAdded() {}
 
     /**
      *
@@ -81,11 +80,11 @@ interface Refreshables {
     /**
      *
      */
-    fun refreshConnectionState(newState : ConnectionState) {}
+    fun refreshConnectionState(newState: ConnectionState) {}
 
     /**
      *
      */
-    //fun refreshAfterPlayerJoined(networkPlayers : MutableList<String>)
+    fun refreshAfterPlayerJoined(networkPlayers: MutableList<String>) {}
 
 }

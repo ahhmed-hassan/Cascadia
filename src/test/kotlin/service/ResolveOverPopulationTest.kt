@@ -32,7 +32,7 @@ class ResolveOverPopulationTest {
         val tile1 = HabitatTile( 1, false, 0, listOf(Animal.FOX), null,
             mutableListOf(Terrain.FOREST)
         )
-        val tile2 = HabitatTile( 2, false, 0, listOf(Animal.FOX), null,
+            val tile2 = HabitatTile( 2, false, 0, listOf(Animal.FOX), WildlifeToken(Animal.FOX),
             mutableListOf(Terrain.RIVER)
         )
         val tile3 = HabitatTile( 3, false, 0, listOf(Animal.FOX), null,
