@@ -85,7 +85,8 @@ class HardBotService(private val rootService: RootService) {
             }
         }
 
-        var maxNumberOfThreads = Runtime.getRuntime().availableProcessors()
+        val maxNumberOfThreads = Runtime.getRuntime().availableProcessors()
+        println("Available Processors: $maxNumberOfThreads")
         for (i in 1..maxNumberOfThreads) {
             threads.add(
                 Thread {
@@ -146,11 +147,11 @@ class HardBotService(private val rootService: RootService) {
         points += service.calculateFoxScore(habitat)
         points += service.calculateHawkScore(habitat)
 
-//        points += service.calculateLongestTerrain(Terrain.WETLAND, habitat)
-//        points += service.calculateLongestTerrain(Terrain.RIVER, habitat)
-//        points += service.calculateLongestTerrain(Terrain.FOREST, habitat)
-//        points += service.calculateLongestTerrain(Terrain.PRAIRIE, habitat)
-//        points += service.calculateLongestTerrain(Terrain.MOUNTAIN, habitat)
+        points += service.calculateLongestTerrain(Terrain.WETLAND, habitat)
+        points += service.calculateLongestTerrain(Terrain.RIVER, habitat)
+        points += service.calculateLongestTerrain(Terrain.FOREST, habitat)
+        points += service.calculateLongestTerrain(Terrain.PRAIRIE, habitat)
+        points += service.calculateLongestTerrain(Terrain.MOUNTAIN, habitat)
 
         return points
     }
@@ -187,7 +188,9 @@ class HardBotService(private val rootService: RootService) {
 
         val customPair = employer.customPair
         if (customPair != null) {
-            habitat[employer.tilePlacement] = checkNotNull(shop[customPair.first].first)
+            val curTile = checkNotNull(shop[customPair.first].first)
+            for (i in 0..employer.rotation) rotateTile(curTile)
+            habitat[employer.tilePlacement] = curTile
             habitat.forEach { habitatTile ->
                 if (habitatTile.value.id == employer.wildlifePlacementId) {
                     habitatTile.value.wildlifeToken = shop[customPair.second].second
@@ -197,7 +200,9 @@ class HardBotService(private val rootService: RootService) {
             shop[customPair.second] = Pair(shop[customPair.second].first, animals.removeFirst())
         } else {
             val index = shop.indexOfFirst { it.first == tile }
-            habitat[employer.tilePlacement] = checkNotNull(shop[index].first)
+            val curTile = checkNotNull(shop[index].first)
+            for (i in 0..employer.rotation) rotateTile(curTile)
+            habitat[employer.tilePlacement] = curTile
             habitat.forEach { habitatTile ->
                 if (habitatTile.value.id == employer.wildlifePlacementId) {
                     habitatTile.value.wildlifeToken = shop[index].second
@@ -284,11 +289,8 @@ class HardBotService(private val rootService: RootService) {
                             val token = checkNotNull(it.second)
                             token.animal
                         }) {
-
                         tokenChance = 1
-
                         val firstPair = shop.find { checkNotNull(it.second).animal == animal }
-
                         selectedToken = checkNotNull(firstPair).second
                         selectedTokenIndex = shop.indexOf(firstPair)
                     } else if (player.natureToken > 1) {
