@@ -46,9 +46,8 @@ class WinningMenuScene(val rootService: RootService) : MenuScene(1920, 1080), Re
         posX = 150,
         posY = 150,
         alignment = Alignment.CENTER,
-        font = Font(20),
-        text = "1. Player1 : 62" //${rootService.scoringService.calculateScore()}
-        )
+        font = Font(20)
+    )
 
     private val player2Label = Label(
         width = 400,
@@ -56,8 +55,7 @@ class WinningMenuScene(val rootService: RootService) : MenuScene(1920, 1080), Re
         posX = 150,
         posY = 210,
         alignment = Alignment.CENTER,
-        font = Font(20),
-        text = "2. Player2 : 52" //${rootService.scoringService.calculateScore()}
+        font = Font(20)
     )
 
     private val player3Label = Label(
@@ -66,8 +64,7 @@ class WinningMenuScene(val rootService: RootService) : MenuScene(1920, 1080), Re
         posX = 150,
         posY = 270,
         alignment = Alignment.CENTER,
-        font = Font(20),
-        text = "3. Player3 : 42" //${rootService.scoringService.calculateScore()}
+        font = Font(20)
     )
 
     private val player4Label = Label(
@@ -76,8 +73,7 @@ class WinningMenuScene(val rootService: RootService) : MenuScene(1920, 1080), Re
         posX = 150,
         posY = 330,
         alignment = Alignment.CENTER,
-        font = Font(20),
-        text = "4. Player4 : 32" //${rootService.scoringService.calculateScore()}
+        font = Font(20)
     )
 
     val exitButton = Button(
@@ -89,6 +85,7 @@ class WinningMenuScene(val rootService: RootService) : MenuScene(1920, 1080), Re
         visual = ColorVisual(255, 255, 255)
     ).apply {
         onMouseClicked = {
+            // Exit the game or return to the main menu
         }
     }
 
@@ -104,6 +101,23 @@ class WinningMenuScene(val rootService: RootService) : MenuScene(1920, 1080), Re
             exitButton
         )
         addComponents(overlay)
+        updateScores()
     }
 
+    private fun updateScores() {
+        val game = rootService.currentGame
+        checkNotNull(game) { return }
+
+        val scores = rootService.scoringService.calculateScore()
+        val sortedScores = scores.entries.sortedByDescending { it.value.sum() }
+
+        val playerLabels = listOf(player1Label, player2Label, player3Label, player4Label)
+
+        playerLabels.forEachIndexed { index, label ->
+            label.text = ""
+            sortedScores.getOrNull(index)?.let { (name, score) ->
+                label.text = "${index + 1}. $name : ${score.sum()} (Details: Animals: ${score.animalsScores}, Terrains: ${score.ownLongestTerrainsScores}, Nature Tokens: ${score.natureTokens})"
+            }
+        }
+    }
 }
