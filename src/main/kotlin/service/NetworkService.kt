@@ -9,9 +9,9 @@ import edu.udo.cs.sopra.ntf.entity.Animal as RemoteAnimal
 import java.lang.IllegalStateException
 
 /**
-* Service layer class that realizes the necessary logic for sending and receiving messages
-* in multiplayer network games.
-*/
+ * Service layer class that realizes the necessary logic for sending and receiving messages
+ * in multiplayer network games.
+ */
 class NetworkService (private  val rootService: RootService) : AbstractRefreshingService() {
 
     companion object {
@@ -87,7 +87,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
      * player order, and order of startTiles. It also ensures that the system is in the correct
      * connection state to host a game and updates the connection state based on the player's turn.
      *
-     * @param orderIsRandom Indicates whether the player order should be randomized.
+     * @param orderIsRanom Indicates whether the player order should be randomized.
      * @param isRandomRules Indicates whether the game rules should be randomized.
      * @param scoreRules A list of boolean values defining the scoring rules for the game.
      *                   ( [true] for B [false] for A).
@@ -98,7 +98,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
      *                               the game and client are properly initialized.
      *
      */
-    fun startNewHostedGame(orderIsRandom : Boolean, isRandomRules : Boolean, scoreRules : List<Boolean>) {
+    fun startNewHostedGame(orderIsRanom : Boolean, isRandomRules : Boolean, scoreRules : List<Boolean>) {
         check(connectionState == ConnectionState.WAITING_FOR_GUESTS)
         { "currently not prepared to start a new hosted game." }
 
@@ -108,7 +108,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         rootService.gameService.startNewGame(
             playerNames,
             scoreRules,
-            orderIsRandom,
+            orderIsRanom,
             isRandomRules,
             null,
         )
@@ -329,7 +329,6 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
                 rootService.playerActionService.addTileToHabitat(habitatCoordinates)
                 val targetTile = game.currentPlayer.habitat[wildlifeTokenCoordinates]
                 checkNotNull(targetTile)
-                println(targetTile.wildlifeToken)
                 rootService.playerActionService.addToken(targetTile)
             } else {
                 // Execute actions if no nature token is used.
@@ -631,10 +630,10 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
     }
 
     /**
-    * Disconnects the [client] from the server, nulls it and updates the
-    * [connectionState] to [ConnectionState.DISCONNECTED]. Can safely be called
-    * even if no connection is currently active.
-    */
+     * Disconnects the [client] from the server, nulls it and updates the
+     * [connectionState] to [ConnectionState.DISCONNECTED]. Can safely be called
+     * even if no connection is currently active.
+     */
     fun disconnect() {
         client?.apply {
             if (sessionID != null) leaveGame("Goodbye!")

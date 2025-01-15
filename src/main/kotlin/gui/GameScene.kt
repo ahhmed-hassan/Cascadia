@@ -526,8 +526,8 @@ class GameScene(
         playableTile[0, 0]?.isDisabled = true
 
         playableToken.isDisabled = false
-        if (game.currentPlayer.playerType == PlayerType.LOCAL)
-            discardToken.isDisabled = false
+        //if (game.currentPlayer.playerType == PlayerType.LOCAL)
+        discardToken.isDisabled = false
 
         //get the List of all Habitats where selected Token can be placed
         val tokenHabitate = game.selectedToken?.let {
@@ -539,7 +539,7 @@ class GameScene(
 
         //enable for each Habitat where Token can be put onMouseClick
         for (habitat in game.currentPlayer.habitat) {
-            if (habitat.value in checkNotNull(tokenHabitate) && game.currentPlayer.playerType == PlayerType.LOCAL) {
+            if (habitat.value in checkNotNull(tokenHabitate)){// && game.currentPlayer.playerType == PlayerType.LOCAL) {
                 playArea[habitat.key.second, habitat.key.first] = (habitats[habitat.value] as HexagonView).apply {
                     isDisabled = false
                     onMouseClicked = {
@@ -612,6 +612,7 @@ class GameScene(
         //put the selected Habitat to the left Bottom
         val tileToPlay = game.selectedTile
         checkNotNull(tileToPlay)
+        println(tileToPlay)
         playableTile[0, 0] = (habitats[tileToPlay] as HexagonView).apply {
             onMouseClicked = {
                 rootService.playerActionService.rotateTile()
@@ -834,9 +835,9 @@ class GameScene(
                     rootService.playerActionService.addTileToHabitat(i)
                 }
             }
-            if (game.currentPlayer.playerType != PlayerType.LOCAL) {
-                playArea[i.second, i.first]?.onMouseClicked = null
-            }
+//            if (game.currentPlayer.playerType != PlayerType.LOCAL) {
+//                playArea[i.second, i.first]?.onMouseClicked = null
+//            }
         }
     }
 

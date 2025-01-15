@@ -260,7 +260,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             if (randomOrderToggle.isSelected) { randomOrder = true }
             if (randomRuleToggle.isSelected) { randomRule = true}
             rules = determineRules()
-            rootService.networkService.startNewHostedGame(orderIsRandom = randomOrder, isRandomRules = randomRule, scoreRules = rules)
+            rootService.networkService.startNewHostedGame(orderIsRanom = randomOrder, isRandomRules = randomRule, scoreRules = rules)
             rules.clear()
 
         }
@@ -433,8 +433,6 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     override fun refreshAfterPlayerJoined(networkPlayers: MutableList<String>) {
         playerNameFields.forEach { overlay.remove(it) }
         playerNameFields.clear()
-        playerNameFields.add(playersField)
-        overlay.add(playersField)
 
         networkPlayers.forEachIndexed { index, playerName ->
             val playerNameField = TextField(
