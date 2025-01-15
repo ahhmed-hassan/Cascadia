@@ -28,25 +28,25 @@ import java.awt.Color
 import kotlin.math.cos
 import kotlin.math.sin
 
-class GameScene (
+class GameScene(
     val rootService: RootService,
     private val hotSeatConfigurationMenuScene: HotSeatConfigurationMenuScene,
     private val networkJoinMenuScene: NetworkJoinMenuScene,
     private val networkConfigurationMenuScene: NetworkConfigurationMenuScene
 ) : BoardGameScene(1920, 1080), Refreshables {
 
-    private val habitats : BidirectionalMap<HabitatTile,HexagonView> = BidirectionalMap()
-    private var selectedHabitat : Int = 0
-    private var selectedToken : Int = 0
-    private var selectedHabitatX : Int = 0
-    private var selectedHabitatY : Int = 0
-    private var selectedShopToken : MutableList<Int> = mutableListOf()
-    private var custom : Boolean = false
+    private val habitats: BidirectionalMap<HabitatTile, HexagonView> = BidirectionalMap()
+    private var selectedHabitat: Int = 0
+    private var selectedToken: Int = 0
+    private var selectedHabitatX: Int = 0
+    private var selectedHabitatY: Int = 0
+    private var selectedShopToken: MutableList<Int> = mutableListOf()
+    private var custom: Boolean = false
     private var currentXCamera = 0
     private var currentYCamera = 0
     private var speed = 0
 
-    private val shopHabitats = GridPane<HexagonView> (
+    private val shopHabitats = GridPane<HexagonView>(
         posX = 1400,
         posY = 100,
         rows = 1,
@@ -55,7 +55,7 @@ class GameScene (
         visual = ColorVisual(Color.GRAY)
     )
 
-    private val shopTokens = GridPane<HexagonView> (
+    private val shopTokens = GridPane<HexagonView>(
         posX = 1400,
         posY = 250,
         rows = 1,
@@ -65,8 +65,8 @@ class GameScene (
     )
 
     private val playArea = HexagonGrid<HexagonView>(
-        posX = 1920/2-100,
-        posY = 1080/2-100,
+        posX = 1920 / 2 - 100,
+        posY = 1080 / 2 - 100,
         width = 0,
         height = 0,
         coordinateSystem = HexagonGrid.CoordinateSystem.AXIAL
@@ -86,7 +86,7 @@ class GameScene (
         rows = 1,
     )
 
-    private val targetLayout = Pane<ComponentView> (width = 1920, height = 1080)
+    private val targetLayout = Pane<ComponentView>(width = 1920, height = 1080)
     private val cameraPane = CameraPane(
         width = 1920,
         height = 1080,
@@ -134,22 +134,24 @@ class GameScene (
     ).apply {
         onMouseClicked = {
             updateButtonStates("replaceWildlife")
-            for (i in 0..3){
-                shopTokens[i,0]?.onMouseClicked = { mouseEvent ->
-                    when (mouseEvent.button){
-                        MouseButtonType.LEFT_BUTTON->{
-                            shopTokens[i,0]?.apply {
+            for (i in 0..3) {
+                shopTokens[i, 0]?.onMouseClicked = { mouseEvent ->
+                    when (mouseEvent.button) {
+                        MouseButtonType.LEFT_BUTTON -> {
+                            shopTokens[i, 0]?.apply {
                                 posY -= 25
                             }
                             selectedShopToken.add(i)
                         }
-                        MouseButtonType.RIGHT_BUTTON->{
-                            shopTokens[i,0]?.apply {
+
+                        MouseButtonType.RIGHT_BUTTON -> {
+                            shopTokens[i, 0]?.apply {
                                 posY = 0.01
                             }
                             selectedShopToken.remove(i)
                         }
-                        else ->{}
+
+                        else -> {}
                     }
                 }
             }
@@ -173,7 +175,7 @@ class GameScene (
                 enableAllHabitats()
                 natureTokenLabel.apply { text = "NatureToken: " + game.currentPlayer.natureToken.toString() }
                 custom = false
-            }else {
+            } else {
                 rootService.playerActionService.replaceWildlifeTokens(selectedShopToken)
                 natureTokenLabel.apply { text = "NatureToken: " + game.currentPlayer.natureToken.toString() }
 
@@ -196,42 +198,44 @@ class GameScene (
 
             custom = true
             for (i in 0..3) {
-                shopTokens[i,0]?.onMouseClicked = { mouseEvent ->
-                        when (mouseEvent.button) {
-                            MouseButtonType.RIGHT_BUTTON -> {
-                                shopTokens[i,0]?.apply {
-                                    posY = 0.01
-                                }
-                                enableAllTokens()
-                            }
-
-                            MouseButtonType.LEFT_BUTTON -> {
-                                shopTokens[i,0]?.apply {
-                                    posY -= 25
-                                }
-                                selectedToken = i
-                                disableTokensExcept(checkNotNull(shopTokens[i,0]))
-                            }
-                            else -> {}
-                        }
-                }
-
-                shopHabitats[i,0]?.onMouseClicked = { mouseEvent ->
+                shopTokens[i, 0]?.onMouseClicked = { mouseEvent ->
                     when (mouseEvent.button) {
                         MouseButtonType.RIGHT_BUTTON -> {
-                            shopHabitats[i,0]?.apply {
+                            shopTokens[i, 0]?.apply {
+                                posY = 0.01
+                            }
+                            enableAllTokens()
+                        }
+
+                        MouseButtonType.LEFT_BUTTON -> {
+                            shopTokens[i, 0]?.apply {
+                                posY -= 25
+                            }
+                            selectedToken = i
+                            disableTokensExcept(checkNotNull(shopTokens[i, 0]))
+                        }
+
+                        else -> {}
+                    }
+                }
+
+                shopHabitats[i, 0]?.onMouseClicked = { mouseEvent ->
+                    when (mouseEvent.button) {
+                        MouseButtonType.RIGHT_BUTTON -> {
+                            shopHabitats[i, 0]?.apply {
                                 posY = 0.01
                             }
                             enableAllHabitats()
                         }
 
                         MouseButtonType.LEFT_BUTTON -> {
-                            shopHabitats[i,0]?.apply {
+                            shopHabitats[i, 0]?.apply {
                                 posY -= 25
                             }
                             selectedHabitat = i
-                            disableHabitatsExcept(checkNotNull(shopHabitats[i,0]))
+                            disableHabitatsExcept(checkNotNull(shopHabitats[i, 0]))
                         }
+
                         else -> {}
                     }
                 }
@@ -342,32 +346,32 @@ class GameScene (
 
         onKeyPressed = {
             //go left with camera
-            if (it.keyCode == KeyCode.A){
+            if (it.keyCode == KeyCode.A) {
                 currentXCamera += -100
-                cameraPane.reposition(currentXCamera,currentYCamera)
+                cameraPane.reposition(currentXCamera, currentYCamera)
             }
 
             //go up with camera
-            if (it.keyCode == KeyCode.W){
+            if (it.keyCode == KeyCode.W) {
                 currentYCamera += -100
-                cameraPane.reposition(currentXCamera,currentYCamera)
+                cameraPane.reposition(currentXCamera, currentYCamera)
             }
 
             //go right with camera
-            if (it.keyCode == KeyCode.D){
+            if (it.keyCode == KeyCode.D) {
                 currentXCamera += 100
-                cameraPane.reposition(currentXCamera,currentYCamera)
+                cameraPane.reposition(currentXCamera, currentYCamera)
             }
 
             //go down with camera
-            if (it.keyCode == KeyCode.S){
+            if (it.keyCode == KeyCode.S) {
                 currentYCamera += 100
-                cameraPane.reposition(currentXCamera,currentYCamera)
+                cameraPane.reposition(currentXCamera, currentYCamera)
             }
 
             //reset the pane to original position
-            if (it.keyCode == KeyCode.R){
-                cameraPane.reposition(0,0)
+            if (it.keyCode == KeyCode.R) {
+                cameraPane.reposition(0, 0)
                 currentXCamera = 0
                 currentYCamera = 0
             }
@@ -411,25 +415,28 @@ class GameScene (
             elkRule,
             foxRule,
             hawkRule,
-            salmonRule)
+            salmonRule
+        )
 
         //create a HexagonView for each tile
         for (habitat in game.habitatTileList)
             habitats[habitat] = createLabeledHexagonView(
                 color = habitat.isKeystoneTile,
                 labels = habitat.terrains.map { terrain: Terrain ->
-                    (terrain.name.substring(0, 1)) },
-                tokens = habitat.wildlifeSymbols.map { animal: Animal -> animal.name.substring(0,1) }
+                    (terrain.name.substring(0, 1))
+                },
+                tokens = habitat.wildlifeSymbols.map { animal: Animal -> animal.name.substring(0, 1) }
             )
 
         //create a HexagonView for each shopTile
-        for (habitat in game.shop){
+        for (habitat in game.shop) {
             val habitate = checkNotNull(habitat.first)
             habitats[habitate] = createLabeledHexagonView(
                 color = habitate.isKeystoneTile,
                 labels = habitate.terrains.map { terrain: Terrain ->
-                    (terrain.name.substring(0, 1)) },
-                tokens = habitate.wildlifeSymbols.map { animal: Animal -> animal.name.substring(0,1) }
+                    (terrain.name.substring(0, 1))
+                },
+                tokens = habitate.wildlifeSymbols.map { animal: Animal -> animal.name.substring(0, 1) }
             )
         }
 
@@ -439,27 +446,28 @@ class GameScene (
                 habitats[habitate] = createLabeledHexagonView(
                     color = habitate.isKeystoneTile,
                     labels = habitate.terrains.map { terrain: Terrain ->
-                        (terrain.name.substring(0, 1)) },
-                    tokens = habitate.wildlifeSymbols.map { animal: Animal -> animal.name.substring(0,1) }
+                        (terrain.name.substring(0, 1))
+                    },
+                    tokens = habitate.wildlifeSymbols.map { animal: Animal -> animal.name.substring(0, 1) }
                 )
             }
         }
 
         //add the views to the shop
-        for (i in 0..3){
-            shopHabitats[i,0] = habitats[game.shop[i].first!!] as HexagonView
+        for (i in 0..3) {
+            shopHabitats[i, 0] = habitats[game.shop[i].first!!] as HexagonView
             //create HexagonViews for the Token
-            shopTokens[i,0] = game.shop[i].second?.animal?.let { createTokens(it.name) }
+            shopTokens[i, 0] = game.shop[i].second?.animal?.let { createTokens(it.name) }
         }
 
         //If player Clicks on any Habitat or Token that vertical pair is chosen
-        for (i in 0..3){
-            shopTokens[i,0]?.apply {
+        for (i in 0..3) {
+            shopTokens[i, 0]?.apply {
                 onMouseClicked = {
                     rootService.playerActionService.chooseTokenTilePair(i)
                 }
             }
-            shopHabitats[i,0]?.apply {
+            shopHabitats[i, 0]?.apply {
                 onMouseClicked = {
                     rootService.playerActionService.chooseTokenTilePair(i)
                 }
@@ -467,8 +475,8 @@ class GameScene (
         }
 
         //add all habitats for the starting player to the playField
-        for (habitat in game.currentPlayer.habitat){
-            playArea[habitat.key.second,habitat.key.first] = habitats[habitat.value] as HexagonView
+        for (habitat in game.currentPlayer.habitat) {
+            playArea[habitat.key.second, habitat.key.first] = habitats[habitat.value] as HexagonView
         }
 
         discardToken.isDisabled = true
@@ -478,19 +486,19 @@ class GameScene (
         currentPlayerLabel.apply { text = game.currentPlayer.name }
 
         //Disable resolveOverpopulation if already done or not possible
-        if (game.hasReplacedThreeToken || !hasThreeSameWildlifeTokens().first){
+        if (game.hasReplacedThreeToken || !hasThreeSameWildlifeTokens().first) {
             resolveOverpopButton.isDisabled = true
         } else
             resolveOverpopButton.isDisabled = false
 
         //Disable Buttons for action with NatureToken if player has none
-        if (game.currentPlayer.natureToken == 0){
+        if (game.currentPlayer.natureToken == 0) {
             chooseCustomPair.isDisabled = true
             replaceWildlifeButton.isDisabled = true
             confirmReplacementButton.isDisabled = true
         }
 
-        if (game.currentPlayer.playerType == PlayerType.EASY){
+        if (game.currentPlayer.playerType == PlayerType.EASY) {
             disableAll()
             playAnimation(DelayAnimation(speed).apply {
                 onFinished = {
@@ -505,21 +513,23 @@ class GameScene (
         checkNotNull(game)
         println("RefreshTileAdd")
 
-        playableTile[0,0] = null
+        playableTile[0, 0] = null
         playArea.clear()
 
         //add all habitats for current Player to the playField
-        for (habitat in game.currentPlayer.habitat){
-            playArea[habitat.key.second,habitat.key.first] = (habitats[habitat.value] as HexagonView).apply {
+        for (habitat in game.currentPlayer.habitat) {
+            playArea[habitat.key.second, habitat.key.first] = (habitats[habitat.value] as HexagonView).apply {
                 onMouseClicked = null
             }
         }
 
-        playableTile[0,0]?.isDisabled = true
+        playableTile[0, 0]?.isDisabled = true
 
         playableToken.isDisabled = false
-        discardToken.isDisabled = false
+        if (game.currentPlayer.playerType == PlayerType.LOCAL)
+            discardToken.isDisabled = false
 
+        //get the List of all Habitats where selected Token can be placed
         val tokenHabitate = game.selectedToken?.let {
             rootService.gameService.getAllPossibleTilesForWildlife(
                 it.animal,
@@ -527,22 +537,18 @@ class GameScene (
             )
         }
 
-        for (habitat in game.currentPlayer.habitat){
-            if (tokenHabitate != null) {
-                if (habitat.value in tokenHabitate) {
-                    playArea[habitat.key.second, habitat.key.first] = (habitats[habitat.value] as HexagonView).apply {
-                        isDisabled = false
-                        onMouseClicked = {
-                            rootService.playerActionService.addToken(habitat.value)
-                        }
+        //enable for each Habitat where Token can be put onMouseClick
+        for (habitat in game.currentPlayer.habitat) {
+            if (habitat.value in checkNotNull(tokenHabitate) && game.currentPlayer.playerType == PlayerType.LOCAL) {
+                playArea[habitat.key.second, habitat.key.first] = (habitats[habitat.value] as HexagonView).apply {
+                    isDisabled = false
+                    onMouseClicked = {
+                        rootService.playerActionService.addToken(habitat.value)
                     }
                 }
             }
         }
 
-        if (game.currentPlayer.playerType == PlayerType.EASY){
-
-        }
         println("RefreshTileAdd")
     }
 
@@ -553,14 +559,14 @@ class GameScene (
         val rotateTile = game.selectedTile
         checkNotNull(rotateTile)
 
-       // get the list of terrains from Habitat
-        val sideLabels = rotateTile.terrains.map { terrain: Terrain -> terrain.name.substring(0,1) }
+        // get the list of terrains from Habitat
+        val sideLabels = rotateTile.terrains.map { terrain: Terrain -> terrain.name.substring(0, 1) }
 
         // create new Hexagon for the rotated Tile
         val newHexagon = createLabeledHexagonView(
             labels = sideLabels,
             color = rotateTile.isKeystoneTile,
-            tokens = rotateTile.wildlifeSymbols.map { animal: Animal -> animal.name.substring(0,1) }
+            tokens = rotateTile.wildlifeSymbols.map { animal: Animal -> animal.name.substring(0, 1) }
         ).apply {
             onMouseClicked = {
                 rootService.playerActionService.rotateTile()
@@ -569,12 +575,9 @@ class GameScene (
 
         habitats[rotateTile] = newHexagon
 
-        playableTile[0,0] = null
-        playableTile[0,0] = habitats[rotateTile] as HexagonView
+        playableTile[0, 0] = null
+        playableTile[0, 0] = habitats[rotateTile] as HexagonView
 
-        if (game.currentPlayer.playerType == PlayerType.EASY){
-
-        }
         println("RefreshAfterTileRotation")
     }
 
@@ -601,24 +604,21 @@ class GameScene (
         checkNotNull(tokenToPlay)
 
         //put the selected Token to left Bottom
-        playableToken[0,0] = createTokens(tokenToPlay.animal.name)
-        playableToken[0,0]?.onMouseClicked = null
+        playableToken[0, 0] = createTokens(tokenToPlay.animal.name)
+        playableToken[0, 0]?.onMouseClicked = null
 
         playableToken.isDisabled = true
 
         //put the selected Habitat to the left Bottom
         val tileToPlay = game.selectedTile
         checkNotNull(tileToPlay)
-        playableTile[0,0] = (habitats[tileToPlay] as HexagonView).apply {
+        playableTile[0, 0] = (habitats[tileToPlay] as HexagonView).apply {
             onMouseClicked = {
                 rootService.playerActionService.rotateTile()
             }
             isDisabled = false
         }
 
-        if (game.currentPlayer.playerType == PlayerType.EASY){
-
-        }
         println("RefreshChosen")
     }
 
@@ -627,16 +627,13 @@ class GameScene (
         checkNotNull(game)
 
         //update the view of the Habitat where we placed our token
-        playableToken[0,0] = null
+        playableToken[0, 0] = null
         habitats[habitatTile] = createLabeledHexagonView(
             color = habitatTile.isKeystoneTile,
-            labels = habitatTile.terrains.map { terrain: Terrain -> terrain.name.substring(0,1) },
-            token = habitatTile.wildlifeToken?.animal.toString().substring(0,1)
+            labels = habitatTile.terrains.map { terrain: Terrain -> terrain.name.substring(0, 1) },
+            token = habitatTile.wildlifeToken?.animal.toString().substring(0, 1)
         )
 
-        if (game.currentPlayer.playerType == PlayerType.EASY){
-
-        }
         println("RefreshToken")
     }
 
@@ -645,17 +642,16 @@ class GameScene (
         checkNotNull(game)
 
         //add the views to the shop
-        for (i in 0..3){
+        for (i in 0..3) {
             //create HexagonViews for the Token
-            shopTokens[i,0] = game.shop[i].second?.animal?.let { createTokens(it.name) }
-            shopTokens[i,0]?.apply {
+            shopTokens[i, 0] = game.shop[i].second?.animal?.let { createTokens(it.name) }
+            shopTokens[i, 0]?.apply {
                 onMouseClicked = {
                     rootService.playerActionService.chooseTokenTilePair(i)
                 }
             }
         }
         selectedShopToken.clear()
-
     }
 
     override fun refreshAfterNextTurn() {
@@ -663,7 +659,7 @@ class GameScene (
         checkNotNull(game)
 
         //reset the camera to original position
-        cameraPane.reposition(0,0)
+        cameraPane.reposition(0, 0)
         currentXCamera = 0
         currentYCamera = 0
 
@@ -674,23 +670,23 @@ class GameScene (
         shopTokens.isVisible = true
         shopHabitats.isVisible = true
 
-        playableToken[0,0] = null
+        playableToken[0, 0] = null
 
         //add the views to the shop
-        for (i in 0..3){
-            shopHabitats[i,0] = habitats[game.shop[i].first!!] as HexagonView
+        for (i in 0..3) {
+            shopHabitats[i, 0] = habitats[game.shop[i].first!!] as HexagonView
             //create HexagonViews for the Token
-            shopTokens[i,0] = game.shop[i].second?.animal?.let { createTokens(it.name) }
+            shopTokens[i, 0] = game.shop[i].second?.animal?.let { createTokens(it.name) }
         }
 
         //If player Clicks on any Habitat or Token that vertical pair is chosen
-        for (i in 0..3){
-            shopTokens[i,0]?.apply {
+        for (i in 0..3) {
+            shopTokens[i, 0]?.apply {
                 onMouseClicked = {
                     rootService.playerActionService.chooseTokenTilePair(i)
                 }
             }
-            shopHabitats[i,0]?.apply {
+            shopHabitats[i, 0]?.apply {
                 onMouseClicked = {
                     rootService.playerActionService.chooseTokenTilePair(i)
                 }
@@ -700,8 +696,8 @@ class GameScene (
         playArea.clear()
 
         //add all habitats for the starting player to the playField
-        for (habitat in game.currentPlayer.habitat){
-            playArea[habitat.key.second,habitat.key.first] = habitats[habitat.value] as HexagonView
+        for (habitat in game.currentPlayer.habitat) {
+            playArea[habitat.key.second, habitat.key.first] = habitats[habitat.value] as HexagonView
         }
 
         discardToken.isDisabled = true
@@ -711,24 +707,24 @@ class GameScene (
         currentPlayerLabel.apply { text = game.currentPlayer.name }
 
         //Disable resolveOverpopulation if already done or not possible
-        if (game.hasReplacedThreeToken || !hasThreeSameWildlifeTokens().first){
+        if (game.hasReplacedThreeToken || !hasThreeSameWildlifeTokens().first) {
             resolveOverpopButton.isDisabled = true
         } else
             resolveOverpopButton.isDisabled = false
 
         //Disable Buttons for action with NatureToken if player has none
-        if (game.currentPlayer.natureToken == 0){
+        if (game.currentPlayer.natureToken == 0) {
             chooseCustomPair.isDisabled = true
             replaceWildlifeButton.isDisabled = true
             confirmReplacementButton.isDisabled = true
-        } else{
+        } else {
             chooseCustomPair.isDisabled = false
             replaceWildlifeButton.isDisabled = false
             confirmReplacementButton.isDisabled = false
         }
 
 
-        if (game.currentPlayer.playerType == PlayerType.EASY){
+        if (game.currentPlayer.playerType == PlayerType.EASY) {
             disableAll()
             playAnimation(DelayAnimation(speed).apply {
                 onFinished = {
@@ -736,6 +732,7 @@ class GameScene (
                 }
             })
         }
+        println(game.ruleSet)
         println("RefreshNext")
     }
 
@@ -750,11 +747,12 @@ class GameScene (
     private fun createLabeledHexagonView(
         color: Boolean,
         labels: List<String>,
-        tokens : List<String> = emptyList(),
-        token : String = ""
+        tokens: List<String> = emptyList(),
+        token: String = ""
     ): HexagonView {
 
         val size = 75
+
         // Helper: Calculate the position for the middle of each side
         fun calculateSidePosition(index: Int): Pair<Double, Double> {
             val startAngle = Math.toRadians(60.0 * index - 90.0) // Start at the top side
@@ -804,7 +802,7 @@ class GameScene (
      *
      * @param animal the string of the Animal
      */
-    private fun createTokens(animal : String): HexagonView {
+    private fun createTokens(animal: String): HexagonView {
         return HexagonView(
             size = 50,
             visual = CompoundVisual(
@@ -820,7 +818,10 @@ class GameScene (
      *
      * @param position List of possible Positions
      */
-    private fun createPossibleHexagons(position : List<Pair<Int,Int>>) {
+    private fun createPossibleHexagons(position: List<Pair<Int, Int>>) {
+        val game = rootService.currentGame
+        checkNotNull(game)
+
         for (i in position) {
             val hex = HexagonView(
                 size = 75,
@@ -833,37 +834,40 @@ class GameScene (
                     rootService.playerActionService.addTileToHabitat(i)
                 }
             }
+            if (game.currentPlayer.playerType != PlayerType.LOCAL) {
+                playArea[i.second, i.first]?.onMouseClicked = null
+            }
         }
     }
 
     /**
      * [getRuleSets] loads the correct images for ruleSets of the current game
      */
-    private fun getRuleSets(){
+    private fun getRuleSets() {
         val game = rootService.currentGame
         checkNotNull(game)
 
-        if (!game.ruleSet[0]){
+        if (!game.ruleSet[0]) {
             bearRule.visual = ImageVisual("Bear_A.png")
         } else
             bearRule.visual = ImageVisual("Bear_B.png")
 
-        if (!game.ruleSet[1]){
+        if (!game.ruleSet[1]) {
             elkRule.visual = ImageVisual("Elk_A.png")
         } else
             elkRule.visual = ImageVisual("Elk_B.png")
 
-        if (!game.ruleSet[2]){
+        if (!game.ruleSet[2]) {
             foxRule.visual = ImageVisual("Fox_A.png")
         } else
             foxRule.visual = ImageVisual("Fox_B.png")
 
-        if (!game.ruleSet[3]){
+        if (!game.ruleSet[3]) {
             hawkRule.visual = ImageVisual("Hawk_A.png")
         } else
             hawkRule.visual = ImageVisual("Hawk_B.png")
 
-        if (!game.ruleSet[4]){
+        if (!game.ruleSet[4]) {
             salmonRule.visual = ImageVisual("Salmon_A.png")
         } else
             salmonRule.visual = ImageVisual("Salmon_B.png")
@@ -873,10 +877,10 @@ class GameScene (
      * [disableTokensExcept] disables all other Tokens except the chosen one
      * in the shop
      */
-    private fun disableTokensExcept(pos : HexagonView){
+    private fun disableTokensExcept(pos: HexagonView) {
         for (i in 0..3)
-            if (shopTokens[i,0] != pos){
-                shopTokens[i,0]?.isDisabled = true
+            if (shopTokens[i, 0] != pos) {
+                shopTokens[i, 0]?.isDisabled = true
             }
     }
 
@@ -884,10 +888,10 @@ class GameScene (
      * [disableHabitatsExcept] disables all other Habitats except the chosen one
      * in the shop
      */
-    private fun disableHabitatsExcept(pos :HexagonView){
+    private fun disableHabitatsExcept(pos: HexagonView) {
         for (i in 0..3)
-            if (shopHabitats[i,0] != pos){
-                shopHabitats[i,0]?.isDisabled = true
+            if (shopHabitats[i, 0] != pos) {
+                shopHabitats[i, 0]?.isDisabled = true
             }
     }
 
@@ -895,9 +899,9 @@ class GameScene (
      * [enableAllTokens] enable all Tokens to be chosen
      * in the shop
      */
-    private fun enableAllTokens(){
-        for (i in 0..3){
-            shopTokens[i,0]?.isDisabled = false
+    private fun enableAllTokens() {
+        for (i in 0..3) {
+            shopTokens[i, 0]?.isDisabled = false
         }
     }
 
@@ -905,9 +909,9 @@ class GameScene (
      * [enableAllHabitats] enable all Habitats to be chosen
      * in the shop
      */
-    private fun enableAllHabitats(){
-        for (i in 0..3){
-            shopHabitats[i,0]?.isDisabled = false
+    private fun enableAllHabitats() {
+        for (i in 0..3) {
+            shopHabitats[i, 0]?.isDisabled = false
         }
     }
 
@@ -968,7 +972,7 @@ class GameScene (
         }
     }
 
-    private fun disableAll(){
+    private fun disableAll() {
         listOf(
             //cameraPane,
             replaceWildlifeButton,
@@ -983,6 +987,6 @@ class GameScene (
             playableTile,
             playableToken,
             ruleSetOverlay
-        ).onEach { it.isDisabled = true}
+        ).onEach { it.isDisabled = true }
     }
 }
