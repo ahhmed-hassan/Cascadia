@@ -244,7 +244,7 @@ class HardBotService(private val rootService: RootService) {
         val job = HardBotJob(
             naturalTokens = currentPlayer.natureToken - employer.usedNaturalToken,
             habitat = habitat,
-            round = round,
+            round = round - 1,
             habitatTiles = habitatTiles,
             animals = animals,
             employer = employer,
