@@ -38,8 +38,12 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
     ) {
         require(playerNames.size in 2..4) { "The number of players must be between 2 and 4" }
 
-        val ruleSet = if (isRandomRules) { List(5) { (0..1).random() == 1 }} // true is B, false is A
-                      else { require(scoreRules.size == 5) { "The scoring rules must be 5" }; scoreRules}
+        val ruleSet = if (isRandomRules) {
+            List(5) { (0..1).random() == 1 }
+        } // true is B, false is A
+        else {
+            require(scoreRules.size == 5) { "The scoring rules must be 5" }; scoreRules
+        }
 
         require(playerNames.keys.size == playerNames.keys.toSet().size) { "Player names must be unique." }
 
@@ -47,9 +51,16 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         //Ensure that no network players exist if the game connection state indicates Hotseat mode
         if (rootService.networkService.connectionState == ConnectionState.DISCONNECTED) {
             val networkPlayers = playerNames.values.count { it == PlayerType.NETWORK }
-            if (networkPlayers > 0) { throw IllegalArgumentException("In Hotseat, no player can be of type NETWORK.")}}
+            if (networkPlayers > 0) {
+                throw IllegalArgumentException("In Hotseat, no player can be of type NETWORK.")
+            }
+        }
 
-        val playerOrder = if (orderIsRandom) { playerNames.keys.shuffled() } else { playerNames.keys.toList() }
+        val playerOrder = if (orderIsRandom) {
+            playerNames.keys.shuffled()
+        } else {
+            playerNames.keys.toList()
+        }
 
         //Habitat tile distribution according to the number of players
         val totalTiles = getTileNumber(playerNames.size)
@@ -60,14 +71,17 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         val wildlifeTokens = createWildlifeToken()
 
         val shop = totalTilesInGame.take(4).mapIndexed { index, tile ->
-            tile as HabitatTile? to wildlifeTokens[index] as WildlifeToken? }.toMutableList()
+            tile as HabitatTile? to wildlifeTokens[index] as WildlifeToken?
+        }.toMutableList()
         totalTilesInGame.removeAll(shop.map { it.first })
         wildlifeTokens.removeAll(shop.map { it.second })
 
         val startTiles = getStartTiles().toMutableList()
 
-        val playerList = playerOrder.map { name -> val playerType = requireNotNull(playerNames[name])
-            Player(name, mutableMapOf(), playerType) }
+        val playerList = playerOrder.map { name ->
+            val playerType = requireNotNull(playerNames[name])
+            Player(name, mutableMapOf(), playerType)
+        }
 
         val game = CascadiaGame(
             startTiles,
@@ -88,7 +102,9 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
 
         rootService.currentGame = game
 
-        if (checkForSameAnimal()) { resolveOverpopulation() }
+        if (checkForSameAnimal()) {
+            resolveOverpopulation()
+        }
 
         // Retrieve the starting tiles assigned to the player based on the tile index.
         if (startTileOrder != null && startTileOrder.size == playerList.size) {
@@ -96,7 +112,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
                 val tileIndex = startTileOrder[i]  // e.g., 2 => startTiles[2]
                 val player = playerList[i]         // i-th player
                 // Retrieve the starting tiles assigned to the player based on the tile index.
-                val playerStartTile = startTiles[tileIndex-1]
+                val playerStartTile = startTiles[tileIndex - 1]
 
                 //Place the top tile in the player's habitat (central)
                 player.habitat[0 to 0] = playerStartTile[0]
@@ -120,7 +136,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
     /**
      * create the list of wildLifeToken needed for a Cascadia game
      */
-    private fun createWildlifeToken() : MutableList<WildlifeToken> {
+    private fun createWildlifeToken(): MutableList<WildlifeToken> {
         val wildlifeToken = mutableListOf<WildlifeToken>()
         repeat(20) {
             wildlifeToken.add(WildlifeToken(Animal.BEAR))
@@ -141,7 +157,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
      *
      * @throws IllegalArgumentException if PlayerCount not in between 2 and 4
      */
-    private fun getTileNumber(playerCount : Int) : Int {
+    private fun getTileNumber(playerCount: Int): Int {
         when (playerCount) {
             2 -> return 43
             3 -> return 63
@@ -447,8 +463,8 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         habitat: MutableMap<Pair<Int, Int>, HabitatTile>
     ): List<Pair<Int, Int>> {
         return habitat.keys.flatMap { ScoringService.getNeighbours(it) }
-            .filterNot { habitat.containsKey(it) }.toList()
-     }
+            .filterNot { habitat.containsKey(it) }.toSet().toList()
+    }
 
     /**
      * Creates a List of all HabitatTiles, where the current Player can place the given Animal
