@@ -12,7 +12,7 @@ package entity
  * @property wildlifeToken The wildlife token currently placed on this tile. Nullable as not all tiles may have tokens.
  * @property terrains Mutable list of the terrain type(s) represented on the tile.
  */
-class HabitatTile(
+data class HabitatTile(
     val id: Int,
     val isKeystoneTile: Boolean,
     var rotationOffset: Int,
@@ -20,4 +20,22 @@ class HabitatTile(
     val wildlifeSymbols: List<Animal>,
     var wildlifeToken: WildlifeToken?,
     val terrains: MutableList<Terrain>
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as HabitatTile
+
+        if (id != other.id) return false
+        if (isKeystoneTile != other.isKeystoneTile) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = id
+        result = 31 * result + isKeystoneTile.hashCode()
+        return result
+    }
+}

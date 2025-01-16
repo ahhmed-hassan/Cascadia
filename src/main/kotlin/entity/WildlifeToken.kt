@@ -6,6 +6,6 @@ package entity
  *
  * @property animal The animal type represented by this token (e.g., Bear, Elk).
  */
-class WildlifeToken(
+data class WildlifeToken(
     val animal: Animal
 )
