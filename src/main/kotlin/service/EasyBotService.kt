@@ -1,7 +1,6 @@
 package service
 
 import entity.PlayerType
-import tools.aqua.bgw.core.BoardGameApplication.Companion.runOnGUIThread
 
 /**
  * Service for an easy bot
@@ -46,9 +45,7 @@ class EasyBotService(private val rootService: RootService) {
             "PlayerType must be easy bot"
         }
 
-        delayAction(1000) {
-            resolveOverpopulation()
-        }
+        resolveOverpopulation()
 
         //Maybe uses natureToken
         if (player.natureToken >= 1 && useNaturalTokenChance >= (1..100).random()) {
@@ -61,9 +58,7 @@ class EasyBotService(private val rootService: RootService) {
                         list.add(i)
                     }
                 }
-                delayAction(2000) {
-                    playerActionService.replaceWildlifeTokens(list)
-                }
+                playerActionService.replaceWildlifeTokens(list)
                 hasReplacedWildlifeTokens = true
             } else {
                 //choose CustomPair
@@ -75,9 +70,8 @@ class EasyBotService(private val rootService: RootService) {
                     tile = (0..3).random()
                     animal = (0..3).random()
                 } while (tile == animal)
-                delayAction(3000) {
-                    playerActionService.chooseCustomPair(tile, animal)
-                }
+
+                playerActionService.chooseCustomPair(tile, animal)
                 hasChosenCustomPair = true
             }
         }
@@ -86,49 +80,32 @@ class EasyBotService(private val rootService: RootService) {
 
         //chooses a pair if it has not happened yet
         if (!hasChosenCustomPair) {
-            delayAction(3000) {
-                playerActionService.chooseTokenTilePair((0..3).random())
-            }
+            playerActionService.chooseTokenTilePair((0..3).random())
         }
 
         //maybe rotates the tile before placing
         val rotation = (0..5).random()
         for (i in 1..rotation) {
-            delayAction(4000) {
-                playerActionService.rotateTile()
-            }
+            playerActionService.rotateTile()
         }
 
         //place the tile
-        delayAction(5000) {
-            playerActionService.addTileToHabitat(
-                gameService.getAllPossibleCoordinatesForTilePlacing(player.habitat).random()
-            )
-        }
+        playerActionService.addTileToHabitat(
+            gameService.getAllPossibleCoordinatesForTilePlacing(player.habitat).random()
+        )
 
         //maybe places the wildlife
         if (placeWildlifeChance >= (1..100).random()) {
-            delayAction(6000) {
-                val selectedToken = game.selectedToken
-                checkNotNull(selectedToken)
-                val tiles = gameService.getAllPossibleTilesForWildlife(selectedToken.animal, player.habitat)
-                if (tiles.isNotEmpty()) {
-                        playerActionService.addToken(tiles.random())
-                } else {
-                        playerActionService.discardToken()
-                }
-            }
-        } else {
-            delayAction(7000) {
+            val selectedToken = game.selectedToken
+            checkNotNull(selectedToken)
+            val tiles = gameService.getAllPossibleTilesForWildlife(selectedToken.animal, player.habitat)
+            if (tiles.isNotEmpty()) {
+                playerActionService.addToken(tiles.random())
+            } else {
                 playerActionService.discardToken()
             }
+        } else {
+            playerActionService.discardToken()
         }
-    }
-
-    private fun delayAction(delayMs: Long, action: () -> Unit) {
-        Thread {
-            Thread.sleep(delayMs)
-            runOnGUIThread { action() }
-        }.start()
     }
 }

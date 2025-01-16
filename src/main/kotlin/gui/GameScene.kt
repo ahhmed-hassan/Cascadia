@@ -1,9 +1,6 @@
 package gui
 
-import entity.Animal
-import entity.HabitatTile
-import entity.PlayerType
-import entity.Terrain
+import entity.*
 import service.RootService
 import tools.aqua.bgw.animation.DelayAnimation
 import tools.aqua.bgw.components.ComponentView
@@ -15,6 +12,7 @@ import tools.aqua.bgw.components.layoutviews.Pane
 import tools.aqua.bgw.components.uicomponents.Button
 import tools.aqua.bgw.components.uicomponents.Label
 import tools.aqua.bgw.components.uicomponents.UIComponent
+import tools.aqua.bgw.core.BoardGameApplication.Companion.runOnGUIThread
 import tools.aqua.bgw.core.BoardGameScene
 import tools.aqua.bgw.event.KeyCode
 import tools.aqua.bgw.event.MouseButtonType
@@ -25,6 +23,7 @@ import tools.aqua.bgw.visual.CompoundVisual
 import tools.aqua.bgw.visual.ImageVisual
 import tools.aqua.bgw.visual.TextVisual
 import java.awt.Color
+import java.util.*
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -45,6 +44,12 @@ class GameScene(
     private var currentXCamera = 0
     private var currentYCamera = 0
     private var speed = 0
+    private val refreshQueue: Queue<() -> Unit> = LinkedList()
+    private var isProcessingQueue = false
+    private var refreshSelectedToken: WildlifeToken? = null
+    private var refreshSelectedHabitat: HabitatTile? = null
+    private var refreshHabitat : MutableMap<Pair<Int, Int>, HabitatTile>? = null
+    private var refreshPlayerType : PlayerType? = null
 
     private val shopHabitats = GridPane<HexagonView>(
         posX = 1400,
@@ -509,231 +514,249 @@ class GameScene(
     }
 
     override fun refreshAfterHabitatTileAdded() {
-        val game = rootService.currentGame
-        checkNotNull(game)
-        println("RefreshTileAdd")
+        enqueueRefresh {
+            val game = rootService.currentGame
+            checkNotNull(game)
+            println("RefreshTileAdd")
 
-        playableTile[0, 0] = null
-        playArea.clear()
+            playableTile[0, 0] = null
+            playArea.clear()
 
-        //add all habitats for current Player to the playField
-        for (habitat in game.currentPlayer.habitat) {
-            playArea[habitat.key.second, habitat.key.first] = (habitats[habitat.value] as HexagonView).apply {
-                onMouseClicked = null
-            }
-        }
-
-        playableTile[0, 0]?.isDisabled = true
-
-        playableToken.isDisabled = false
-        if (game.currentPlayer.playerType == PlayerType.LOCAL)
-            discardToken.isDisabled = false
-
-        //get the List of all Habitats where selected Token can be placed
-        val tokenHabitate = game.selectedToken?.let {
-            rootService.gameService.getAllPossibleTilesForWildlife(
-                it.animal,
-                habitat = game.currentPlayer.habitat
-            )
-        }
-
-        //enable for each Habitat where Token can be put onMouseClick
-        for (habitat in game.currentPlayer.habitat) {
-            if (habitat.value in checkNotNull(tokenHabitate) && game.currentPlayer.playerType == PlayerType.LOCAL) {
+            //add all habitats for current Player to the playField
+            for (habitat in game.currentPlayer.habitat) {
                 playArea[habitat.key.second, habitat.key.first] = (habitats[habitat.value] as HexagonView).apply {
-                    isDisabled = false
-                    onMouseClicked = {
-                        rootService.playerActionService.addToken(habitat.value)
+                    onMouseClicked = null
+                }
+            }
+
+            playableTile[0, 0]?.isDisabled = true
+
+            playableToken.isDisabled = false
+            if (game.currentPlayer.playerType == PlayerType.LOCAL)
+                discardToken.isDisabled = false
+
+            //get the List of all Habitats where selected Token can be placed
+            val tokenHabitate = refreshSelectedToken?.let {
+                refreshHabitat?.let { it1 ->
+                    rootService.gameService.getAllPossibleTilesForWildlife(
+                        it.animal,
+                        habitat = it1
+                    )
+                }
+            }
+
+            //enable for each Habitat where Token can be put onMouseClick
+            for (habitat in checkNotNull( refreshHabitat)) {
+                if (habitat.value in checkNotNull(tokenHabitate) && refreshPlayerType == PlayerType.LOCAL) {
+                    playArea[habitat.key.second, habitat.key.first] = (habitats[habitat.value] as HexagonView).apply {
+                        isDisabled = false
+                        onMouseClicked = {
+                            rootService.playerActionService.addToken(habitat.value)
+                        }
                     }
                 }
             }
         }
-
-        println("RefreshTileAdd")
     }
 
     override fun refreshAfterTileRotation() {
-        val game = rootService.currentGame
-        checkNotNull(game)
+        enqueueRefresh {
+            val game = rootService.currentGame
+            checkNotNull(game)
 
-        val rotateTile = game.selectedTile
-        checkNotNull(rotateTile)
+            val rotateTile = refreshSelectedHabitat
+            checkNotNull(rotateTile)
 
-        // get the list of terrains from Habitat
-        val sideLabels = rotateTile.terrains.map { terrain: Terrain -> terrain.name.substring(0, 1) }
+            // get the list of terrains from Habitat
+            val sideLabels = rotateTile.terrains.map { terrain: Terrain -> terrain.name.substring(0, 1) }
 
-        // create new Hexagon for the rotated Tile
-        val newHexagon = createLabeledHexagonView(
-            labels = sideLabels,
-            color = rotateTile.isKeystoneTile,
-            tokens = rotateTile.wildlifeSymbols.map { animal: Animal -> animal.name.substring(0, 1) }
-        ).apply {
-            onMouseClicked = {
-                rootService.playerActionService.rotateTile()
+            // create new Hexagon for the rotated Tile
+            val newHexagon = createLabeledHexagonView(
+                labels = sideLabels,
+                color = rotateTile.isKeystoneTile,
+                tokens = rotateTile.wildlifeSymbols.map { animal: Animal -> animal.name.substring(0, 1) }
+            ).apply {
+                onMouseClicked = {
+                    rootService.playerActionService.rotateTile()
+                }
             }
+
+            habitats[rotateTile] = newHexagon
+
+            playableTile[0, 0] = null
+            playableTile[0, 0] = habitats[rotateTile] as HexagonView
+
+            println("RefreshAfterTileRotation")
         }
-
-        habitats[rotateTile] = newHexagon
-
-        playableTile[0, 0] = null
-        playableTile[0, 0] = habitats[rotateTile] as HexagonView
-
-        println("RefreshAfterTileRotation")
     }
 
     override fun refreshAfterTokenTilePairChosen() {
-        val game = rootService.currentGame
-        checkNotNull(game)
+        val game1 = rootService.currentGame
+        checkNotNull(game1)
+        refreshSelectedToken = game1.selectedToken
+        refreshSelectedHabitat = game1.selectedTile
+        refreshHabitat = game1.currentPlayer.habitat
+        refreshPlayerType = game1.currentPlayer.playerType
+        enqueueRefresh {
+            val game = rootService.currentGame
+            checkNotNull(game)
 
-        shopTokens.isVisible = false
-        shopHabitats.isVisible = false
-        shopTokens.isDisabled = true
-        shopHabitats.isDisabled = true
-        playArea.isDisabled = false
-        playableTile.isDisabled = false
-        confirmReplacementButton.isDisabled = true
-        resolveOverpopButton.isDisabled = true
-        chooseCustomPair.isDisabled = true
-        discardToken.isDisabled = true
-        replaceWildlifeButton.isDisabled = true
+            shopTokens.isVisible = false
+            shopHabitats.isVisible = false
+            shopTokens.isDisabled = true
+            shopHabitats.isDisabled = true
+            playArea.isDisabled = false
+            playableTile.isDisabled = false
+            confirmReplacementButton.isDisabled = true
+            resolveOverpopButton.isDisabled = true
+            chooseCustomPair.isDisabled = true
+            discardToken.isDisabled = true
+            replaceWildlifeButton.isDisabled = true
 
-        //call method getAllPossibleCoordinatesForTilePlacing in createPossibleHexagons
-        createPossibleHexagons(rootService.gameService.getAllPossibleCoordinatesForTilePlacing(game.currentPlayer.habitat))
+            //call method getAllPossibleCoordinatesForTilePlacing in createPossibleHexagons
+            createPossibleHexagons(rootService.gameService.getAllPossibleCoordinatesForTilePlacing(game.currentPlayer.habitat))
 
-        val tokenToPlay = game.selectedToken
-        checkNotNull(tokenToPlay)
+            val tokenToPlay = refreshSelectedToken
+            checkNotNull(tokenToPlay)
 
-        //put the selected Token to left Bottom
-        playableToken[0, 0] = createTokens(tokenToPlay.animal.name)
-        playableToken[0, 0]?.onMouseClicked = null
+            //put the selected Token to left Bottom
+            playableToken[0, 0] = createTokens(tokenToPlay.animal.name)
+            playableToken[0, 0]?.onMouseClicked = null
 
-        playableToken.isDisabled = true
+            playableToken.isDisabled = true
 
-        //put the selected Habitat to the left Bottom
-        val tileToPlay = game.selectedTile
-        checkNotNull(tileToPlay)
-        playableTile[0, 0] = (habitats[tileToPlay] as HexagonView).apply {
-            onMouseClicked = {
-                rootService.playerActionService.rotateTile()
+            //put the selected Habitat to the left Bottom
+            val tileToPlay = refreshSelectedHabitat
+            checkNotNull(tileToPlay)
+            playableTile[0, 0] = (habitats[tileToPlay] as HexagonView).apply {
+                onMouseClicked = {
+                    rootService.playerActionService.rotateTile()
+                }
+                isDisabled = false
             }
-            isDisabled = false
-        }
 
-        println("RefreshChosen")
+            println("RefreshChosen")
+        }
     }
 
     override fun refreshAfterWildlifeTokenAdded(habitatTile: HabitatTile) {
-        val game = rootService.currentGame
-        checkNotNull(game)
+        enqueueRefresh {
+            val game = rootService.currentGame
+            checkNotNull(game)
 
-        //update the view of the Habitat where we placed our token
-        playableToken[0, 0] = null
-        habitats[habitatTile] = createLabeledHexagonView(
-            color = habitatTile.isKeystoneTile,
-            labels = habitatTile.terrains.map { terrain: Terrain -> terrain.name.substring(0, 1) },
-            token = habitatTile.wildlifeToken?.animal.toString().substring(0, 1)
-        )
+            //update the view of the Habitat where we placed our token
+            playableToken[0, 0] = null
+            habitats[habitatTile] = createLabeledHexagonView(
+                color = habitatTile.isKeystoneTile,
+                labels = habitatTile.terrains.map { terrain: Terrain -> terrain.name.substring(0, 1) },
+                token = habitatTile.wildlifeToken?.animal.toString().substring(0, 1)
+            )
 
-        println("RefreshToken")
+            println("RefreshToken")
+        }
     }
 
     override fun refreshAfterWildlifeTokenReplaced() {
-        val game = rootService.currentGame
-        checkNotNull(game)
+        enqueueRefresh {
+            val game = rootService.currentGame
+            checkNotNull(game)
 
-        //add the views to the shop
-        for (i in 0..3) {
-            //create HexagonViews for the Token
-            shopTokens[i, 0] = game.shop[i].second?.animal?.let { createTokens(it.name) }
-            shopTokens[i, 0]?.apply {
-                onMouseClicked = {
-                    rootService.playerActionService.chooseTokenTilePair(i)
+            //add the views to the shop
+            for (i in 0..3) {
+                //create HexagonViews for the Token
+                shopTokens[i, 0] = game.shop[i].second?.animal?.let { createTokens(it.name) }
+                shopTokens[i, 0]?.apply {
+                    onMouseClicked = {
+                        rootService.playerActionService.chooseTokenTilePair(i)
+                    }
                 }
             }
+            selectedShopToken.clear()
         }
-        selectedShopToken.clear()
     }
 
     override fun refreshAfterNextTurn() {
-        val game = rootService.currentGame
-        checkNotNull(game)
+        enqueueRefresh {
+            val game = rootService.currentGame
+            checkNotNull(game)
 
-        //reset the camera to original position
-        cameraPane.reposition(0, 0)
-        currentXCamera = 0
-        currentYCamera = 0
+            //reset the camera to original position
+            cameraPane.reposition(0, 0)
+            currentXCamera = 0
+            currentYCamera = 0
 
-        showRuleSetButton.isDisabled = false
-        cameraPane.isDisabled = false
-        shopTokens.isDisabled = false
-        shopHabitats.isDisabled = false
-        shopTokens.isVisible = true
-        shopHabitats.isVisible = true
+            showRuleSetButton.isDisabled = false
+            cameraPane.isDisabled = false
+            shopTokens.isDisabled = false
+            shopHabitats.isDisabled = false
+            shopTokens.isVisible = true
+            shopHabitats.isVisible = true
 
-        playableToken[0, 0] = null
+            playableToken[0, 0] = null
 
-        //add the views to the shop
-        for (i in 0..3) {
-            shopHabitats[i, 0] = habitats[game.shop[i].first!!] as HexagonView
-            //create HexagonViews for the Token
-            shopTokens[i, 0] = game.shop[i].second?.animal?.let { createTokens(it.name) }
-        }
+            //add the views to the shop
+            for (i in 0..3) {
+                shopHabitats[i, 0] = habitats[game.shop[i].first!!] as HexagonView
+                //create HexagonViews for the Token
+                shopTokens[i, 0] = game.shop[i].second?.animal?.let { createTokens(it.name) }
+            }
 
-        //If player Clicks on any Habitat or Token that vertical pair is chosen
-        for (i in 0..3) {
-            shopTokens[i, 0]?.apply {
-                onMouseClicked = {
-                    rootService.playerActionService.chooseTokenTilePair(i)
+            //If player Clicks on any Habitat or Token that vertical pair is chosen
+            for (i in 0..3) {
+                shopTokens[i, 0]?.apply {
+                    onMouseClicked = {
+                        rootService.playerActionService.chooseTokenTilePair(i)
+                    }
+                }
+                shopHabitats[i, 0]?.apply {
+                    onMouseClicked = {
+                        rootService.playerActionService.chooseTokenTilePair(i)
+                    }
                 }
             }
-            shopHabitats[i, 0]?.apply {
-                onMouseClicked = {
-                    rootService.playerActionService.chooseTokenTilePair(i)
-                }
+
+            playArea.clear()
+
+            //add all habitats for the starting player to the playField
+            for (habitat in game.currentPlayer.habitat) {
+                playArea[habitat.key.second, habitat.key.first] = habitats[habitat.value] as HexagonView
             }
+
+            discardToken.isDisabled = true
+
+            //Update Labels for name and NatureToken
+            natureTokenLabel.apply { text = "NatureToken: " + game.currentPlayer.natureToken.toString() }
+            currentPlayerLabel.apply { text = game.currentPlayer.name }
+
+            //Disable resolveOverpopulation if already done or not possible
+            if (game.hasReplacedThreeToken || !hasThreeSameWildlifeTokens().first) {
+                resolveOverpopButton.isDisabled = true
+            } else
+                resolveOverpopButton.isDisabled = false
+
+            //Disable Buttons for action with NatureToken if player has none
+            if (game.currentPlayer.natureToken == 0) {
+                chooseCustomPair.isDisabled = true
+                replaceWildlifeButton.isDisabled = true
+                confirmReplacementButton.isDisabled = true
+            } else {
+                chooseCustomPair.isDisabled = false
+                replaceWildlifeButton.isDisabled = false
+                confirmReplacementButton.isDisabled = false
+            }
+
+
+            if (game.currentPlayer.playerType == PlayerType.EASY) {
+                disableAll()
+                playAnimation(DelayAnimation(speed).apply {
+                    onFinished = {
+                        rootService.easyBotService.takeTurn()
+                    }
+                })
+            }
+            println(game.ruleSet)
+            println("RefreshNext")
         }
-
-        playArea.clear()
-
-        //add all habitats for the starting player to the playField
-        for (habitat in game.currentPlayer.habitat) {
-            playArea[habitat.key.second, habitat.key.first] = habitats[habitat.value] as HexagonView
-        }
-
-        discardToken.isDisabled = true
-
-        //Update Labels for name and NatureToken
-        natureTokenLabel.apply { text = "NatureToken: " + game.currentPlayer.natureToken.toString() }
-        currentPlayerLabel.apply { text = game.currentPlayer.name }
-
-        //Disable resolveOverpopulation if already done or not possible
-        if (game.hasReplacedThreeToken || !hasThreeSameWildlifeTokens().first) {
-            resolveOverpopButton.isDisabled = true
-        } else
-            resolveOverpopButton.isDisabled = false
-
-        //Disable Buttons for action with NatureToken if player has none
-        if (game.currentPlayer.natureToken == 0) {
-            chooseCustomPair.isDisabled = true
-            replaceWildlifeButton.isDisabled = true
-            confirmReplacementButton.isDisabled = true
-        } else {
-            chooseCustomPair.isDisabled = false
-            replaceWildlifeButton.isDisabled = false
-            confirmReplacementButton.isDisabled = false
-        }
-
-
-        if (game.currentPlayer.playerType == PlayerType.EASY) {
-            disableAll()
-            playAnimation(DelayAnimation(speed).apply {
-                onFinished = {
-                    rootService.easyBotService.takeTurn()
-                }
-            })
-        }
-        println(game.ruleSet)
-        println("RefreshNext")
     }
 
     /**
@@ -988,5 +1011,31 @@ class GameScene(
             playableToken,
             ruleSetOverlay
         ).onEach { it.isDisabled = true }
+    }
+
+    // Delay utility for queued actions
+    private fun processNextRefresh() {
+        if (isProcessingQueue) return
+
+        if (refreshQueue.isNotEmpty()) {
+            isProcessingQueue = true
+            val nextAction = refreshQueue.poll()
+
+            // Execute the action after a delay
+            Thread {
+                Thread.sleep(1000)
+                runOnGUIThread {
+                    nextAction()
+                    isProcessingQueue = false
+                    processNextRefresh()
+                }
+            }.start()
+        }
+    }
+
+    // Enqueue a refresh action
+    private fun enqueueRefresh(action: () -> Unit) {
+        refreshQueue.add(action)
+        processNextRefresh()
     }
 }
