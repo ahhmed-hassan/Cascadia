@@ -15,6 +15,8 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
 
     private val playerNameFields = mutableListOf<TextField>()
     private val playerButtons = mutableListOf<Button>()
+    private var simulationSpeed : Float = 0.0f
+    var myPlayer : PlayerType? = null
 
     private val overlay = Pane<UIComponent>(
         posX = 200,
@@ -71,12 +73,12 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
         selectedItem = 0.5f
     }
 
-    private fun createPlayerButtons(posY: Int): Button {
+    private fun createPlayerButtons(): Button {
         val playerTypeButton = Button(
             width = 50,
             height = 50,
             posX = 850,
-            posY = posY,
+            posY = 300,
             text = "H",
             visual = ImageVisual("human.png")
         ).apply {
@@ -102,7 +104,7 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
         return playerTypeButton
     }
 
-    val startButton = Button(
+    private val startButton = Button(
         width = 250,
         height = 50,
         posX = 600,
@@ -115,13 +117,13 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
             val playerNames = playerNameFields.filter { it.text.isNotBlank() }.map { it.text }
             val playerTypes = playerButtons.filter { it.text.isNotBlank() }.map { it.text }
             val param = mapPlayerToPlayerTypes(playerNames,playerTypes)
+            myPlayer = param.values.first()
+            simulationSpeed = checkNotNull(simEntry.selectedItem)
             val secret = "cascadia24d"
             val name = playersField.text
             val sessionID = gameId.text
 
             rootService.networkService.joinGame(secret, name, sessionID, PlayerType.NETWORK)
-            //rootService.gameService.startNewGame(playerNames = param, scoreRules = rules)
-            println(param)
         }
     }
 
@@ -166,7 +168,8 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
             networkStatusArea
         )
         addComponents(overlay)
-        val buttons = createPlayerButtons(300)
+        val buttons = createPlayerButtons()
+        playerNameFields.add(playersField)
         playerButtons.add(buttons)
         overlay.add(buttons)
     }
@@ -195,12 +198,14 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
         return pairs
     }
 
-    override fun refreshConnectionState(state: ConnectionState) {
-        networkStatusArea.text = state.toUIText()
-        val disconnected = state == ConnectionState.DISCONNECTED
+    override fun refreshConnectionState(newState: ConnectionState) {
+        networkStatusArea.text = newState.toUIText()
+        val disconnected = newState == ConnectionState.DISCONNECTED
         cancelButton.isVisible = !disconnected
         startButton.isVisible = disconnected
     }
 
-
+    fun getSpeed(): Float {
+        return simulationSpeed
+    }
 }

@@ -48,6 +48,7 @@ class GameScene(
     private var currentYCamera = 0
     private var speed = 0
     private var state : ConnectionState = ConnectionState.DISCONNECTED
+    private var myPlayerType : PlayerType? = null
 
     private val shopHabitats = GridPane<HexagonView>(
         posX = 1400,
@@ -423,15 +424,21 @@ class GameScene(
         val game = rootService.currentGame
         checkNotNull(game)
         println("RefreshStart")
-//        habitats.clear()
-//        for (i in 0..3) {
-//            shopHabitats[i, 0] = null
-//            //create HexagonViews for the Token
-//            shopTokens[i, 0] = null
-//        }
-//        ruleSetOverlay.removeAll()
 
-        speed = hotSeatConfigurationMenuScene.getSpeed().toInt() * 1000
+        if (networkJoinMenuScene.myPlayer != null){
+            myPlayerType = networkJoinMenuScene.myPlayer
+        }
+        else if (networkConfigurationMenuScene.myPlayer != null) {
+            myPlayerType = networkConfigurationMenuScene.myPlayer
+        }
+
+        speed = if (networkJoinMenuScene.getSpeed() != 0.0F){
+            networkJoinMenuScene.getSpeed().toInt() * 1000
+        } else if (networkConfigurationMenuScene.getSpeed() != 0.0F){
+            networkConfigurationMenuScene.getSpeed().toInt() * 1000
+        }else {
+            hotSeatConfigurationMenuScene.getSpeed().toInt() * 1000
+        }
 
         //add the playArea to the CameraPane
         targetLayout.add(playArea)
@@ -527,7 +534,7 @@ class GameScene(
             confirmReplacementButton.isDisabled = true
         }
 
-        if (game.currentPlayer.playerType == PlayerType.EASY) {
+        if (game.currentPlayer.playerType == PlayerType.EASY || (myPlayerType == PlayerType.EASY && state == ConnectionState.PLAYING_MY_TURN)) {
             disableAll()
             playAnimation(DelayAnimation(speed).apply {
                 onFinished = {
@@ -757,7 +764,7 @@ class GameScene(
         }
 
 
-        if (game.currentPlayer.playerType == PlayerType.EASY) {
+        if (game.currentPlayer.playerType == PlayerType.EASY || (myPlayerType == PlayerType.EASY && state == ConnectionState.PLAYING_MY_TURN)) {
             disableAll()
             playAnimation(DelayAnimation(speed).apply {
                 onFinished = {

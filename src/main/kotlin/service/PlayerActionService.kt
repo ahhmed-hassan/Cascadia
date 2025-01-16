@@ -291,8 +291,14 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
 
         val myTurn = rootService.networkService.connectionState == ConnectionState.PLAYING_MY_TURN
 
-        game.wildlifeTokenList.add(selectedToken)
-        game.wildlifeTokenList.shuffle()
+        if(rootService.networkService.connectionState == ConnectionState.WAITING_FOR_OPPONENTS_TURN){
+            game.wildlifeTokenList.add(0,selectedToken)
+        }
+        else if (myTurn){
+            game.wildlifeTokenList.add(selectedToken)
+            game.wildlifeTokenList.shuffle()
+        }
+
         game.selectedToken = null
 
         if (myTurn) {

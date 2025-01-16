@@ -18,6 +18,8 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     private var rules = mutableListOf<Boolean>()
     private var randomRule = false
     private var randomOrder = false
+    private var simulationSpeed : Float = 0.0f
+    var myPlayer : PlayerType? = null
 
 
     private val overlay = Pane<UIComponent>(
@@ -279,6 +281,9 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             val playerNames = playerNameFields.filter { it.text.isNotBlank() }.map { it.text }
             val playerTypes = playerButtons.filter { it.text.isNotBlank() }.map { it.text }
             val param = mapPlayerToPlayerTypes(playerNames,playerTypes)
+            println(param)
+            myPlayer = param.values.first()
+            simulationSpeed = checkNotNull(simEntry.selectedItem)
             rootService.networkService.hostGame(secret = "cascadia24d", name = playersField.text, sessionID = createId.text, playerType=param.values.first())
         }
     }
@@ -405,7 +410,6 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             }
             pairs[names[i]] = playerType
         }
-
         return pairs
     }
 
@@ -442,4 +446,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         startButton.isVisible = networkPlayers.size >=1
     }
 
+    fun getSpeed(): Float {
+        return simulationSpeed
+    }
 }

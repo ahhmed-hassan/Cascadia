@@ -109,9 +109,9 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
                 player.habitat[1 to 0] = playerStartTile[2]
             }
         }
-//        if(rootService.networkService.connectionState == ConnectionState.PLAYING_MY_TURN) {
-//            onAllRefreshables { refreshAfterGameStart() }
-//        }
+        if(rootService.networkService.connectionState == ConnectionState.DISCONNECTED) {
+            onAllRefreshables { refreshAfterGameStart() }
+        }
     }
 
 
