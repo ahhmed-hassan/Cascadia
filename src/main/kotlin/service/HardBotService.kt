@@ -114,13 +114,6 @@ class HardBotService(private val rootService: RootService) {
         for (i in 1..maxNumberOfThreads) {
             threads.add(
                 Thread {
-                    val rootService = RootService()
-                    rootService.gameService.startNewGame(
-                        playerNames = mapOf("A" to PlayerType.NORMAL, "B" to PlayerType.NORMAL),
-                        scoreRules = listOf(),
-                        orderIsRandom = true,
-                        isRandomRules = true,
-                    )
                     simulate(queue, rootService)
                 }
             )
@@ -310,7 +303,7 @@ class HardBotService(private val rootService: RootService) {
             threads.add(Thread {
                 val habitat = deepCopyHabitat(player.habitat)
                 val shop = deepCopyShop(game.shop)
-                var selectedToken: WildlifeToken? = null
+                var selectedToken: WildlifeToken?
                 var selectedTokenIndex = 0
                 for (animal in Animal.values()) {
                     var tokenChance: Double?
