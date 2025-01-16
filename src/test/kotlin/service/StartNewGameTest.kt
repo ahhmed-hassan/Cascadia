@@ -73,7 +73,7 @@ class StartNewGameTest {
 
         //Verify wildlife tokens
         assertTrue(game.wildlifeTokenList.isNotEmpty())
-        assertEquals(40, game.wildlifeTokenList.size) //4 Tokens are in shop
+        assertEquals(96, game.wildlifeTokenList.size) //4 Tokens are in shop
 
         //Verify Habitat Tiles
         assertEquals(39, game.habitatTileList.size) // for 2 Players, 4 Tiles are in shop

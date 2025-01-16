@@ -291,7 +291,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         game.selectedToken = null
 
         if (myTurn) {
-            rootService.networkService.selectedTokenIndex = null
+            rootService.networkService.tokenCoordinates = null
             rootService.networkService.sendPlacedMessage()
         }
         rootService.gameService.nextTurn()
