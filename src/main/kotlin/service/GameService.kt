@@ -109,7 +109,9 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
                 player.habitat[1 to 0] = playerStartTile[2]
             }
         }
-        onAllRefreshables { refreshAfterGameStart() }
+//        if(rootService.networkService.connectionState == ConnectionState.PLAYING_MY_TURN) {
+//            onAllRefreshables { refreshAfterGameStart() }
+//        }
     }
 
 
@@ -256,7 +258,8 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         // refill shop
         val newHabitatTile = game.habitatTileList.removeLast()
         val newWildlifeToken = game.wildlifeTokenList.removeLast()
-        for (i in 0 until game.shop.size) {
+        println(newWildlifeToken)
+        for (i in game.shop.indices) {
             // refill missing pair
             if (game.shop[i].first == null && game.shop[i].second == null) {
                 game.shop[i] = Pair(newHabitatTile, newWildlifeToken)

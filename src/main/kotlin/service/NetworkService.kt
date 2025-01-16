@@ -105,6 +105,15 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         val players = this.playersList
         val playerNames = players.associateWith { PlayerType.NETWORK }
 
+        val networkClient = checkNotNull(client)
+        // Check if client is the first player to play
+        val index = players.indexOf(networkClient.playerName)
+        if( index == 0) {
+            updateConnectionState(ConnectionState.PLAYING_MY_TURN)
+        } else{
+            updateConnectionState(ConnectionState.WAITING_FOR_OPPONENTS_TURN)
+        }
+
         rootService.gameService.startNewGame(
             playerNames,
             scoreRules,
@@ -117,15 +126,9 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
 
         val game = rootService.currentGame
         checkNotNull(game)
+        onAllRefreshables { refreshAfterGameStart() }
 
-        val networkClient = checkNotNull(client)
-        // Check if client is the first player to play
-        val index = players.indexOf(networkClient.playerName)
-        if( index == 0) {
-            updateConnectionState(ConnectionState.PLAYING_MY_TURN)
-        } else{
-            updateConnectionState(ConnectionState.WAITING_FOR_OPPONENTS_TURN)
-        }
+
 
     }
 
@@ -192,7 +195,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         //Remove the used habitat tiles and wildlife tokens from the main list.
         currentGame.habitatTileList.removeAll(currentGame.shop.map { it.first })
         currentGame.wildlifeTokenList.removeAll(currentGame.shop.map { it.second })
-
+        onAllRefreshables { refreshAfterGameStart() }
         // Check if current player is the first player to play
         if (index == 0) {
             updateConnectionState(ConnectionState.PLAYING_MY_TURN)
@@ -305,6 +308,13 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         if (game.currentPlayer.name != sender) {
             throw IllegalStateException("the sender is not the current player.")
         }
+        for (i in game.shop.indices) {
+            println("RECEIVER TILE: ${game.shop[i].first?.id}, TOKEN: ${game.shop[i].second?.animal}")
+        }
+        // Update the game's wildlife token list using the tokens from the message.
+        game.wildlifeTokenList = message.wildlifeTokens.map { animal ->
+            WildlifeToken(LocalAnimal.valueOf(animal.name))
+        }.toMutableList()
 
         // Ensure the placed tile is within valid indices.
         check(message.placedTile in game.shop.indices)
@@ -315,7 +325,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         val rCoordTile = requireNotNull(message.rcoordTile) { "rCoordTile must not be null" }
         val habitatCoordinates = Pair(qCoordTile, rCoordTile)
 
-        if (message.selectedToken != null) {
+        if (message.qcoordToken != null) {
             // Validate the selected token's index and coordinates if a token is provided.
             check(message.selectedToken in game.shop.indices)
             val qCoordToken = requireNotNull(message.qcoordToken) { "qCoordTile must not be null" }
@@ -335,7 +345,11 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
                 rootService.playerActionService.chooseTokenTilePair(message.placedTile)
                 repeat(message.tileRotation) { rootService.playerActionService.rotateTile() }
                 rootService.playerActionService.addTileToHabitat(habitatCoordinates)
-                val targetTile = game.currentPlayer.habitat[habitatCoordinates]
+                val targetTile = game.currentPlayer.habitat[wildlifeTokenCoordinates]
+                println(targetTile?.id)
+                println(habitatCoordinates)
+                println(wildlifeTokenCoordinates)
+                println(targetTile?.wildlifeSymbols)
                 checkNotNull(targetTile)
                 rootService.playerActionService.addToken(targetTile)
             }
@@ -347,17 +361,9 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
             rootService.playerActionService.discardToken()
         }
 
-        // Update the game's wildlife token list using the tokens from the message.
-        game.wildlifeTokenList = message.wildlifeTokens.map { animal ->
-            WildlifeToken(LocalAnimal.valueOf(animal.name))
-        }.toMutableList()
 
-        // Update the connection state based on the current player.
-        if (client?.playerName == game.currentPlayer.name) {
-            updateConnectionState(ConnectionState.PLAYING_MY_TURN)
-        } else {
-            updateConnectionState(ConnectionState.WAITING_FOR_OPPONENTS_TURN)
-        }
+
+        updateConnectionState(ConnectionState.PLAYING_MY_TURN)
     }
 
     /**
@@ -471,10 +477,15 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         val coordinates = requireNotNull(tileCoordinates) { "Tile coordinates must not be null" }
         val qTile = coordinates.first
         val rTile = coordinates.second
-
+        var qToken : Int ? = null
+        var rToken : Int ? = null
         val tokenIndex = requireNotNull(selectedTokenIndex)
-        val qToken = tokenCoordinates?.first ?: -1 // Default-Wert, wenn null
-        val rToken = tokenCoordinates?.second ?: -1 // Default-Wert, wenn null
+        if (tokenCoordinates?.first != null) {
+            qToken = tokenCoordinates?.first
+            rToken = tokenCoordinates?.second
+        }
+
+
 
         val wildlifeTokensList = game.wildlifeTokenList.map { RemoteAnimal.valueOf(it.animal.name) }
 
@@ -493,6 +504,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         // Ensure there is a network client and send the message.
         val networkClient = checkNotNull(client) { "No network client found" }
         networkClient.sendGameActionMessage(message)
+        updateConnectionState(ConnectionState.WAITING_FOR_OPPONENTS_TURN)
 
         // reset to default
         placedTileIndex = null

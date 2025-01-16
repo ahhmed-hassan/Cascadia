@@ -423,6 +423,13 @@ class GameScene(
         val game = rootService.currentGame
         checkNotNull(game)
         println("RefreshStart")
+//        habitats.clear()
+//        for (i in 0..3) {
+//            shopHabitats[i, 0] = null
+//            //create HexagonViews for the Token
+//            shopTokens[i, 0] = null
+//        }
+//        ruleSetOverlay.removeAll()
 
         speed = hotSeatConfigurationMenuScene.getSpeed().toInt() * 1000
 
@@ -563,8 +570,8 @@ class GameScene(
         //enable for each Habitat where Token can be put onMouseClick
         for (habitat in game.currentPlayer.habitat) {
             if (habitat.value in checkNotNull(tokenHabitate)
-                && (game.currentPlayer.playerType == PlayerType.LOCAL
-                        || state == ConnectionState.PLAYING_MY_TURN)
+//                && (game.currentPlayer.playerType == PlayerType.LOCAL
+//                        || state == ConnectionState.PLAYING_MY_TURN)
                 ) {
                 playArea[habitat.key.second, habitat.key.first] = (habitats[habitat.value] as HexagonView).apply {
                     isDisabled = false
@@ -866,10 +873,10 @@ class GameScene(
                     rootService.playerActionService.addTileToHabitat(i)
                 }
             }
-            if (game.currentPlayer.playerType != PlayerType.LOCAL){
-                if (state != ConnectionState.PLAYING_MY_TURN)
-                    playArea[i.second, i.first]?.onMouseClicked = null
-            }
+//            if (game.currentPlayer.playerType != PlayerType.LOCAL){
+//                if (state != ConnectionState.PLAYING_MY_TURN)
+//                    playArea[i.second, i.first]?.onMouseClicked = null
+//            }
         }
     }
 
