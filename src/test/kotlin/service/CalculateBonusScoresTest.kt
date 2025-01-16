@@ -91,7 +91,6 @@ class CalculateBonusScoresTest {
             false,
             false
         )
-
         val game = rootService.currentGame
         checkNotNull(game)
 
@@ -102,15 +101,13 @@ class CalculateBonusScoresTest {
                 Terrain.PRAIRIE to 4,
                 Terrain.RIVER to 2,
                 Terrain.WETLAND to 1
-            ),
-            "Local_Player2" to mapOf(
+            ), "Local_Player2" to mapOf(
                 Terrain.FOREST to 4,
                 Terrain.MOUNTAIN to 3,
                 Terrain.PRAIRIE to 5,
                 Terrain.RIVER to 2,
                 Terrain.WETLAND to 2
-            ),
-            "Easy_Bot" to mapOf(
+            ), "Easy_Bot" to mapOf(
                 Terrain.FOREST to 4,
                 Terrain.MOUNTAIN to 3,
                 Terrain.PRAIRIE to 5,
@@ -118,8 +115,6 @@ class CalculateBonusScoresTest {
                 Terrain.WETLAND to 2
             )
         )
-
-        println(playersLongestTerrain)
 
         val expectedBonusScores = mapOf(
             "Local_Player1" to mapOf(
@@ -128,15 +123,13 @@ class CalculateBonusScoresTest {
                 Terrain.PRAIRIE to 1,
                 Terrain.RIVER to 1,
                 Terrain.WETLAND to 1
-            ),
-            "Local_Player2" to mapOf(
+            ), "Local_Player2" to mapOf(
                 Terrain.FOREST to 0,
                 Terrain.MOUNTAIN to 1,
                 Terrain.PRAIRIE to 2,
                 Terrain.RIVER to 1,
                 Terrain.WETLAND to 2
-            ),
-            "Easy_Bot" to mapOf(
+            ), "Easy_Bot" to mapOf(
                 Terrain.FOREST to 0,
                 Terrain.MOUNTAIN to 1,
                 Terrain.PRAIRIE to 2,
@@ -144,13 +137,8 @@ class CalculateBonusScoresTest {
                 Terrain.WETLAND to 2
             )
         )
-
-        println(expectedBonusScores)
-
         val result = scoringService.calculateBonusScores(playersLongestTerrain)
         assertEquals(expectedBonusScores, result)
-
-        println(result)
     }
 
     /**

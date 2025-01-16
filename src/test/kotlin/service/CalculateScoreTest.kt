@@ -14,14 +14,13 @@ class CalculateScoreTest {
     private val scoringService = ScoringService(rootService)
 
     /**
-     * Tests the calculateScore method for a two-player scenario.
+     * Sets up the initial game state before test.
      *
-     * This test initializes a game with two local players, sets up their habitats with
-     * specific habitat tiles and wildlife tokens, and then calculates the scores
-     * based on animal patterns, terrain connections, and nature tokens.
+     * This method initializes a new game with two local players and configures their habitats
+     * using helper methods for each player's setup.
      */
-    @Test
-    fun testCalculateScore() {
+    @BeforeTest
+    fun setUp() {
         rootService.gameService.startNewGame(
             mapOf(
                 "Local_Player1" to PlayerType.LOCAL,
@@ -31,68 +30,27 @@ class CalculateScoreTest {
             false,
             false
         )
-
         val game = rootService.currentGame
         checkNotNull(game)
+
         val allHabitatTiles = rootService.gameService.getHabitatTiles()
         game.playerList[0].habitat.clear()
         game.playerList[1].habitat.clear()
 
-        // Setup Player 1's habitat
-        game.playerList[0].habitat[Pair(0, 0)] = allHabitatTiles[11].apply {
-            wildlifeToken = WildlifeToken(Animal.FOX)
-        }
-        game.playerList[0].habitat[Pair(1, 0)] = allHabitatTiles[12].apply {
-            wildlifeToken = WildlifeToken(Animal.FOX)
-        }
-        game.playerList[0].habitat[Pair(1, -1)] = allHabitatTiles[13].apply {
-            wildlifeToken = WildlifeToken(Animal.ELK)
-        }
-        game.playerList[0].habitat[Pair(0, -1)] = allHabitatTiles[14].apply {
-            wildlifeToken = WildlifeToken(Animal.BEAR)
-        }
-        game.playerList[0].habitat[Pair(-1, 0)] = allHabitatTiles[15].apply {
-            wildlifeToken = WildlifeToken(Animal.BEAR)
-        }
-        game.playerList[0].habitat[Pair(-1, 1)] = allHabitatTiles[55].apply {
-            wildlifeToken = WildlifeToken(Animal.HAWK)
-            rotationOffset = 2
-        }
-        game.playerList[0].habitat[Pair(0, 1)] = allHabitatTiles[16].apply {
-            wildlifeToken = WildlifeToken(Animal.SALMON)
-        }
-        game.playerList[0].natureToken = 2
+        setupPlayer1Habitat(game.playerList[0], allHabitatTiles)
+        setupPlayer2Habitat(game.playerList[1], allHabitatTiles)
+    }
 
-        // Setup Player 2s habitat
-        game.playerList[1].habitat[Pair(0, 0)] = allHabitatTiles[35].apply {
-            wildlifeToken = WildlifeToken(Animal.HAWK)
-        }
-        game.playerList[1].habitat[Pair(1, 0)] = allHabitatTiles[34].apply {
-            wildlifeToken = WildlifeToken(Animal.SALMON)
-        }
-        game.playerList[1].habitat[Pair(1, -1)] = allHabitatTiles[34].apply {
-            wildlifeToken = WildlifeToken(Animal.SALMON)
-        }
-        game.playerList[1].habitat[Pair(0, -1)] = allHabitatTiles[34].apply {
-            wildlifeToken = WildlifeToken(Animal.SALMON)
-        }
-        game.playerList[1].habitat[Pair(-1, 0)] = allHabitatTiles[37].apply {
-            wildlifeToken = WildlifeToken(Animal.BEAR)
-        }
-        game.playerList[1].habitat[Pair(-1, 1)] = allHabitatTiles[34].apply {
-            wildlifeToken = WildlifeToken(Animal.SALMON)
-        }
-        game.playerList[1].habitat[Pair(0, 1)] = allHabitatTiles[34].apply {
-            wildlifeToken = WildlifeToken(Animal.SALMON)
-        }
-        game.playerList[1].natureToken = 3
-
-        println(game.playerList[0].habitat)
-        println(game.playerList[1].habitat)
-
+    /**
+     * Tests the calculateScore method for a two-player scenario.
+     *
+     * This test initializes a game with two local players, sets up their habitats with
+     * specific habitat tiles and wildlife tokens, and then calculates the scores
+     * based on animal patterns, terrain connections, and nature tokens.
+     */
+    @Test
+    fun testCalculateScore() {
         val result = scoringService.calculateScore()
-
-        //Expected scores
         val expectedScores = mapOf(
             "Local_Player1" to PlayerScore(
                 animalsScores = mapOf(
@@ -143,7 +101,69 @@ class CalculateScoreTest {
                 )
             )
         )
-        println(result)
         assertEquals(expectedScores, result)
+    }
+
+    /**
+     * Configures Player 1's habitat with specific habitat tiles and wildlife tokens.
+     *
+     * @param player The player whose habitat is being configured.
+     * @param allHabitatTiles The list of all available habitat tiles.
+     */
+    private fun setupPlayer1Habitat(player: Player, allHabitatTiles: List<HabitatTile>) {
+        player.habitat[Pair(0, 0)] = allHabitatTiles[11].apply {
+            wildlifeToken = WildlifeToken(Animal.FOX)
+        }
+        player.habitat[Pair(1, 0)] = allHabitatTiles[12].apply {
+            wildlifeToken = WildlifeToken(Animal.FOX)
+        }
+        player.habitat[Pair(1, -1)] = allHabitatTiles[13].apply {
+            wildlifeToken = WildlifeToken(Animal.ELK)
+        }
+        player.habitat[Pair(0, -1)] = allHabitatTiles[14].apply {
+            wildlifeToken = WildlifeToken(Animal.BEAR)
+        }
+        player.habitat[Pair(-1, 0)] = allHabitatTiles[15].apply {
+            wildlifeToken = WildlifeToken(Animal.BEAR)
+        }
+        player.habitat[Pair(-1, 1)] = allHabitatTiles[55].apply {
+            wildlifeToken = WildlifeToken(Animal.HAWK)
+            rotationOffset = 2
+        }
+        player.habitat[Pair(0, 1)] = allHabitatTiles[16].apply {
+            wildlifeToken = WildlifeToken(Animal.SALMON)
+        }
+        player.natureToken = 2
+    }
+
+    /**
+     * Configures Player 2's habitat with specific habitat tiles and wildlife tokens.
+     *
+     * @param player The player whose habitat is being configured.
+     * @param allHabitatTiles The list of all available habitat tiles.
+     */
+    private fun setupPlayer2Habitat(player: Player, allHabitatTiles: List<HabitatTile>) {
+        player.habitat[Pair(0, 0)] = allHabitatTiles[35].apply {
+            wildlifeToken = WildlifeToken(Animal.HAWK)
+        }
+        player.habitat[Pair(1, 0)] = allHabitatTiles[34].apply {
+            wildlifeToken = WildlifeToken(Animal.SALMON)
+        }
+        player.habitat[Pair(1, -1)] = allHabitatTiles[34].apply {
+            wildlifeToken = WildlifeToken(Animal.SALMON)
+        }
+        player.habitat[Pair(0, -1)] = allHabitatTiles[34].apply {
+            wildlifeToken = WildlifeToken(Animal.SALMON)
+        }
+        player.habitat[Pair(-1, 0)] = allHabitatTiles[37].apply {
+            wildlifeToken = WildlifeToken(Animal.BEAR)
+        }
+        player.habitat[Pair(-1, 1)] = allHabitatTiles[34].apply {
+            wildlifeToken = WildlifeToken(Animal.SALMON)
+        }
+        player.habitat[Pair(0, 1)] = allHabitatTiles[34].apply {
+            wildlifeToken = WildlifeToken(Animal.SALMON)
+        }
+        player.natureToken = 3
     }
 }
