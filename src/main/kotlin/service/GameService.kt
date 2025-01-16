@@ -60,28 +60,28 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         val shop = totalTilesInGame.take(4).mapIndexed { index, tile ->
             tile as HabitatTile? to wildlifeTokens[index] as WildlifeToken? }.toMutableList()
         totalTilesInGame.removeAll(shop.map { it.first })
-        wildlifeTokens.removeAll(shop.map { it.second })
+        shop.forEach{ pair -> wildlifeTokens.remove(pair.second)}
 
-        val startTiles = getStartTiles().toMutableList()
+            val startTiles = getStartTiles().toMutableList()
 
         val playerList = playerOrder.map { name -> val playerType = requireNotNull(playerNames[name])
             Player(name, mutableMapOf(), playerType) }
 
         val game = CascadiaGame(
-            startTiles,
-            ruleSet,
-            0.3f,
-            25,
-            false,
-            false,
-            shop,
-            mutableListOf(),
-            playerList.first(),
-            playerList,
-            totalTilesInGame,
-            null,
-            null,
-            wildlifeTokens
+            startTileList =  startTiles,
+            ruleSet =  ruleSet,
+            simulationSpeed = 0.3f,
+            natureToken = 25,
+            hasReplacedThreeToken = false,
+            hasPlayedTile = false,
+            shop = shop,
+            discardedToken = mutableListOf(),
+            currentPlayer = playerList.first(),
+            playerList = playerList,
+            habitatTileList = totalTilesInGame,
+            selectedTile = null,
+            selectedToken = null,
+            wildlifeTokenList = wildlifeTokens
         )
 
         rootService.currentGame = game
@@ -126,7 +126,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
             wildlifeToken.add(WildlifeToken(Animal.SALMON))
         }
         wildlifeToken.shuffle()
-        return wildlifeToken
+        return wildlifeToken.toMutableList()
     }
 
 
