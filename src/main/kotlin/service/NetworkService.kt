@@ -114,7 +114,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         )
 
         sendGameInitMessage()
-
+        println("WILDLIFE TOKENS HOST: ${rootService.currentGame?.wildlifeTokenList?.size}")
         val game = rootService.currentGame
         checkNotNull(game)
 
@@ -175,6 +175,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         rootService.currentGame?.wildlifeTokenList = message.initWildlifeTokens.map { animal ->
             WildlifeToken(LocalAnimal.valueOf(animal.name))
         }.toMutableList()
+        println("WILDLIFE TOKENS GUEST: ${rootService.currentGame?.wildlifeTokenList?.size}")
         val allHabitatTiles = rootService.gameService.getHabitatTiles()
         val newHabitatTileList = message.habitatTileList.mapNotNull { id ->
             allHabitatTiles.find { it.id == id } // Finde das Tile mit der entsprechenden ID
@@ -191,7 +192,9 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
 
         //Remove the used habitat tiles and wildlife tokens from the main list.
         currentGame.habitatTileList.removeAll(currentGame.shop.map { it.first })
-        currentGame.wildlifeTokenList.removeAll(currentGame.shop.map { it.second })
+        //currentGame.wildlifeTokenList.removeAll(currentGame.shop.map { it.second })
+        currentGame.shop.forEach{ pair -> currentGame.wildlifeTokenList.remove(pair.second) }
+        //println("WILDLIFE TOKENS GUEST: ${rootService.currentGame?.wildlifeTokenList?.size}")
 
         // Check if current player is the first player to play
         if (index == 0) {
