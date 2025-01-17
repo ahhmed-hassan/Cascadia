@@ -24,9 +24,6 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         checkNotNull(game)
         println("TilePair")
         val myTurn = rootService.networkService.connectionState == ConnectionState.PLAYING_MY_TURN
-        for (i in game.shop.indices) {
-            println("SENDER TILE: ${game.shop[i].first?.id}, TOKEN: ${game.shop[i].second?.animal}")
-        }
         // check if chosenPair is not out of bounds
         require(chosenPair in 0..3) { "Index for pair must be between 0 and 3" }
 
@@ -34,7 +31,6 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         val shopToken = game.shop[chosenPair].second
         checkNotNull(shopTile)
         checkNotNull(shopToken)
-        println(shopToken.animal)
         require(game.selectedTile == null && game.selectedToken == null)
 
         //mark the chosen Token-Tile Pair as selected
@@ -220,7 +216,6 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         checkNotNull(selectedToken)
         val currentPlayer = game.currentPlayer
         println("AddToken")
-        println(tile.id)
 
         val myTurn = rootService.networkService.connectionState == ConnectionState.PLAYING_MY_TURN
 

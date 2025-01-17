@@ -274,12 +274,16 @@ class GameScene(
         visual = ColorVisual(200, 150, 255)
     ).apply {
         onMouseClicked = {
+            val game = rootService.currentGame
+            checkNotNull(game)
             //check overpopulation
-            if (state == ConnectionState.PLAYING_MY_TURN) {
+            if ((state == ConnectionState.PLAYING_MY_TURN && myPlayerType == PlayerType.LOCAL) || game.currentPlayer.playerType == PlayerType.LOCAL) {
                 rootService.playerActionService.replaceWildlifeTokens(hasThreeSameWildlifeTokens().second)
                 this.isDisabled = true
-            } else
+            }
+            else{
                 this.isDisabled = true
+            }
         }
     }
 
@@ -414,8 +418,8 @@ class GameScene(
             //playArea,
             playableTile,
             playableToken,
+            networkStatusArea,
             ruleSetOverlay,
-            networkStatusArea
         )
 
     }
@@ -500,12 +504,14 @@ class GameScene(
         for (i in 0..3) {
             shopTokens[i, 0]?.apply {
                 onMouseClicked = {
-                    rootService.playerActionService.chooseTokenTilePair(i)
+                    if (game.currentPlayer.playerType == PlayerType.LOCAL || state == ConnectionState.PLAYING_MY_TURN)
+                        rootService.playerActionService.chooseTokenTilePair(i)
                 }
             }
             shopHabitats[i, 0]?.apply {
                 onMouseClicked = {
-                    rootService.playerActionService.chooseTokenTilePair(i)
+                    if (game.currentPlayer.playerType == PlayerType.LOCAL || state == ConnectionState.PLAYING_MY_TURN)
+                        rootService.playerActionService.chooseTokenTilePair(i)
                 }
             }
         }
@@ -533,6 +539,8 @@ class GameScene(
             replaceWildlifeButton.isDisabled = true
             confirmReplacementButton.isDisabled = true
         }
+
+        println(state)
 
         if (game.currentPlayer.playerType == PlayerType.EASY || (myPlayerType == PlayerType.EASY && state == ConnectionState.PLAYING_MY_TURN)) {
             disableAll()
@@ -577,8 +585,8 @@ class GameScene(
         //enable for each Habitat where Token can be put onMouseClick
         for (habitat in game.currentPlayer.habitat) {
             if (habitat.value in checkNotNull(tokenHabitate)
-//                && (game.currentPlayer.playerType == PlayerType.LOCAL
-//                        || state == ConnectionState.PLAYING_MY_TURN)
+                && (game.currentPlayer.playerType == PlayerType.LOCAL
+                        || state == ConnectionState.PLAYING_MY_TURN)
                 ) {
                 playArea[habitat.key.second, habitat.key.first] = (habitats[habitat.value] as HexagonView).apply {
                     isDisabled = false
@@ -673,6 +681,15 @@ class GameScene(
             labels = habitatTile.terrains.map { terrain: Terrain -> terrain.name.substring(0, 1) },
             token = habitatTile.wildlifeToken?.animal.toString().substring(0, 1)
         )
+        playArea.clear()
+
+        for (habitat in game.currentPlayer.habitat) {
+            playArea[habitat.key.second, habitat.key.first] = (habitats[habitat.value] as HexagonView).apply {
+                onMouseClicked = null
+            }
+        }
+
+        Thread.sleep(1000)
 
         println("RefreshToken")
     }
@@ -687,7 +704,8 @@ class GameScene(
             shopTokens[i, 0] = game.shop[i].second?.animal?.let { createTokens(it.name) }
             shopTokens[i, 0]?.apply {
                 onMouseClicked = {
-                    rootService.playerActionService.chooseTokenTilePair(i)
+                    if (game.currentPlayer.playerType == PlayerType.LOCAL)
+                        rootService.playerActionService.chooseTokenTilePair(i)
                 }
             }
         }
@@ -723,12 +741,14 @@ class GameScene(
         for (i in 0..3) {
             shopTokens[i, 0]?.apply {
                 onMouseClicked = {
-                    rootService.playerActionService.chooseTokenTilePair(i)
+                    if (game.currentPlayer.playerType == PlayerType.LOCAL || myPlayerType == PlayerType.LOCAL)
+                        rootService.playerActionService.chooseTokenTilePair(i)
                 }
             }
             shopHabitats[i, 0]?.apply {
                 onMouseClicked = {
-                    rootService.playerActionService.chooseTokenTilePair(i)
+                    if (game.currentPlayer.playerType == PlayerType.LOCAL || myPlayerType == PlayerType.LOCAL)
+                        rootService.playerActionService.chooseTokenTilePair(i)
                 }
             }
         }
@@ -746,25 +766,26 @@ class GameScene(
         natureTokenLabel.apply { text = "NatureToken: " + game.currentPlayer.natureToken.toString() }
         currentPlayerLabel.apply { text = game.currentPlayer.name }
 
-        //Disable resolveOverpopulation if already done or not possible
-        if (game.hasReplacedThreeToken || !hasThreeSameWildlifeTokens().first) {
-            resolveOverpopButton.isDisabled = true
-        } else
-            resolveOverpopButton.isDisabled = false
+        if (game.currentPlayer.playerType == PlayerType.LOCAL || (myPlayerType == PlayerType.LOCAL && state == ConnectionState.PLAYING_MY_TURN)) {
+            //Disable resolveOverpopulation if already done or not possible
+            if (game.hasReplacedThreeToken || !hasThreeSameWildlifeTokens().first) {
+                resolveOverpopButton.isDisabled = true
+            } else
+                resolveOverpopButton.isDisabled = false
 
-        //Disable Buttons for action with NatureToken if player has none
-        if (game.currentPlayer.natureToken == 0) {
-            chooseCustomPair.isDisabled = true
-            replaceWildlifeButton.isDisabled = true
-            confirmReplacementButton.isDisabled = true
-        } else {
-            chooseCustomPair.isDisabled = false
-            replaceWildlifeButton.isDisabled = false
-            confirmReplacementButton.isDisabled = false
+            //Disable Buttons for action with NatureToken if player has none
+            if (game.currentPlayer.natureToken == 0) {
+                chooseCustomPair.isDisabled = true
+                replaceWildlifeButton.isDisabled = true
+                confirmReplacementButton.isDisabled = true
+            } else {
+                chooseCustomPair.isDisabled = false
+                replaceWildlifeButton.isDisabled = false
+                confirmReplacementButton.isDisabled = false
+            }
         }
 
-
-        if (game.currentPlayer.playerType == PlayerType.EASY || (myPlayerType == PlayerType.EASY && state == ConnectionState.PLAYING_MY_TURN)) {
+        if (game.currentPlayer.playerType == PlayerType.EASY) {
             disableAll()
             playAnimation(DelayAnimation(speed).apply {
                 onFinished = {
@@ -772,14 +793,25 @@ class GameScene(
                 }
             })
         }
-        println(game.ruleSet)
+
         println("RefreshNext")
     }
 
     override fun refreshConnectionState(newState: ConnectionState) {
         networkStatusArea.text = newState.toUIText()
         state = newState
-        println(state)
+        println(newState)
+        println(networkStatusArea.text)
+        if (state == ConnectionState.PLAYING_MY_TURN){
+            if (myPlayerType == PlayerType.EASY) {
+                disableAll()
+                playAnimation(DelayAnimation(speed).apply {
+                    onFinished = {
+                        rootService.easyBotService.takeTurn()
+                    }
+                })
+            }
+        }
     }
 
     /**
@@ -880,10 +912,11 @@ class GameScene(
                     rootService.playerActionService.addTileToHabitat(i)
                 }
             }
-//            if (game.currentPlayer.playerType != PlayerType.LOCAL){
-//                if (state != ConnectionState.PLAYING_MY_TURN)
-//                    playArea[i.second, i.first]?.onMouseClicked = null
-//            }
+
+            if (game.currentPlayer.playerType != PlayerType.LOCAL){
+                if (state != ConnectionState.PLAYING_MY_TURN)
+                    playArea[i.second, i.first]?.onMouseClicked = null
+            }
         }
     }
 

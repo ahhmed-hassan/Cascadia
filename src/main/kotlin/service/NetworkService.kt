@@ -194,7 +194,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
 
         //Remove the used habitat tiles and wildlife tokens from the main list.
         currentGame.habitatTileList.removeAll(currentGame.shop.map { it.first })
-        currentGame.wildlifeTokenList.removeAll(currentGame.shop.map { it.second })
+        currentGame.shop.forEach { pair -> currentGame.wildlifeTokenList.remove(pair.second)  }
         onAllRefreshables { refreshAfterGameStart() }
         // Check if current player is the first player to play
         if (index == 0) {
@@ -308,9 +308,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         if (game.currentPlayer.name != sender) {
             throw IllegalStateException("the sender is not the current player.")
         }
-        for (i in game.shop.indices) {
-            println("RECEIVER TILE: ${game.shop[i].first?.id}, TOKEN: ${game.shop[i].second?.animal}")
-        }
+
         // Update the game's wildlife token list using the tokens from the message.
         game.wildlifeTokenList = message.wildlifeTokens.map { animal ->
             WildlifeToken(LocalAnimal.valueOf(animal.name))
@@ -346,10 +344,6 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
                 repeat(message.tileRotation) { rootService.playerActionService.rotateTile() }
                 rootService.playerActionService.addTileToHabitat(habitatCoordinates)
                 val targetTile = game.currentPlayer.habitat[wildlifeTokenCoordinates]
-                println(targetTile?.id)
-                println(habitatCoordinates)
-                println(wildlifeTokenCoordinates)
-                println(targetTile?.wildlifeSymbols)
                 checkNotNull(targetTile)
                 rootService.playerActionService.addToken(targetTile)
             }

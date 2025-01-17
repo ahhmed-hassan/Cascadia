@@ -258,7 +258,6 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         // refill shop
         val newHabitatTile = game.habitatTileList.removeLast()
         val newWildlifeToken = game.wildlifeTokenList.removeLast()
-        println(newWildlifeToken)
         for (i in game.shop.indices) {
             // refill missing pair
             if (game.shop[i].first == null && game.shop[i].second == null) {
