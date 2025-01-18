@@ -50,43 +50,43 @@ class EasyBotService(private val rootService: RootService) {
             resolveOverpopulation()
         }
 
-        //Maybe uses natureToken
-        if (player.natureToken >= 1 && useNaturalTokenChance >= (1..100).random()) {
-            if ((1..2).random() == 1) {
-                //replace WildlifeTokens
+        delayAction(2000) {
+            //Maybe uses natureToken
+            if (player.natureToken >= 1 && useNaturalTokenChance >= (1..100).random()) {
+                if ((1..2).random() == 1) {
+                    //replace WildlifeTokens
 
-                val list = mutableListOf<Int>()
-                for (i in 0..3) {
-                    if (replaceSingleTokenChance >= (1..100).random()) {
-                        list.add(i)
+                    val list = mutableListOf<Int>()
+                    for (i in 0..3) {
+                        if (replaceSingleTokenChance >= (1..100).random()) {
+                            list.add(i)
+                        }
                     }
-                }
-                delayAction(2000) {
                     playerActionService.replaceWildlifeTokens(list)
-                }
-                hasReplacedWildlifeTokens = true
-            } else {
-                //choose CustomPair
+                    hasReplacedWildlifeTokens = true
+                } else {
+                    //choose CustomPair
 
-                var tile: Int
-                var animal: Int
+                    var tile: Int
+                    var animal: Int
 
-                do {
-                    tile = (0..3).random()
-                    animal = (0..3).random()
-                } while (tile == animal)
-                delayAction(3000) {
+                    do {
+                        tile = (0..3).random()
+                        animal = (0..3).random()
+                    } while (tile == animal)
                     playerActionService.chooseCustomPair(tile, animal)
+                    hasChosenCustomPair = true
                 }
-                hasChosenCustomPair = true
             }
         }
 
-        if (hasReplacedWildlifeTokens) resolveOverpopulation()
+        delayAction(3000) {
+            if (hasReplacedWildlifeTokens) resolveOverpopulation()
+        }
 
-        //chooses a pair if it has not happened yet
-        if (!hasChosenCustomPair) {
-            delayAction(3000) {
+        delayAction(4000) {
+            //chooses a pair if it has not happened yet
+            if (!hasChosenCustomPair) {
                 playerActionService.chooseTokenTilePair((0..3).random())
             }
         }
@@ -94,13 +94,13 @@ class EasyBotService(private val rootService: RootService) {
         //maybe rotates the tile before placing
         val rotation = (0..5).random()
         for (i in 1..rotation) {
-            delayAction(4000) {
+            delayAction(5000) {
                 playerActionService.rotateTile()
             }
         }
 
         //place the tile
-        delayAction(5000) {
+        delayAction(6000) {
             playerActionService.addTileToHabitat(
                 gameService.getAllPossibleCoordinatesForTilePlacing(player.habitat).random()
             )
@@ -108,7 +108,7 @@ class EasyBotService(private val rootService: RootService) {
 
         //maybe places the wildlife
         if (placeWildlifeChance >= (1..100).random()) {
-            delayAction(6000) {
+            delayAction(7000) {
                 val selectedToken = game.selectedToken
                 checkNotNull(selectedToken)
                 val tiles = gameService.getAllPossibleTilesForWildlife(selectedToken.animal, player.habitat)

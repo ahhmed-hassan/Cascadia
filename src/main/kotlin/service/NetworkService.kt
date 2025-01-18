@@ -5,6 +5,7 @@ import edu.udo.cs.sopra.ntf.entity.ScoringCards
 import entity.*
 import entity.Animal as LocalAnimal
 import edu.udo.cs.sopra.ntf.messages.*
+import tools.aqua.bgw.core.BoardGameApplication.Companion.runOnGUIThread
 import edu.udo.cs.sopra.ntf.entity.Animal as RemoteAnimal
 import java.lang.IllegalStateException
 
@@ -121,7 +122,6 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
             isRandomRules,
             null,
         )
-
         sendGameInitMessage()
 
         val game = rootService.currentGame
@@ -245,6 +245,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
                     rootService.gameService.resolveOverpopulation()
                 }
                 3 -> {
+                    require(!game.hasReplacedThreeToken) {"Player has already resolved Overpopulation of 3"}
                     // If there are 3 tokens of the same animal type, identify their indices in the shop.
                     val indices = shopTokens
                         .mapIndexedNotNull { index, token ->
@@ -256,6 +257,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
                     rootService.gameService.executeTokenReplacement(indices,
                         true,
                         false)
+                    game.hasReplacedThreeToken = true
                 }
             }
         }
@@ -387,7 +389,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
             require(index in game.shop.indices) { "Invalid token index: $index" }
         }
 
-        require(game.currentPlayer.natureToken > 0)
+        require(game.currentPlayer.natureToken > 0) {"Current Player has no NatureToken"}
         game.currentPlayer.natureToken--
 
         // Execute token replacement using the provided indices, marking the nature token as used.
@@ -585,6 +587,8 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         // Ensure there is a network client and send the message.
         val networkClient = checkNotNull(client) { "No network client found" }
         networkClient.sendGameActionMessage(message)
+
+        updateConnectionState(ConnectionState.PLAYING_MY_TURN)
     }
 
     /**
@@ -659,5 +663,4 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
             refreshConnectionState(newState)
         }
     }
-
 }
