@@ -45,7 +45,7 @@ class EasyBotService(private val rootService: RootService) {
             "PlayerType must be easy bot"
         }
 
-        //resolveOverpopulation()
+        resolveOverpopulation()
 
         //Maybe uses natureToken
         if (player.natureToken >= 1 && useNaturalTokenChance >= (1..100).random()) {
