@@ -3,6 +3,7 @@ package service
 import entity.PlayerType
 import gui.Refreshables
 import org.junit.jupiter.api.assertDoesNotThrow
+import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
 
 /**
@@ -38,6 +39,24 @@ class HardBotTest : Refreshables {
 
                 (1..playerMap.size * 20).forEach { _ -> if (gameIsActive) rootService.hardBotService.takeTurn() }
             }
+        }
+
+        //Tests if there is an Exception when a non HardBot trys to use the takeTurn method
+        assertThrows<AssertionError> {
+            gameIsActive = true
+            val rootService = RootService()
+            rootService.addRefreshable(this)
+
+            val players = mapOf("A" to PlayerType.NORMAL, "B" to PlayerType.LOCAL)
+
+            rootService.gameService.startNewGame(
+                playerNames = players,
+                scoreRules = listOf(),
+                orderIsRandom = true,
+                isRandomRules = true
+            )
+
+            (1..2).forEach { _ -> if (gameIsActive) rootService.hardBotService.takeTurn() }
         }
     }
 

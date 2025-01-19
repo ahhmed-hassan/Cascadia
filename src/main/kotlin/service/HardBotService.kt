@@ -33,37 +33,72 @@ class HardBotService(private val rootService: RootService) {
         println("There are " + queue.size + " Jobs left")
         println("All stopped")
 
-        var best = possibilities.first()
+        var bestCertain = possibilities.first { (it.wildLifeChance == null || it.wildLifeChance == 1.0) }
         possibilities.forEach {
-            if (!(it.wildLifeChance == null || it.wildLifeChance != 1.0)) {
-                if (it.getScore() > best.getScore()) {
-                    best = it
+            if ((it.wildLifeChance == null || it.wildLifeChance == 1.0)) {
+                if (it.getScore() > bestCertain.getScore()) {
+                    bestCertain = it
+                }
+            }
+        }
+        var bestUncertain = possibilities.first()
+        possibilities.forEach {
+            if ((it.wildLifeChance != null && it.wildLifeChance != 1.0)) {
+                if (it.getScore() > bestUncertain.getScore()) {
+                    bestUncertain = it
                 }
             }
         }
 
-        if (best.customPair != null) {
-            rootService.playerActionService.chooseCustomPair(best.customPair!!.first, best.customPair!!.second)
+        val bestUncertainWildlifeChance = bestUncertain.wildLifeChance
+        var useCertain = bestCertain.getScore() > bestUncertain.getScore() || bestUncertainWildlifeChance == 1.0 ||
+                bestUncertainWildlifeChance == null || bestUncertainWildlifeChance < 0.75
+
+        if (!useCertain) {
+            val alternatives =
+                possibilities.filter {
+                    it.tileId == bestUncertain.tileId
+                            && it.tilePlacement == bestUncertain.tilePlacement
+                            && it.rotation == bestUncertain.rotation
+                            && it.wildlifeToken != bestUncertain.wildlifeToken
+                }
+            alternatives.forEach {
+                val chance = it.wildLifeChance
+                if (chance != null && chance < 0.75) {
+                    useCertain = true
+                }
+            }
+        }
+
+
+
+
+        if (bestCertain.customPair != null) {
+            rootService.playerActionService.chooseCustomPair(
+                bestCertain.customPair!!.first,
+                bestCertain.customPair!!.second
+            )
         } else {
-            val index = game.shop.indexOfFirst { it.first?.id == best.tileId }
+            val index = game.shop.indexOfFirst { it.first?.id == bestCertain.tileId }
             rootService.playerActionService.chooseTokenTilePair(index)
         }
 
-        for (i in 0..best.rotation) {
+        for (i in 0..bestCertain.rotation) {
             rootService.playerActionService.rotateTile()
         }
 
-        rootService.playerActionService.addTileToHabitat(best.tilePlacement)
+        rootService.playerActionService.addTileToHabitat(bestCertain.tilePlacement)
 
-        if (best.wildlifePlacementId != null) {
+        if (bestCertain.wildlifePlacementId != null) {
             game.currentPlayer.habitat.forEach { habitatTile ->
-                if (habitatTile.value.id == best.wildlifePlacementId) {
+                if (habitatTile.value.id == bestCertain.wildlifePlacementId) {
                     rootService.playerActionService.addToken(habitatTile.value)
                 }
             }
         } else {
             rootService.playerActionService.discardToken()
         }
+
     }
 
     private fun takeAsyncTurn(
