@@ -505,7 +505,7 @@ class GameScene(
         }
 
         refreshShop.add(game.shop)
-        refreshHabitat.add(game.currentPlayer.habitat.toMutbaleMap())
+        refreshHabitat.add(game.currentPlayer.habitat.toMutableMap())
         refreshHabitat.add(game.currentPlayer.habitat)
         refreshPlayerType.add(game.currentPlayer.playerType)
 
@@ -676,7 +676,7 @@ class GameScene(
         val game = rootService.currentGame
         checkNotNull(game)
 
-        refreshHabitat.add(game.currentPlayer.habitat.toMutbaleMap())
+        refreshHabitat.add(game.currentPlayer.habitat.toMutableMap())
         refreshHabitat.add(game.currentPlayer.habitat)
         refreshShop.add(game.shop)
         refreshPlayerType.add(game.currentPlayer.playerType)
