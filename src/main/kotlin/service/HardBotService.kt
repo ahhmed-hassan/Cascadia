@@ -1,7 +1,6 @@
 package service
 
 import entity.*
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -31,6 +30,7 @@ class HardBotService(private val rootService: RootService) {
         timeIsUp.set(true)
         threads.forEach { it.interrupt() }
         thread.join()
+        println("There are " + queue.size + " Jobs left")
         println("All stopped")
 
         var best = possibilities.first()
@@ -83,8 +83,9 @@ class HardBotService(private val rootService: RootService) {
         possibilities.addAll(calculateAllPossibilities(game, animalTokens))
         println("There are " + possibilities.size + " possible Placements!")
 
-        launch {
-            if (currentRound == 1) {
+
+        if (currentRound == 1) {
+            Thread {
                 possibilities.forEach { placement ->
                     createJob(
                         employer = placement,
@@ -93,8 +94,9 @@ class HardBotService(private val rootService: RootService) {
                         round = currentRound
                     )
                 }
-            } else {
-                println("Start creating new Jobs")
+            }.start()
+        } else {
+            Thread {
                 while (!timeIsUp.get()) {
                     possibilities.forEach { possibility ->
                         createJob(
@@ -105,11 +107,11 @@ class HardBotService(private val rootService: RootService) {
                         )
                     }
                 }
-                println("Stopped creating new Jobs")
-            }
+            }.start()
         }
 
-        val maxNumberOfThreads = (Runtime.getRuntime().availableProcessors() - 1).coerceAtLeast(1)
+
+        val maxNumberOfThreads = (Runtime.getRuntime().availableProcessors() - 2).coerceAtLeast(1)
         println("Available Threads: $maxNumberOfThreads")
         for (i in 1..maxNumberOfThreads) {
             threads.add(
