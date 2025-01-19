@@ -73,6 +73,9 @@ class HardBotService(private val rootService: RootService) {
 
     }
 
+    /**
+     * playes uncertain tiles
+     */
     private fun playUncertain(
         game: CascadiaGame,
         bestUncertain: HardBotPossiblePlacements,
@@ -121,6 +124,9 @@ class HardBotService(private val rootService: RootService) {
         rootService.playerActionService.discardToken()
     }
 
+    /**
+     * chooses uncertain animals
+     */
     private fun chooseUncertainAnimalPair(
         placement: HardBotPossiblePlacements,
         shopWithAnimal: List<Pair<HabitatTile?,
@@ -138,6 +144,9 @@ class HardBotService(private val rootService: RootService) {
         }
     }
 
+    /**
+     * plays a ceratin turn
+     */
     private fun playCertain(game: CascadiaGame, bestCertain: HardBotPossiblePlacements) {
         if (bestCertain.customPair != null) {
             rootService.playerActionService.chooseCustomPair(
@@ -170,6 +179,9 @@ class HardBotService(private val rootService: RootService) {
         rootService.playerActionService.discardToken()
     }
 
+    /**
+     * finds all possibilities and simulates them
+     */
     private fun takeAsyncTurn(
         game: CascadiaGame,
         queue: ConcurrentLinkedQueue<HardBotJob>,
@@ -214,7 +226,6 @@ class HardBotService(private val rootService: RootService) {
             }.start()
         }
 
-
         val maxNumberOfThreads = (Runtime.getRuntime().availableProcessors() - 2).coerceAtLeast(1)
         println("Available Threads: $maxNumberOfThreads")
         for (i in 1..maxNumberOfThreads) {
@@ -227,6 +238,9 @@ class HardBotService(private val rootService: RootService) {
         threads.forEach { it.start() }
     }
 
+    /**
+     * simulates the possibilities
+     */
     private fun simulate(queue: ConcurrentLinkedQueue<HardBotJob>, rootService: RootService) {
         val gameService = rootService.gameService
         var count = 0
@@ -266,6 +280,9 @@ class HardBotService(private val rootService: RootService) {
         }
     }
 
+    /**
+     * helper method to find the score of a habitat
+     */
     private fun scoringService(habitat: MutableMap<Pair<Int, Int>, HabitatTile>, rootService: RootService): Int {
         val service = rootService.scoringService
         var points = 0
@@ -284,6 +301,9 @@ class HardBotService(private val rootService: RootService) {
         return points
     }
 
+    /**
+     * method that creates jobs form possibilities
+     */
     private fun createJob(
         employer: HardBotPossiblePlacements,
         game: CascadiaGame,
@@ -351,6 +371,9 @@ class HardBotService(private val rootService: RootService) {
         queue.add(job)
     }
 
+    /**
+     * calculates the possibilities
+     */
     private fun calculateAllPossibilities(
         game: CascadiaGame,
         tokenList: MutableList<WildlifeToken>
@@ -482,6 +505,9 @@ class HardBotService(private val rootService: RootService) {
         return list.toMutableList()
     }
 
+    /**
+     * rotates a tile
+     */
     private fun rotateTile(tile: HabitatTile) {
         tile.rotationOffset = (tile.rotationOffset - 1) % 6
         val first = tile.terrains.removeFirst()
@@ -491,6 +517,9 @@ class HardBotService(private val rootService: RootService) {
         )
     }
 
+    /**
+     * deep copies a habitat tile
+     */
     private fun deepCopyHabitatTile(habitatTile: HabitatTile): HabitatTile {
         return HabitatTile(
             id = habitatTile.id,
@@ -502,12 +531,18 @@ class HardBotService(private val rootService: RootService) {
         )
     }
 
+    /**
+     * deep copies a habitat
+     */
     private fun deepCopyHabitat(habitat: MutableMap<Pair<Int, Int>, HabitatTile>): MutableMap<Pair<Int, Int>, HabitatTile> {
         val newHabitat = mutableMapOf<Pair<Int, Int>, HabitatTile>()
         habitat.forEach { tile -> newHabitat[tile.key] = deepCopyHabitatTile(tile.value) }
         return newHabitat
     }
 
+    /**
+     * deep copies the shop
+     */
     private fun deepCopyShop(shop: MutableList<Pair<HabitatTile?, WildlifeToken?>>): MutableList<Pair<HabitatTile?,
             WildlifeToken?>> {
         val newShop = mutableListOf<Pair<HabitatTile?, WildlifeToken?>>()
