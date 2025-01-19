@@ -8,5 +8,4 @@ class HardBotJob(
     val animals: MutableList<WildlifeToken>,
     val employer: HardBotPossiblePlacements,
     val shop: MutableList<Pair<HabitatTile?, WildlifeToken?>>
-) {
-}
+)

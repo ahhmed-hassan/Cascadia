@@ -322,7 +322,8 @@ class HardBotService(private val rootService: RootService) {
                         if (k == 0.0) continue
                         val n = tokenList.size.toDouble()
                         val tokenChanceComplement: Double =
-                            ((n - k) * (n - k - 1.0) * (n - k - 2.0) * (n - k - 3.0)) / (n * (n - 1.0) * (n - 2.0) * (n - 3.0))
+                            ((n - k) * (n - k - 1.0) * (n - k - 2.0) * (n - k - 3.0)) /
+                                    (n * (n - 1.0) * (n - 2.0) * (n - 3.0))
                         tokenChance = 1 - tokenChanceComplement
 
                         selectedToken = tokenList.first { it.animal == animal }
@@ -403,7 +404,8 @@ class HardBotService(private val rootService: RootService) {
         return newHabitat
     }
 
-    private fun deepCopyShop(shop: MutableList<Pair<HabitatTile?, WildlifeToken?>>): MutableList<Pair<HabitatTile?, WildlifeToken?>> {
+    private fun deepCopyShop(shop: MutableList<Pair<HabitatTile?, WildlifeToken?>>): MutableList<Pair<HabitatTile?,
+            WildlifeToken?>> {
         val newShop = mutableListOf<Pair<HabitatTile?, WildlifeToken?>>()
         shop.forEach {
             it.second?.let { it1 -> Pair(it.first?.let { it2 -> deepCopyHabitatTile(it2) }, it1.copy()) }
