@@ -36,7 +36,7 @@ class CascadiaApplication : BoardGameApplication("Cascadia Game"), Refreshables 
         }
     }
 
-    private val winningMenuScene = WinningMenuScene(rootService).apply {
+    private val winningMenuScene = WinningMenuScene(rootService,gameScene).apply {
         exitButton.onMouseClicked = {
             exit()
         }
@@ -55,7 +55,9 @@ class CascadiaApplication : BoardGameApplication("Cascadia Game"), Refreshables 
     }
 
     override fun refreshAfterGameEnd(scores: Map<String, ScoringService.Companion.PlayerScore>) {
-        this.showMenuScene(winningMenuScene)
+        gameScene.enqueueRefresh {
+            this.showMenuScene(winningMenuScene)
+        }
     }
 
     override fun refreshAfterGameStart() {

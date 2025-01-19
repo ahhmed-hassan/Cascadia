@@ -15,7 +15,10 @@ import tools.aqua.bgw.visual.ColorVisual
 import tools.aqua.bgw.visual.ImageVisual
 import java.awt.Color
 
-class WinningMenuScene(val rootService: RootService) : MenuScene(1920, 1080), Refreshables {
+class WinningMenuScene(
+    val rootService: RootService,
+    private val gameScene: GameScene
+) : MenuScene(1920, 1080), Refreshables {
 
     private val gridPane = GridPane<UIComponent>(
         posX = 960,
@@ -149,7 +152,9 @@ class WinningMenuScene(val rootService: RootService) : MenuScene(1920, 1080), Re
     }
 
     override fun refreshAfterGameEnd(scores: Map<String, ScoringService.Companion.PlayerScore>) {
-        updateScores()
+        gameScene.enqueueRefresh {
+            updateScores()
+        }
     }
 
     private fun updateScores() {

@@ -333,7 +333,7 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             simulationSpeed = checkNotNull(simEntry.selectedItem)
             rootService.gameService.startNewGame(
                 playerNames = param,
-                scoreRules = rules,
+                scoreRules = rules.toList(),
                 orderIsRandom = randomOrder,
                 isRandomRules = randomRule
             )

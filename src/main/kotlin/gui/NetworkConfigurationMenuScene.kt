@@ -262,7 +262,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             if (randomOrderToggle.isSelected) { randomOrder = true }
             if (randomRuleToggle.isSelected) { randomRule = true}
             rules = determineRules()
-            rootService.networkService.startNewHostedGame(orderIsRanom = randomOrder, isRandomRules = randomRule, scoreRules = rules)
+            rootService.networkService.startNewHostedGame(orderIsRanom = randomOrder, isRandomRules = randomRule, scoreRules = rules.toList())
             rules.clear()
 
         }
