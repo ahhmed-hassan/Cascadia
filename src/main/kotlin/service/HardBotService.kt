@@ -169,10 +169,10 @@ class HardBotService(private val rootService: RootService) {
                 if (habitatTile.value.id == bestCertain.wildlifePlacementId
                     && habitatTile.value.wildlifeSymbols.contains(
                         checkNotNull(game.selectedToken).animal
-                    )
+                    ) && habitatTile.value.wildlifeToken == null
                 ) {
                     rootService.playerActionService.addToken(habitatTile.value)
-                    return
+                    return //change when bug found
                 }
             }
         }
