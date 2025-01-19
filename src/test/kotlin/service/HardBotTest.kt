@@ -37,8 +37,6 @@ class HardBotTest : Refreshables {
                     isRandomRules = true
                 )
 
-                rootService.currentGame?.playerList?.forEach { player -> player.natureToken = 30 }
-
                 (1..playerMap.size * 20).forEach { _ -> if (gameIsActive) rootService.hardBotService.takeTurn() }
             }
         }

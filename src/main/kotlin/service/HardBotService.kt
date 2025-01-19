@@ -45,13 +45,11 @@ class HardBotService(private val rootService: RootService) {
             possibilities.filter { it.wildLifeChance != null && it.wildLifeChance != 1.0 }.maxByOrNull { it.getScore() }
         checkNotNull(bestCertain)
 
-        bestCertain.score = 0 //TODO: Entfernen!!!
-
         var useCertain = true
         if (bestUncertain != null) {
             val bestUncertainWildlifeChance = bestUncertain.wildLifeChance
             useCertain = bestCertain.getScore() > bestUncertain.getScore() ||
-                    bestUncertainWildlifeChance == null || bestUncertainWildlifeChance < 0.25 //TODO: auf 0.75 zuück setzen
+                    bestUncertainWildlifeChance == null || bestUncertainWildlifeChance < 0.75
 
             if (!useCertain) {
                 val alternatives =
@@ -70,7 +68,6 @@ class HardBotService(private val rootService: RootService) {
                 if (alternatives.isEmpty()) useCertain = true
             }
         }
-
         if (useCertain) playCertain(game, bestCertain)
         else bestUncertain?.let { playUncertain(game, it, possibilities) }
 
@@ -81,7 +78,6 @@ class HardBotService(private val rootService: RootService) {
         bestUncertain: HardBotPossiblePlacements,
         possibilities: MutableList<HardBotPossiblePlacements>
     ) {
-        println("uncertain")
         rootService.playerActionService.replaceWildlifeTokens(listOf(0, 1, 2, 3))
         var animal = checkNotNull(bestUncertain.wildlifeToken)
 
@@ -116,13 +112,13 @@ class HardBotService(private val rootService: RootService) {
 
         if (actualPlacement.wildlifePlacementId != null) {
             game.currentPlayer.habitat.forEach { habitatAnimalTile ->
-                if (habitatAnimalTile.value.id == actualPlacement.wildlifePlacementId) {
+                if (habitatAnimalTile.value.id == actualPlacement.wildlifePlacementId && game.selectedToken != null) {
                     rootService.playerActionService.addToken(habitatAnimalTile.value)
+                    return //change when bug found
                 }
             }
-        } else {
-            rootService.playerActionService.discardToken()
         }
+        rootService.playerActionService.discardToken()
     }
 
     private fun chooseUncertainAnimalPair(
@@ -161,13 +157,17 @@ class HardBotService(private val rootService: RootService) {
 
         if (bestCertain.wildlifePlacementId != null) {
             game.currentPlayer.habitat.forEach { habitatTile ->
-                if (habitatTile.value.id == bestCertain.wildlifePlacementId) {
+                if (habitatTile.value.id == bestCertain.wildlifePlacementId
+                    && habitatTile.value.wildlifeSymbols.contains(
+                        checkNotNull(game.selectedToken).animal
+                    )
+                ) {
                     rootService.playerActionService.addToken(habitatTile.value)
+                    return
                 }
             }
-        } else {
-            rootService.playerActionService.discardToken()
         }
+        rootService.playerActionService.discardToken()
     }
 
     private fun takeAsyncTurn(
