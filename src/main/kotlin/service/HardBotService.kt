@@ -33,50 +33,114 @@ class HardBotService(private val rootService: RootService) {
         println("There are " + queue.size + " Jobs left")
         println("All stopped")
 
-        var bestCertain = possibilities.first { (it.wildLifeChance == null || it.wildLifeChance == 1.0) }
-        possibilities.forEach {
-            if ((it.wildLifeChance == null || it.wildLifeChance == 1.0)) {
-                if (it.getScore() > bestCertain.getScore()) {
-                    bestCertain = it
-                }
-            }
-        }
-        var bestUncertain = possibilities.first()
-        possibilities.forEach {
-            if ((it.wildLifeChance != null && it.wildLifeChance != 1.0)) {
-                if (it.getScore() > bestUncertain.getScore()) {
-                    bestUncertain = it
-                }
-            }
-        }
+        val bestCertain =
+            possibilities.filter { it.wildLifeChance == null || it.wildLifeChance == 1.0 }.maxByOrNull { it.getScore() }
+        val bestUncertain =
+            possibilities.filter { it.wildLifeChance != null && it.wildLifeChance != 1.0 }.maxByOrNull { it.getScore() }
+        checkNotNull(bestCertain)
 
-        val bestUncertainWildlifeChance = bestUncertain.wildLifeChance
-        var useCertain = bestCertain.getScore() > bestUncertain.getScore() || bestUncertainWildlifeChance == 1.0 ||
-                bestUncertainWildlifeChance == null || bestUncertainWildlifeChance < 0.75
+        bestCertain.score = 0 //TODO: Entfernen!!!
 
-        if (!useCertain) {
-            val alternatives =
-                possibilities.filter {
-                    it.tileId == bestUncertain.tileId
-                            && it.tilePlacement == bestUncertain.tilePlacement
-                            && it.rotation == bestUncertain.rotation
-                            && it.wildlifeToken != bestUncertain.wildlifeToken
+        var useCertain = true
+        if (bestUncertain != null) {
+            val bestUncertainWildlifeChance = bestUncertain.wildLifeChance
+            useCertain = bestCertain.getScore() > bestUncertain.getScore() ||
+                    bestUncertainWildlifeChance == null || bestUncertainWildlifeChance < 0.25 //TODO: auf 0.75 zuück setzen
+
+            if (!useCertain) {
+                val alternatives =
+                    possibilities.filter {
+                        it.tileId == bestUncertain.tileId
+                                && it.tilePlacement == bestUncertain.tilePlacement
+                                && it.rotation == bestUncertain.rotation
+                                && it.wildlifeToken != bestUncertain.wildlifeToken
+                    }
+                alternatives.forEach {
+                    val chance = it.wildLifeChance
+                    if (chance != null && chance < 0.75) {
+                        useCertain = true
+                    }
                 }
-            alternatives.forEach {
-                val chance = it.wildLifeChance
-                if (chance != null && chance < 0.75) {
-                    useCertain = true
-                }
+                if (alternatives.isEmpty()) useCertain = true
             }
         }
 
+        if (useCertain) playCertain(game, bestCertain)
+        else bestUncertain?.let { playUncertain(game, it, possibilities) }
 
+    }
 
+    private fun playUncertain(
+        game: CascadiaGame,
+        bestUncertain: HardBotPossiblePlacements,
+        possibilities: MutableList<HardBotPossiblePlacements>
+    ) {
+        println("uncertain")
+        rootService.playerActionService.replaceWildlifeTokens(listOf(0, 1, 2, 3))
+        var animal = checkNotNull(bestUncertain.wildlifeToken)
 
+        var shopWithAnimal = game.shop.filter { it.second?.animal == animal.animal }
+
+        var actualPlacement = bestUncertain
+        if (shopWithAnimal.isNotEmpty()) {
+            chooseUncertainAnimalPair(bestUncertain, shopWithAnimal, game)
+        } else {
+            val animals = mutableListOf<WildlifeToken>()
+            game.shop.forEach { if (!animals.contains(it.second)) it.second?.let { it1 -> animals.add(it1) } }
+            val newPossiblePlacements = possibilities.filter {
+                it.tileId == bestUncertain.tileId
+                        && it.tilePlacement == bestUncertain.tilePlacement
+                        && it.rotation == bestUncertain.rotation
+                        && animals.contains(it.wildlifeToken)
+            }.maxByOrNull { it.getScore() }
+            if (newPossiblePlacements != null) {
+                animal = checkNotNull(newPossiblePlacements.wildlifeToken)
+                shopWithAnimal = game.shop.filter { it.second?.animal == animal.animal }
+
+                chooseUncertainAnimalPair(newPossiblePlacements, shopWithAnimal, game)
+                actualPlacement = newPossiblePlacements
+            }
+        }
+
+        for (i in 0..actualPlacement.rotation) {
+            rootService.playerActionService.rotateTile()
+        }
+
+        rootService.playerActionService.addTileToHabitat(actualPlacement.tilePlacement)
+
+        if (actualPlacement.wildlifePlacementId != null) {
+            game.currentPlayer.habitat.forEach { habitatAnimalTile ->
+                if (habitatAnimalTile.value.id == actualPlacement.wildlifePlacementId) {
+                    rootService.playerActionService.addToken(habitatAnimalTile.value)
+                }
+            }
+        } else {
+            rootService.playerActionService.discardToken()
+        }
+    }
+
+    private fun chooseUncertainAnimalPair(
+        placement: HardBotPossiblePlacements,
+        shopWithAnimal: List<Pair<HabitatTile?,
+                WildlifeToken?>>, game: CascadiaGame
+    ) {
+        val nicePair = shopWithAnimal.find { it.first?.id == placement.tileId }
+        if (nicePair != null) {
+            rootService.playerActionService.chooseTokenTilePair(game.shop.indexOf(nicePair))
+        } else {
+            val tileToPlace = game.shop.find { it.first?.id == placement.tileId }
+            rootService.playerActionService.chooseCustomPair(
+                game.shop.indexOf(tileToPlace),
+                game.shop.indexOf(shopWithAnimal.first())
+            )
+        }
+    }
+
+    private fun playCertain(game: CascadiaGame, bestCertain: HardBotPossiblePlacements) {
         if (bestCertain.customPair != null) {
             rootService.playerActionService.chooseCustomPair(
-                bestCertain.customPair!!.first,
-                bestCertain.customPair!!.second
+                checkNotNull(bestCertain.customPair).first,
+                checkNotNull(bestCertain.customPair).second
             )
         } else {
             val index = game.shop.indexOfFirst { it.first?.id == bestCertain.tileId }
@@ -98,7 +162,6 @@ class HardBotService(private val rootService: RootService) {
         } else {
             rootService.playerActionService.discardToken()
         }
-
     }
 
     private fun takeAsyncTurn(
