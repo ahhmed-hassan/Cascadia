@@ -791,7 +791,7 @@ class GameScene(
             natureTokenLabel.apply { text = "NatureToken: " + game.currentPlayer.natureToken.toString() }
             currentPlayerLabel.apply { text = game.currentPlayer.name }
 
-            if (game.currentPlayer.playerType == PlayerType.LOCAL || (myPlayerType == PlayerType.LOCAL && state == ConnectionState.PLAYING_MY_TURN)) {
+            //if (game.currentPlayer.playerType == PlayerType.LOCAL || (myPlayerType == PlayerType.LOCAL && state == ConnectionState.PLAYING_MY_TURN)) {
                 //Disable resolveOverpopulation if already done or not possible
                 if (game.hasReplacedThreeToken || !hasThreeSameWildlifeTokens().first) {
                     resolveOverpopButton.isDisabled = true
@@ -808,7 +808,7 @@ class GameScene(
                     replaceWildlifeButton.isDisabled = false
                     confirmReplacementButton.isDisabled = false
                 }
-            }
+            //}
 
             if (refreshPlayerType.first() == PlayerType.EASY) {
                 disableAll()
