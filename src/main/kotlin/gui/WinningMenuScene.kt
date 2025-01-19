@@ -20,8 +20,8 @@ class WinningMenuScene(val rootService: RootService) : MenuScene(1920, 1080), Re
     private val gridPane = GridPane<UIComponent>(
         posX = 960,
         posY = 500,
-        columns = 12,
-        rows = 12,
+        columns = 6,
+        rows = 14,
         spacing = 10
     ).apply {
         visual = ColorVisual(Color(0xA6C9A3))
@@ -134,6 +134,14 @@ class WinningMenuScene(val rootService: RootService) : MenuScene(1920, 1080), Re
         visual = ImageVisual("naturetoken.png")
     )
 
+    private val totalImage = Label(
+        width = 60,
+        height = 60,
+        posX = 200,
+        posY = 150,
+        visual = ImageVisual("crown.png")
+    )
+
     init {
         background = ImageVisual("Cascadia.jpg")
         addComponents(gridPane, exitButton)
@@ -163,8 +171,11 @@ class WinningMenuScene(val rootService: RootService) : MenuScene(1920, 1080), Re
         gridPane[0, 9] = wetlandImage
         gridPane[0, 10] = riverImage
         gridPane[0, 11] = tokenImage
+        gridPane[0, 12] = totalImage
+
 
         sortedScores.forEachIndexed { index, (playerName, score) ->
+            val totalScore = score.animalsScores.values.sum() + score.ownLongestTerrainsScores.values.sum() + score.natureTokens
             gridPane[index + 1, 0] = createScoreLabel(playerName)
             gridPane[index + 1, 1] = createScoreLabel(score.animalsScores[Animal.BEAR].toString())
             gridPane[index + 1, 2] = createScoreLabel(score.animalsScores[Animal.ELK].toString())
@@ -177,6 +188,7 @@ class WinningMenuScene(val rootService: RootService) : MenuScene(1920, 1080), Re
             gridPane[index + 1, 9] = createScoreLabel(score.ownLongestTerrainsScores[Terrain.WETLAND].toString())
             gridPane[index + 1, 10] = createScoreLabel(score.ownLongestTerrainsScores[Terrain.RIVER].toString())
             gridPane[index + 1, 11] = createScoreLabel(score.natureTokens.toString())
+            gridPane[index + 1, 12] = createScoreLabel(totalScore.toString())
         }
     }
 
