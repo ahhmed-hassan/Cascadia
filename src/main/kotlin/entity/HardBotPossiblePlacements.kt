@@ -1,5 +1,8 @@
 package entity
 
+/**
+ *
+ */
 class HardBotPossiblePlacements(
     val tileId: Int,
     val tilePlacement: Pair<Int, Int>,
@@ -14,6 +17,9 @@ class HardBotPossiblePlacements(
     var score = 0
     var numberOfScores = 0
 
+    /**
+     * Getting the current score
+     */
     fun getScore(): Double {
         return score.toDouble() / numberOfScores.toDouble()
     }
