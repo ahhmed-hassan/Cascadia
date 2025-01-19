@@ -93,29 +93,39 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
          *
          * @return points of a player
          */
-        private fun calculateElkScoreRuleA(i: Int, elkCoordinate : MutableSet<Pair<Int, Int>>,
-                                           directions : List<Pair<Int, Int>>, coordinate: Pair<Int, Int>) :Int {
+        private fun calculateElkScoreRuleA(
+            i: Int, elkCoordinate: MutableSet<Pair<Int, Int>>,
+            directions: List<Pair<Int, Int>>, coordinate: Pair<Int, Int>
+        ): Int {
             var points = 0;
-                //checks if there is a row in each direction
-                for (direction in directions) {
-                    val straightLine = (0..i).all { element ->
-                        elkCoordinate.contains( Pair( coordinate.first + (element * direction.first),
-                            coordinate.second + (element * direction.second)))
+            //checks if there is a row in each direction
+            for (direction in directions) {
+                val straightLine = (0..i).all { element ->
+                    elkCoordinate.contains(
+                        Pair(
+                            coordinate.first + (element * direction.first),
+                            coordinate.second + (element * direction.second)
+                        )
+                    )
+                }
+                //when a straight line was found check its length and remove it from the elkCoordinate pair
+                if (straightLine) {
+                    points += when (i) {
+                        3 -> 13
+                        2 -> 9
+                        1 -> 5
+                        else -> 2
                     }
-                    //when a straight line was found check its length and remove it from the elkCoordinate pair
-                    if (straightLine) {
-                        points += when (i) {
-                            3 -> 13
-                            2 -> 9
-                            1 -> 5
-                            else ->  2
-                        }
-                        (0..i).forEach { element ->
-                            elkCoordinate.remove( Pair(coordinate.first + element * direction.first,
-                                coordinate.second + element * direction.second))
-                        }
+                    (0..i).forEach { element ->
+                        elkCoordinate.remove(
+                            Pair(
+                                coordinate.first + element * direction.first,
+                                coordinate.second + element * direction.second
+                            )
+                        )
                     }
                 }
+            }
             return points
         }
 
@@ -128,8 +138,10 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
          *
          * @return points of a player
          */
-        private fun calculateElkScoreRuleB(i:Int,coordinate: Pair<Int, Int>,
-                                           elkCoordinate : MutableSet<Pair<Int, Int>>) :Int {
+        private fun calculateElkScoreRuleB(
+            i: Int, coordinate: Pair<Int, Int>,
+            elkCoordinate: MutableSet<Pair<Int, Int>>
+        ): Int {
             var points = 0;
             //creates the pattern with every rotation
             for (j in 0..2) {
@@ -137,10 +149,21 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
                 val pattern = createPattern(coordinate, i, j)
                 if (pattern.all { it in elkCoordinate }) {
                     when (i) {
-                        3 -> {points += 13; elkCoordinate.removeAll(pattern)}
-                        2 -> {points += 9; elkCoordinate.removeAll(pattern)}
-                        1 -> {points += 5; elkCoordinate.removeAll(pattern)}
-                        0 -> {points += 2; elkCoordinate.removeAll(pattern)}
+                        3 -> {
+                            points += 13; elkCoordinate.removeAll(pattern)
+                        }
+
+                        2 -> {
+                            points += 9; elkCoordinate.removeAll(pattern)
+                        }
+
+                        1 -> {
+                            points += 5; elkCoordinate.removeAll(pattern)
+                        }
+
+                        0 -> {
+                            points += 2; elkCoordinate.removeAll(pattern)
+                        }
                     }
                 }
             }
@@ -154,7 +177,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
          *
          * @return the points of a player
          */
-        private fun calculateHawkScoreRuleA(size:Int) : Int {
+        private fun calculateHawkScoreRuleA(size: Int): Int {
             var points = 0
             when (size) {
                 0 -> points += 0
@@ -178,17 +201,23 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
          *
          * @return inSight return every hawk that is also in sight with another hawk
          */
-        private fun calculateHawkScoreRuleB(notAdjacent : MutableSet<Pair<Int,Int>>,
-                                            hawkCoordinate: MutableSet<Pair<Int,Int>>) : MutableSet<Pair<Int,Int>> {
+        private fun calculateHawkScoreRuleB(
+            notAdjacent: MutableSet<Pair<Int, Int>>,
+            hawkCoordinate: MutableSet<Pair<Int, Int>>
+        ): MutableSet<Pair<Int, Int>> {
             //implementing one set of pairs for rule b
             val inSight: MutableSet<Pair<Int, Int>> = mutableSetOf()
             //checks if a hawk is also in direct sight to another hawk
             for (coordinate in notAdjacent) {
                 for (innerCoordinate in hawkCoordinate) {
                     //vertical
-                    if (coordinate.second == innerCoordinate.second) { inSight.add(coordinate) }
+                    if (coordinate.second == innerCoordinate.second) {
+                        inSight.add(coordinate)
+                    }
                     //horizontal
-                    if (coordinate.first == innerCoordinate.first) { inSight.add(coordinate) }
+                    if (coordinate.first == innerCoordinate.first) {
+                        inSight.add(coordinate)
+                    }
                     //diagonal plus
                     if (coordinate.first - innerCoordinate.first == coordinate.second - innerCoordinate.second) {
                         inSight.add(coordinate)
@@ -211,37 +240,73 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
          */
         private fun createPattern(coordinate: Pair<Int, Int>, number: Int, rot: Int): List<Pair<Int, Int>> {
             if (number == 3) {
-                if (rot == 0) { return listOf( Pair(coordinate.first, coordinate.second),
-                    Pair(coordinate.first - 1, coordinate.second + 1),
-                    Pair(coordinate.first - 1, coordinate.second),
-                    Pair(coordinate.first - 2, coordinate.second + 1)) }
-                if (rot == 1) { return listOf( Pair(coordinate.first, coordinate.second),
-                    Pair(coordinate.first, coordinate.second + 1),
-                    Pair(coordinate.first - 1, coordinate.second + 1),
-                    Pair(coordinate.first - 1, coordinate.second + 2)) }
-                if (rot == 2) { return listOf( Pair(coordinate.first, coordinate.second),
-                    Pair(coordinate.first + 1, coordinate.second),
-                    Pair(coordinate.first, coordinate.second + 1),
-                    Pair(coordinate.first + 1, coordinate.second + 1)) }
+                if (rot == 0) {
+                    return listOf(
+                        Pair(coordinate.first, coordinate.second),
+                        Pair(coordinate.first - 1, coordinate.second + 1),
+                        Pair(coordinate.first - 1, coordinate.second),
+                        Pair(coordinate.first - 2, coordinate.second + 1)
+                    )
+                }
+                if (rot == 1) {
+                    return listOf(
+                        Pair(coordinate.first, coordinate.second),
+                        Pair(coordinate.first, coordinate.second + 1),
+                        Pair(coordinate.first - 1, coordinate.second + 1),
+                        Pair(coordinate.first - 1, coordinate.second + 2)
+                    )
+                }
+                if (rot == 2) {
+                    return listOf(
+                        Pair(coordinate.first, coordinate.second),
+                        Pair(coordinate.first + 1, coordinate.second),
+                        Pair(coordinate.first, coordinate.second + 1),
+                        Pair(coordinate.first + 1, coordinate.second + 1)
+                    )
+                }
             }
             if (number == 2) {
-                if (rot == 0) { return listOf(Pair(coordinate.first, coordinate.second),
-                    Pair(coordinate.first - 1, coordinate.second + 1),
-                    Pair(coordinate.first - 1, coordinate.second)) }
-                if (rot == 1) { return listOf(Pair(coordinate.first, coordinate.second),
-                    Pair(coordinate.first, coordinate.second + 1),
-                    Pair(coordinate.first - 1, coordinate.second + 1)) }
-                if (rot == 2) { return listOf(Pair(coordinate.first, coordinate.second),
-                    Pair(coordinate.first + 1, coordinate.second),
-                    Pair(coordinate.first, coordinate.second + 1)) }
+                if (rot == 0) {
+                    return listOf(
+                        Pair(coordinate.first, coordinate.second),
+                        Pair(coordinate.first - 1, coordinate.second + 1),
+                        Pair(coordinate.first - 1, coordinate.second)
+                    )
+                }
+                if (rot == 1) {
+                    return listOf(
+                        Pair(coordinate.first, coordinate.second),
+                        Pair(coordinate.first, coordinate.second + 1),
+                        Pair(coordinate.first - 1, coordinate.second + 1)
+                    )
+                }
+                if (rot == 2) {
+                    return listOf(
+                        Pair(coordinate.first, coordinate.second),
+                        Pair(coordinate.first + 1, coordinate.second),
+                        Pair(coordinate.first, coordinate.second + 1)
+                    )
+                }
             }
             if (number == 1) {
-                if (rot == 0) { return listOf(Pair(coordinate.first, coordinate.second),
-                    Pair(coordinate.first, coordinate.second - 1),) }
-                if (rot == 1) { return listOf(Pair(coordinate.first, coordinate.second),
-                    Pair(coordinate.first - 1, coordinate.second),) }
-                if (rot == 2) { return listOf(Pair(coordinate.first, coordinate.second),
-                    Pair(coordinate.first - 1, coordinate.second + 1),) }
+                if (rot == 0) {
+                    return listOf(
+                        Pair(coordinate.first, coordinate.second),
+                        Pair(coordinate.first, coordinate.second - 1),
+                    )
+                }
+                if (rot == 1) {
+                    return listOf(
+                        Pair(coordinate.first, coordinate.second),
+                        Pair(coordinate.first - 1, coordinate.second),
+                    )
+                }
+                if (rot == 2) {
+                    return listOf(
+                        Pair(coordinate.first, coordinate.second),
+                        Pair(coordinate.first - 1, coordinate.second + 1),
+                    )
+                }
             }
             return listOf(Pair(coordinate.first, coordinate.second))
         }
@@ -545,11 +610,13 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
         hawkCoordinate.forEach { coordinate ->
             //checks for every hawk if it is not adjacent to any other hawks
             val neighbours = getNeighbours(coordinate)
-            if (neighbours.none { it in hawkCoordinate }) { notAdjacent.add(coordinate) }
+            if (neighbours.none { it in hawkCoordinate }) {
+                notAdjacent.add(coordinate)
+            }
         }
 
         if (!isB) {
-           points += calculateHawkScoreRuleA(notAdjacent.size)
+            points += calculateHawkScoreRuleA(notAdjacent.size)
         } else {
 
             val inSight = calculateHawkScoreRuleB(notAdjacent, hawkCoordinate)
@@ -643,12 +710,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
                 var pairs = 0
                 animals[Animal.FOX.ordinal] = 0
 
-
-                animals.forEach { animal ->
-                    if (animal >= 2) {
-                        pairs++
-                    }
-                }
+                pairs = animals.filter { it >= 2 }.size
 
                 if (pairs == 1) points += 3
                 if (pairs == 2) points += 5
@@ -656,12 +718,7 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
             } else {
                 //A
                 var differentAnimals = 0
-
-                animals.forEach { animal ->
-                    if (animal >= 1) {
-                        differentAnimals++
-                    }
-                }
+                differentAnimals = animals.filter { it >= 1 }.size
                 points += differentAnimals
             }
         }

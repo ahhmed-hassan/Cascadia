@@ -1,5 +1,8 @@
 package entity
 
+/**
+ *
+ */
 class HardBotJob(
     var naturalTokens: Int,
     val habitat: MutableMap<Pair<Int, Int>, HabitatTile>,

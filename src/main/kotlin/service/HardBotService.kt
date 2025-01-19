@@ -6,11 +6,17 @@ import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 
+/**
+ * A class to manage the hard bot
+ */
 class HardBotService(private val rootService: RootService) {
 
     val gameService = rootService.gameService
     private val animalPlacingChance = 80
 
+    /**
+     * Simulating one turn of the bot
+     */
     fun takeTurn() {
         val game = rootService.currentGame
         checkNotNull(game)
@@ -243,9 +249,7 @@ class HardBotService(private val rootService: RootService) {
 
                 if (animalPlacingChance >= (0..100).random()) {
                     val animalPositions = gameService.getAllPossibleTilesForWildlife(animal.animal, job.habitat)
-                    if (animalPositions.isNotEmpty()) {
-                        animalPositions.random().wildlifeToken = animal
-                    }
+                    animalPositions.takeIf { it.isNotEmpty() }?.random()?.wildlifeToken = animal
                 }
 
                 job.shop[0] = Pair(job.habitatTiles.removeFirstOrNull(), job.animals.removeFirstOrNull())

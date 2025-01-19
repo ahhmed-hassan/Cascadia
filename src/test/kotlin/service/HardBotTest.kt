@@ -16,7 +16,7 @@ class HardBotTest : Refreshables {
      * Tests the Hard Bot
      */
     @Test
-    fun hardBotTest() {
+    fun testHardBot() {
         assertDoesNotThrow {
             for (i in 1..2) {
                 gameIsActive = true
