@@ -186,8 +186,8 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         currentGame.habitatTileList = newHabitatTileList.toMutableList()
         currentGame.shop?.clear()
         currentGame.let { game ->
-            val shop = game.habitatTileList.take(4).mapIndexed { index, tile ->
-                (tile ?: null) to game.wildlifeTokenList.getOrNull(index)
+            val shop = game.habitatTileList.takeLast(4).reversed().mapIndexed { index, tile ->
+                (tile ?: null) to game.wildlifeTokenList.takeLast(4).reversed().getOrNull(index)
             }.toMutableList()
             game.shop = shop
         }
@@ -323,14 +323,14 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         // Validate and extract tile coordinates.
         val qCoordTile = requireNotNull(message.qcoordTile) { "qCoordTile must not be null" }
         val rCoordTile = requireNotNull(message.rcoordTile) { "rCoordTile must not be null" }
-        val habitatCoordinates = Pair(qCoordTile, rCoordTile)
+        val habitatCoordinates = Pair(rCoordTile, qCoordTile)
 
         if (message.qcoordToken != null) {
             // Validate the selected token's index and coordinates if a token is provided.
             check(message.selectedToken in game.shop.indices)
             val qCoordToken = requireNotNull(message.qcoordToken) { "qCoordTile must not be null" }
             val rCoordToken = requireNotNull(message.rcoordToken) { "rCoordTile must not be null" }
-            val wildlifeTokenCoordinates = Pair(qCoordToken, rCoordToken)
+            val wildlifeTokenCoordinates = Pair(rCoordToken, qCoordToken)
 
             if (message.usedNatureToken) {
                 // Execute actions if a nature token is used.
@@ -420,7 +420,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         val shopTokenAnimals = game.shop.map { it.second?.animal }
         val shop = shopTokenAnimals.map { token -> token?.let { Animal.valueOf(it.name) } }
         // Extract IDs of habitat tiles.
-        val habitateTileIds = shopTileIds.filterNotNull() + game.habitatTileList.map { it.id }
+        val habitateTileIds = game.habitatTileList.map { it.id } + shopTileIds.reversed().filterNotNull()
 
         // Extract player names from the player list.
         val playerNames = game.playerList.map { it.name }
@@ -434,9 +434,9 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         val startTiles = (1..playerNames.size).toList()
 
         // Extract wildlife tokens from the game and map them to their animal type.
-        val wildLifeTokens = shop.filterNotNull() + game.wildlifeTokenList.map { token ->
+        val wildLifeTokens = game.wildlifeTokenList.map { token ->
             Animal.valueOf(token.animal.name)
-        }
+        } + shop.reversed().filterNotNull()
 
         // Construct the `GameInitMessage` with the extracted information.
         val message = GameInitMessage(
@@ -487,11 +487,11 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
 
         val message = PlaceMessage (
             placedTile = tileIndex,
-            qcoordTile = qTile,
-            rcoordTile = rTile,
+            qcoordTile = rTile,
+            rcoordTile = qTile,
             selectedToken = tokenIndex,
-            qcoordToken = qToken,
-            rcoordToken = rToken,
+            qcoordToken = rToken,
+            rcoordToken = qToken,
             usedNatureToken = usedNatureToken,
             tileRotation = tileRotation,
             wildlifeTokens = wildlifeTokensList,

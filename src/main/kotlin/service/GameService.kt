@@ -96,8 +96,8 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
                 // Retrieve the starting tiles assigned to the player based on the tile index.
                 val playerStartTile = startTiles[tileIndex-1]
                 player.habitat[0 to 0] = playerStartTile[0]
-                player.habitat[1 to -1] = playerStartTile[1]
-                player.habitat[1 to 0] = playerStartTile[2]
+                player.habitat[1 to -1] = playerStartTile[2]
+                player.habitat[1 to 0] = playerStartTile[1]
             }
         } else {
             for (i in playerList.indices) {
@@ -105,8 +105,8 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
                 val player = playerList.first { it.name == playerName }
                 val playerStartTile = startTiles[i]
                 player.habitat[0 to 0] = playerStartTile[0]
-                player.habitat[1 to -1] = playerStartTile[1]
-                player.habitat[1 to 0] = playerStartTile[2]
+                player.habitat[1 to -1] = playerStartTile[2]
+                player.habitat[1 to 0] = playerStartTile[1]
             }
         }
         if(rootService.networkService.connectionState == ConnectionState.DISCONNECTED) {
