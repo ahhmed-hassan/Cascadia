@@ -296,6 +296,10 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
 
         game.selectedToken = null
 
+        if (rootService.networkService.connectionState == ConnectionState.WAITING_FOR_OPPONENTS_TURN) {
+            game.wildlifeTokenList = rootService.networkService.receivedList
+        }
+
         if (myTurn) {
             rootService.networkService.tokenCoordinates = null
             rootService.networkService.sendPlacedMessage()

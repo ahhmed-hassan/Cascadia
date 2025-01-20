@@ -5,7 +5,6 @@ import edu.udo.cs.sopra.ntf.entity.ScoringCards
 import entity.*
 import entity.Animal as LocalAnimal
 import edu.udo.cs.sopra.ntf.messages.*
-import tools.aqua.bgw.core.BoardGameApplication.Companion.runOnGUIThread
 import edu.udo.cs.sopra.ntf.entity.Animal as RemoteAnimal
 import java.lang.IllegalStateException
 
@@ -29,7 +28,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
     var tokenCoordinates: Pair<Int, Int>? = null
     var tileRotation: Int = 0
     var usedNatureToken = false
-
+    var receivedList: MutableList<WildlifeToken> = mutableListOf()
 
     var client: NetworkClient? = null
     var playersList: MutableList<String> = mutableListOf()
@@ -148,7 +147,7 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
      * @throws IllegalStateException if no client is connected, ensuring the client object is properly initialized.
      *
      */
-    fun startNewJoinedGame(message: edu.udo.cs.sopra.ntf.messages.GameInitMessage) {
+    fun startNewJoinedGame(message: GameInitMessage) {
         check(connectionState == ConnectionState.WAITING_FOR_INIT) {
             "Not waiting for game init message."
         }
@@ -212,7 +211,6 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
      * events based on the tokens present in the shop. Depending on the number of matching wildlife tokens,
      * it resolves the overpopulation of 3 or 4.
      *
-     * @param message The message containing details about the overpopulation event.
      * @param sender The name of the player who sent the message.
      *
      * @throws IllegalStateException if there is no current game or the sender is not the current player.
@@ -311,11 +309,6 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
             throw IllegalStateException("the sender is not the current player.")
         }
 
-        // Update the game's wildlife token list using the tokens from the message.
-        game.wildlifeTokenList = message.wildlifeTokens.map { animal ->
-            WildlifeToken(LocalAnimal.valueOf(animal.name))
-        }.toMutableList()
-
         // Ensure the placed tile is within valid indices.
         check(message.placedTile in game.shop.indices)
         game.shop[message.placedTile].first?.wildlifeToken = null
@@ -350,11 +343,19 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
                 rootService.playerActionService.addToken(targetTile)
             }
         } else {
+
+            receivedList = message.wildlifeTokens.map { animal ->
+                WildlifeToken(LocalAnimal.valueOf(animal.name))
+            }.toMutableList()
+
             // Execute actions when no token is selected.
             rootService.playerActionService.chooseTokenTilePair(message.placedTile)
             repeat(message.tileRotation) { rootService.playerActionService.rotateTile() }
             rootService.playerActionService.addTileToHabitat(habitatCoordinates)
             rootService.playerActionService.discardToken()
+
+            receivedList = mutableListOf()
+
         }
 
 
@@ -484,7 +485,6 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
 
 
         val wildlifeTokensList = game.wildlifeTokenList.map { RemoteAnimal.valueOf(it.animal.name) }
-
         val message = PlaceMessage (
             placedTile = tileIndex,
             qcoordTile = rTile,
@@ -501,7 +501,6 @@ class NetworkService (private  val rootService: RootService) : AbstractRefreshin
         val networkClient = checkNotNull(client) { "No network client found" }
         networkClient.sendGameActionMessage(message)
         updateConnectionState(ConnectionState.WAITING_FOR_OPPONENTS_TURN)
-
         // reset to default
         placedTileIndex = null
         tileCoordinates = null
