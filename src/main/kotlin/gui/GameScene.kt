@@ -56,6 +56,7 @@ class GameScene(
     private var refreshShop : MutableList<MutableList<Pair<HabitatTile?,WildlifeToken?>>> = mutableListOf()
     private var refreshPlayerType : MutableList<PlayerType> = mutableListOf()
     private var refreshState : MutableList<ConnectionState> = mutableListOf()
+    private var didTakeTurn : Boolean = true
 
 
     private val shopHabitats = GridPane<HexagonView>(
@@ -819,6 +820,7 @@ class GameScene(
                 })
             }
 
+            didTakeTurn = true
             println("RefreshNext")
         }
     }
@@ -829,7 +831,7 @@ class GameScene(
             networkStatusArea.text = newState.toUIText()
             state = newState
             println(networkStatusArea.text)
-            if (state == ConnectionState.PLAYING_MY_TURN) {
+            if (state == ConnectionState.PLAYING_MY_TURN && didTakeTurn) {
                 if (myPlayerType == PlayerType.EASY) {
                     disableAll()
                     playAnimation(DelayAnimation(speed).apply {
@@ -838,6 +840,8 @@ class GameScene(
                         }
                     })
                 }
+            } else if (state == ConnectionState.SWAPPING_WILDLIFE_TOKENS) { //|| state == ConnectionState.OPPONENT_SWAPPING_WILDLIFE_TOKENS)
+                didTakeTurn = false
             }
         }
     }
