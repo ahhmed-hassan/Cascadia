@@ -241,71 +241,53 @@ class ScoringService(private val rootService: RootService) : AbstractRefreshingS
         private fun createPattern(coordinate: Pair<Int, Int>, number: Int, rot: Int): List<Pair<Int, Int>> {
             if (number == 3) {
                 if (rot == 0) {
-                    return listOf(
-                        Pair(coordinate.first, coordinate.second),
+                    return listOf(Pair(coordinate.first, coordinate.second),
                         Pair(coordinate.first - 1, coordinate.second + 1),
                         Pair(coordinate.first - 1, coordinate.second),
-                        Pair(coordinate.first - 2, coordinate.second + 1)
-                    )
+                        Pair(coordinate.first - 2, coordinate.second + 1))
                 }
                 if (rot == 1) {
-                    return listOf(
-                        Pair(coordinate.first, coordinate.second),
+                    return listOf(Pair(coordinate.first, coordinate.second),
                         Pair(coordinate.first, coordinate.second + 1),
                         Pair(coordinate.first - 1, coordinate.second + 1),
-                        Pair(coordinate.first - 1, coordinate.second + 2)
-                    )
+                        Pair(coordinate.first - 1, coordinate.second + 2))
                 }
                 if (rot == 2) {
-                    return listOf(
-                        Pair(coordinate.first, coordinate.second),
+                    return listOf(Pair(coordinate.first, coordinate.second),
                         Pair(coordinate.first + 1, coordinate.second),
                         Pair(coordinate.first, coordinate.second + 1),
-                        Pair(coordinate.first + 1, coordinate.second + 1)
-                    )
+                        Pair(coordinate.first + 1, coordinate.second + 1))
                 }
             }
             if (number == 2) {
                 if (rot == 0) {
-                    return listOf(
-                        Pair(coordinate.first, coordinate.second),
+                    return listOf(Pair(coordinate.first, coordinate.second),
                         Pair(coordinate.first - 1, coordinate.second + 1),
-                        Pair(coordinate.first - 1, coordinate.second)
-                    )
+                        Pair(coordinate.first - 1, coordinate.second))
                 }
                 if (rot == 1) {
-                    return listOf(
-                        Pair(coordinate.first, coordinate.second),
+                    return listOf(Pair(coordinate.first, coordinate.second),
                         Pair(coordinate.first, coordinate.second + 1),
-                        Pair(coordinate.first - 1, coordinate.second + 1)
-                    )
+                        Pair(coordinate.first - 1, coordinate.second + 1))
                 }
                 if (rot == 2) {
-                    return listOf(
-                        Pair(coordinate.first, coordinate.second),
+                    return listOf(Pair(coordinate.first, coordinate.second),
                         Pair(coordinate.first + 1, coordinate.second),
-                        Pair(coordinate.first, coordinate.second + 1)
-                    )
+                        Pair(coordinate.first, coordinate.second + 1))
                 }
             }
             if (number == 1) {
                 if (rot == 0) {
-                    return listOf(
-                        Pair(coordinate.first, coordinate.second),
-                        Pair(coordinate.first, coordinate.second - 1),
-                    )
+                    return listOf(Pair(coordinate.first, coordinate.second),
+                        Pair(coordinate.first, coordinate.second - 1),)
                 }
                 if (rot == 1) {
-                    return listOf(
-                        Pair(coordinate.first, coordinate.second),
-                        Pair(coordinate.first - 1, coordinate.second),
-                    )
+                    return listOf(Pair(coordinate.first, coordinate.second),
+                        Pair(coordinate.first - 1, coordinate.second),)
                 }
                 if (rot == 2) {
-                    return listOf(
-                        Pair(coordinate.first, coordinate.second),
-                        Pair(coordinate.first - 1, coordinate.second + 1),
-                    )
+                    return listOf(Pair(coordinate.first, coordinate.second),
+                        Pair(coordinate.first - 1, coordinate.second + 1),)
                 }
             }
             return listOf(Pair(coordinate.first, coordinate.second))
