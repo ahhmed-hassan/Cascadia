@@ -1,7 +1,6 @@
 package service
 
 import entity.*
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -37,41 +36,152 @@ class HardBotService(private val rootService: RootService) {
         timeIsUp.set(true)
         threads.forEach { it.interrupt() }
         thread.join()
+        println("There are " + queue.size + " Jobs left")
         println("All stopped")
 
-        var best = possibilities.first()
-        possibilities.forEach {
-            if (!(it.wildLifeChance == null || it.wildLifeChance != 1.0)) {
-                if (it.getScore() > best.getScore()) {
-                    best = it
+        val bestCertain =
+            possibilities.filter { it.wildLifeChance == null || it.wildLifeChance == 1.0 }.maxByOrNull { it.getScore() }
+        val bestUncertain =
+            possibilities.filter { it.wildLifeChance != null && it.wildLifeChance != 1.0 }.maxByOrNull { it.getScore() }
+        checkNotNull(bestCertain)
+
+        var useCertain = true
+        if (bestUncertain != null) {
+            val bestUncertainWildlifeChance = bestUncertain.wildLifeChance
+            useCertain = bestCertain.getScore() > bestUncertain.getScore() ||
+                    bestUncertainWildlifeChance == null || bestUncertainWildlifeChance < 0.75
+
+            if (!useCertain) {
+                val alternatives =
+                    possibilities.filter {
+                        it.tileId == bestUncertain.tileId
+                                && it.tilePlacement == bestUncertain.tilePlacement
+                                && it.rotation == bestUncertain.rotation
+                                && it.wildlifeToken != bestUncertain.wildlifeToken
+                    }
+                alternatives.forEach {
+                    val chance = it.wildLifeChance
+                    if (chance != null && chance < 0.75) {
+                        useCertain = true
+                    }
                 }
+                if (alternatives.isEmpty()) useCertain = true
+            }
+        }
+        if (useCertain) playCertain(game, bestCertain)
+        else bestUncertain?.let { playUncertain(game, it, possibilities) }
+
+    }
+
+    /**
+     * playes uncertain tiles
+     */
+    private fun playUncertain(
+        game: CascadiaGame,
+        bestUncertain: HardBotPossiblePlacements,
+        possibilities: MutableList<HardBotPossiblePlacements>
+    ) {
+        rootService.playerActionService.replaceWildlifeTokens(listOf(0, 1, 2, 3))
+        var animal = checkNotNull(bestUncertain.wildlifeToken)
+
+        var shopWithAnimal = game.shop.filter { it.second?.animal == animal.animal }
+
+        var actualPlacement = bestUncertain
+        if (shopWithAnimal.isNotEmpty()) {
+            chooseUncertainAnimalPair(bestUncertain, shopWithAnimal, game)
+        } else {
+            val animals = mutableListOf<WildlifeToken>()
+            game.shop.forEach { if (!animals.contains(it.second)) it.second?.let { it1 -> animals.add(it1) } }
+            val newPossiblePlacements = possibilities.filter {
+                it.tileId == bestUncertain.tileId
+                        && it.tilePlacement == bestUncertain.tilePlacement
+                        && it.rotation == bestUncertain.rotation
+                        && animals.contains(it.wildlifeToken)
+            }.maxByOrNull { it.getScore() }
+            if (newPossiblePlacements != null) {
+                animal = checkNotNull(newPossiblePlacements.wildlifeToken)
+                shopWithAnimal = game.shop.filter { it.second?.animal == animal.animal }
+
+                chooseUncertainAnimalPair(newPossiblePlacements, shopWithAnimal, game)
+                actualPlacement = newPossiblePlacements
             }
         }
 
-        if (best.customPair != null) {
-            rootService.playerActionService.chooseCustomPair(best.customPair!!.first, best.customPair!!.second)
-        } else {
-            val index = game.shop.indexOfFirst { it.first?.id == best.tileId }
-            rootService.playerActionService.chooseTokenTilePair(index)
-        }
-
-        for (i in 0..best.rotation) {
+        for (i in 0..actualPlacement.rotation) {
             rootService.playerActionService.rotateTile()
         }
 
-        rootService.playerActionService.addTileToHabitat(best.tilePlacement)
+        rootService.playerActionService.addTileToHabitat(actualPlacement.tilePlacement)
 
-        if (best.wildlifePlacementId != null) {
-            game.currentPlayer.habitat.forEach { habitatTile ->
-                if (habitatTile.value.id == best.wildlifePlacementId) {
-                    rootService.playerActionService.addToken(habitatTile.value)
+        if (actualPlacement.wildlifePlacementId != null) {
+            game.currentPlayer.habitat.forEach { habitatAnimalTile ->
+                if (habitatAnimalTile.value.id == actualPlacement.wildlifePlacementId && game.selectedToken != null) {
+                    rootService.playerActionService.addToken(habitatAnimalTile.value)
+                    return //change when bug found
                 }
             }
+        }
+        rootService.playerActionService.discardToken()
+    }
+
+    /**
+     * chooses uncertain animals
+     */
+    private fun chooseUncertainAnimalPair(
+        placement: HardBotPossiblePlacements,
+        shopWithAnimal: List<Pair<HabitatTile?,
+                WildlifeToken?>>, game: CascadiaGame
+    ) {
+        val nicePair = shopWithAnimal.find { it.first?.id == placement.tileId }
+        if (nicePair != null) {
+            rootService.playerActionService.chooseTokenTilePair(game.shop.indexOf(nicePair))
         } else {
-            rootService.playerActionService.discardToken()
+            val tileToPlace = game.shop.find { it.first?.id == placement.tileId }
+            rootService.playerActionService.chooseCustomPair(
+                game.shop.indexOf(tileToPlace),
+                game.shop.indexOf(shopWithAnimal.first())
+            )
         }
     }
 
+    /**
+     * plays a ceratin turn
+     */
+    private fun playCertain(game: CascadiaGame, bestCertain: HardBotPossiblePlacements) {
+        if (bestCertain.customPair != null) {
+            rootService.playerActionService.chooseCustomPair(
+                checkNotNull(bestCertain.customPair).first,
+                checkNotNull(bestCertain.customPair).second
+            )
+        } else {
+            val index = game.shop.indexOfFirst { it.first?.id == bestCertain.tileId }
+            rootService.playerActionService.chooseTokenTilePair(index)
+        }
+
+        for (i in 0..bestCertain.rotation) {
+            rootService.playerActionService.rotateTile()
+        }
+
+        rootService.playerActionService.addTileToHabitat(bestCertain.tilePlacement)
+
+        if (bestCertain.wildlifePlacementId != null) {
+            game.currentPlayer.habitat.forEach { habitatTile ->
+                if (habitatTile.value.id == bestCertain.wildlifePlacementId
+                    && habitatTile.value.wildlifeSymbols.contains(
+                        checkNotNull(game.selectedToken).animal
+                    ) && habitatTile.value.wildlifeToken == null
+                ) {
+                    rootService.playerActionService.addToken(habitatTile.value)
+                    return //change when bug found
+                }
+            }
+        }
+        rootService.playerActionService.discardToken()
+    }
+
+    /**
+     * finds all possibilities and simulates them
+     */
     private fun takeAsyncTurn(
         game: CascadiaGame,
         queue: ConcurrentLinkedQueue<HardBotJob>,
@@ -89,8 +199,9 @@ class HardBotService(private val rootService: RootService) {
         possibilities.addAll(calculateAllPossibilities(game, animalTokens))
         println("There are " + possibilities.size + " possible Placements!")
 
-        launch {
-            if (currentRound == 1) {
+
+        if (currentRound == 1) {
+            Thread {
                 possibilities.forEach { placement ->
                     createJob(
                         employer = placement,
@@ -99,8 +210,9 @@ class HardBotService(private val rootService: RootService) {
                         round = currentRound
                     )
                 }
-            } else {
-                println("Start creating new Jobs")
+            }.start()
+        } else {
+            Thread {
                 while (!timeIsUp.get()) {
                     possibilities.forEach { possibility ->
                         createJob(
@@ -111,11 +223,10 @@ class HardBotService(private val rootService: RootService) {
                         )
                     }
                 }
-                println("Stopped creating new Jobs")
-            }
+            }.start()
         }
 
-        val maxNumberOfThreads = (Runtime.getRuntime().availableProcessors() - 1).coerceAtLeast(1)
+        val maxNumberOfThreads = (Runtime.getRuntime().availableProcessors() - 2).coerceAtLeast(1)
         println("Available Threads: $maxNumberOfThreads")
         for (i in 1..maxNumberOfThreads) {
             threads.add(
@@ -127,6 +238,9 @@ class HardBotService(private val rootService: RootService) {
         threads.forEach { it.start() }
     }
 
+    /**
+     * simulates the possibilities
+     */
     private fun simulate(queue: ConcurrentLinkedQueue<HardBotJob>, rootService: RootService) {
         val gameService = rootService.gameService
         var count = 0
@@ -166,6 +280,9 @@ class HardBotService(private val rootService: RootService) {
         }
     }
 
+    /**
+     * helper method to find the score of a habitat
+     */
     private fun scoringService(habitat: MutableMap<Pair<Int, Int>, HabitatTile>, rootService: RootService): Int {
         val service = rootService.scoringService
         var points = 0
@@ -184,6 +301,9 @@ class HardBotService(private val rootService: RootService) {
         return points
     }
 
+    /**
+     * method that creates jobs form possibilities
+     */
     private fun createJob(
         employer: HardBotPossiblePlacements,
         game: CascadiaGame,
@@ -251,6 +371,9 @@ class HardBotService(private val rootService: RootService) {
         queue.add(job)
     }
 
+    /**
+     * calculates the possibilities
+     */
     private fun calculateAllPossibilities(
         game: CascadiaGame,
         tokenList: MutableList<WildlifeToken>
@@ -382,6 +505,9 @@ class HardBotService(private val rootService: RootService) {
         return list.toMutableList()
     }
 
+    /**
+     * rotates a tile
+     */
     private fun rotateTile(tile: HabitatTile) {
         tile.rotationOffset = (tile.rotationOffset - 1) % 6
         val first = tile.terrains.removeFirst()
@@ -391,6 +517,9 @@ class HardBotService(private val rootService: RootService) {
         )
     }
 
+    /**
+     * deep copies a habitat tile
+     */
     private fun deepCopyHabitatTile(habitatTile: HabitatTile): HabitatTile {
         return HabitatTile(
             id = habitatTile.id,
@@ -402,12 +531,18 @@ class HardBotService(private val rootService: RootService) {
         )
     }
 
+    /**
+     * deep copies a habitat
+     */
     private fun deepCopyHabitat(habitat: MutableMap<Pair<Int, Int>, HabitatTile>): MutableMap<Pair<Int, Int>, HabitatTile> {
         val newHabitat = mutableMapOf<Pair<Int, Int>, HabitatTile>()
         habitat.forEach { tile -> newHabitat[tile.key] = deepCopyHabitatTile(tile.value) }
         return newHabitat
     }
 
+    /**
+     * deep copies the shop
+     */
     private fun deepCopyShop(shop: MutableList<Pair<HabitatTile?, WildlifeToken?>>): MutableList<Pair<HabitatTile?,
             WildlifeToken?>> {
         val newShop = mutableListOf<Pair<HabitatTile?, WildlifeToken?>>()
