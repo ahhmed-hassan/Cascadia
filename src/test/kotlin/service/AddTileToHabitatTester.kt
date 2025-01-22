@@ -118,8 +118,10 @@ class AddTileToHabitatTester {
         val game = checkNotNull(rootService.currentGame)
         rootService.networkService.connectionState = ConnectionState.PLAYING_MY_TURN
         game.selectedTile = someHabitat
+        val index = game.playerList.indexOf(game.currentPlayer)
         assertDoesNotThrow { rootService.playerActionService.addTileToHabitat(0 to -1) }
-        val savedHabitat = game.currentPlayer.habitat.get(0 to -1)
+        println(game.currentPlayer.name)
+        val savedHabitat = game.playerList[index].habitat.get(0 to -1)
         assertNotNull(savedHabitat)
         assertNull(game.selectedTile)
     }
