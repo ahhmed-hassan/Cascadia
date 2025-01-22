@@ -360,7 +360,6 @@ class HardBotService(private val rootService: RootService) {
             shop[index] = Pair(habitatTiles.removeFirst(), animals.removeFirst())
         }
         val job = HardBotJob(
-            naturalTokens = currentPlayer.natureToken - employer.usedNaturalToken,
             habitat = habitat,
             round = round - 1,
             habitatTiles = habitatTiles,
