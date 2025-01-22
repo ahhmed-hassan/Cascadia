@@ -201,6 +201,10 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
             rootService.networkService.tileCoordinates = habitatCoordinates
         }
         onAllRefreshables { refreshAfterHabitatTileAdded() }
+
+        if (game.selectedToken == null) {
+            rootService.gameService.nextTurn()
+        }
     }
 
     /**
@@ -216,7 +220,6 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         val selectedToken = game.selectedToken
         checkNotNull(selectedToken)
         val currentPlayer = game.currentPlayer
-        val gameServ = GameService(rootService)
 
         val myTurn = rootService.networkService.connectionState == ConnectionState.PLAYING_MY_TURN
 
@@ -241,7 +244,9 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
 
         onAllRefreshables { refreshAfterWildlifeTokenAdded() }
 
-        gameServ.nextTurn()
+        if (game.selectedTile == null) {
+            rootService.gameService.nextTurn()
+        }
     }
 
     /**
@@ -294,7 +299,10 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
             rootService.networkService.tokenCoordinates = null
             rootService.networkService.sendPlacedMessage()
         }
-        rootService.gameService.nextTurn()
+
+        if (game.selectedTile == null) {
+            rootService.gameService.nextTurn()
+        }
     }
 
 }
