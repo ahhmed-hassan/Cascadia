@@ -11,6 +11,11 @@ import tools.aqua.bgw.visual.ColorVisual
 import tools.aqua.bgw.visual.ImageVisual
 import java.awt.Color
 
+/**
+ * Menu Scene for Joining a NetworkGame
+ *
+ * @property rootService The associated [RootService]
+ */
 class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080), Refreshables {
 
     private val playerNameFields = mutableListOf<TextField>()
@@ -205,6 +210,11 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
         startButton.isVisible = disconnected
     }
 
+    /**
+     * [getSpeed] returns the simulationSpeed
+     *
+     * @return the selected Simulation Speed
+     */
     fun getSpeed(): Float {
         return simulationSpeed
     }

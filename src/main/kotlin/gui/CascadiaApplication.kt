@@ -4,6 +4,9 @@ import service.RootService
 import service.ScoringService
 import tools.aqua.bgw.core.BoardGameApplication
 
+/**
+ * Main class of the Cascadia application
+ */
 class CascadiaApplication : BoardGameApplication("Cascadia Game"), Refreshables {
 
     private val rootService = RootService()

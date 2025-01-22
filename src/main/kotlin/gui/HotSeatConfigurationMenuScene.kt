@@ -521,6 +521,11 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         playerButtons[swap2].visual = swapVisual
     }
 
+    /**
+     * [getSpeed] returns the simulationSpeed
+     *
+     * @return the selected Simulation Speed
+     */
     fun getSpeed(): Float {
         return simulationSpeed
     }

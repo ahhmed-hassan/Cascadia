@@ -15,6 +15,12 @@ import tools.aqua.bgw.visual.ColorVisual
 import tools.aqua.bgw.visual.ImageVisual
 import java.awt.Color
 
+/**
+ * Menu Scene after game Ends. Shows the Score of the Game
+ *
+ * @property rootService The associated [RootService]
+ * @property gameScene The associated gameScene
+ */
 class WinningMenuScene(
     val rootService: RootService,
     private val gameScene: GameScene
@@ -162,7 +168,7 @@ class WinningMenuScene(
         checkNotNull(game) { return }
 
         val scores = rootService.scoringService.calculateScore()
-        val sortedScores = scores.entries.sortedByDescending { it.value.sum() }
+        val sortedScores = scores.entries.sortedByDescending{it.value.sum()}
 
         gridPane[0, 0] = playerImage
         gridPane[0, 1] = bearImage
@@ -180,7 +186,8 @@ class WinningMenuScene(
 
 
         sortedScores.forEachIndexed { index, (playerName, score) ->
-            val totalScore = score.animalsScores.values.sum() + score.ownLongestTerrainsScores.values.sum() + score.natureTokens
+            val totalScore =
+                score.animalsScores.values.sum() + score.ownLongestTerrainsScores.values.sum() + score.natureTokens
             gridPane[index + 1, 0] = createScoreLabel(playerName)
             gridPane[index + 1, 1] = createScoreLabel(score.animalsScores[Animal.BEAR].toString())
             gridPane[index + 1, 2] = createScoreLabel(score.animalsScores[Animal.ELK].toString())

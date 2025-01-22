@@ -11,6 +11,11 @@ import tools.aqua.bgw.visual.ColorVisual
 import tools.aqua.bgw.visual.ImageVisual
 import java.awt.Color
 
+/**
+ * Menu Scene for Hosting a NetworkGame
+ *
+ * @property rootService The associated [RootService]
+ */
 class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1920, 1080), Refreshables {
 
     private val playerNameFields = mutableListOf<TextField>()
@@ -262,7 +267,10 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             if (randomOrderToggle.isSelected) { randomOrder = true }
             if (randomRuleToggle.isSelected) { randomRule = true}
             rules = determineRules()
-            rootService.networkService.startNewHostedGame(orderIsRanom = randomOrder, isRandomRules = randomRule, scoreRules = rules.toList())
+            rootService.networkService.startNewHostedGame(
+                orderIsRanom = randomOrder,
+                isRandomRules = randomRule,
+                scoreRules = rules.toList())
             rules.clear()
 
         }
@@ -284,7 +292,11 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             println(param)
             myPlayer = param.values.first()
             simulationSpeed = checkNotNull(simEntry.selectedItem)
-            rootService.networkService.hostGame(secret = "cascadia24d", name = playersField.text, sessionID = createId.text, playerType=param.values.first())
+            rootService.networkService.hostGame(
+                secret = "cascadia24d",
+                name = playersField.text,
+                sessionID = createId.text,
+                playerType=param.values.first())
         }
     }
 
@@ -446,6 +458,11 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         startButton.isVisible = networkPlayers.size >=1
     }
 
+    /**
+     * [getSpeed] returns the simulationSpeed
+     *
+     * @return the selected Simulation Speed
+     */
     fun getSpeed(): Float {
         return simulationSpeed
     }

@@ -29,6 +29,14 @@ import java.util.*
 import kotlin.math.cos
 import kotlin.math.sin
 
+/**
+ * The GameScene displays the board of the game
+ *
+ * @property rootService The associated [RootService]
+ * @property hotSeatConfigurationMenuScene instance of hotseat Menu
+ * @property networkJoinMenuScene instance of joining a game
+ * @property networkConfigurationMenuScene instance of hosting a game
+ */
 class GameScene(
     val rootService: RootService,
     private val hotSeatConfigurationMenuScene: HotSeatConfigurationMenuScene,
@@ -286,7 +294,8 @@ class GameScene(
             val game = rootService.currentGame
             checkNotNull(game)
             //check overpopulation
-            if ((state == ConnectionState.PLAYING_MY_TURN && myPlayerType == PlayerType.LOCAL) || game.currentPlayer.playerType == PlayerType.LOCAL) {
+            if ((state == ConnectionState.PLAYING_MY_TURN && myPlayerType == PlayerType.LOCAL)
+                || game.currentPlayer.playerType == PlayerType.LOCAL) {
                 rootService.playerActionService.replaceWildlifeTokens(hasThreeSameWildlifeTokens().second)
                 this.isDisabled = true
             }
@@ -554,7 +563,8 @@ class GameScene(
         refreshHabitat.add(game.currentPlayer.habitat)
         refreshPlayerType.add(game.currentPlayer.playerType)
 
-        if (game.currentPlayer.playerType == PlayerType.EASY || (myPlayerType == PlayerType.EASY && state == ConnectionState.PLAYING_MY_TURN)) {
+        if (game.currentPlayer.playerType == PlayerType.EASY ||
+            (myPlayerType == PlayerType.EASY && state == ConnectionState.PLAYING_MY_TURN)) {
             disableAll()
             playAnimation(DelayAnimation(speed).apply {
                 onFinished = {
@@ -665,7 +675,9 @@ class GameScene(
             replaceWildlifeButton.isDisabled = true
 
             //call method getAllPossibleCoordinatesForTilePlacing in createPossibleHexagons
-            createPossibleHexagons(rootService.gameService.getAllPossibleCoordinatesForTilePlacing(refreshHabitat.first()))
+            createPossibleHexagons(
+                rootService.gameService.getAllPossibleCoordinatesForTilePlacing(refreshHabitat.first())
+            )
 
             val tokenToPlay = refreshSelectedToken.first()
 
@@ -715,7 +727,7 @@ class GameScene(
             //add the views to the shop
             for (i in 0..3) {
                 //create HexagonViews for the Token
-                shopTokens[i, 0] = refreshShop.first()[i].second?.animal.let { it?.let { it1 -> createTokens(it1.name) } }
+                shopTokens[i, 0] = refreshShop.first()[i].second?.animal.let { it?.let { it1 -> createTokens(it1.name)}}
                 shopTokens[i, 0]?.apply {
                     onMouseClicked = {
                         if (refreshPlayerType.first() == PlayerType.LOCAL)
@@ -760,7 +772,7 @@ class GameScene(
             for (i in 0..3) {
                 shopHabitats[i, 0] = habitats[refreshShop.first()[i].first!!] as HexagonView
                 //create HexagonViews for the Token
-                shopTokens[i, 0] = refreshShop.first()[i].second?.animal.let { it?.let { it1 -> createTokens(it1.name) } }
+                shopTokens[i, 0] = refreshShop.first()[i].second?.animal.let { it?.let { it1 -> createTokens(it1.name)}}
             }
 
             //If player Clicks on any Habitat or Token that vertical pair is chosen
@@ -792,7 +804,8 @@ class GameScene(
             natureTokenLabel.apply { text = "NatureToken: " + game.currentPlayer.natureToken.toString() }
             currentPlayerLabel.apply { text = game.currentPlayer.name }
 
-            //if (game.currentPlayer.playerType == PlayerType.LOCAL || (myPlayerType == PlayerType.LOCAL && state == ConnectionState.PLAYING_MY_TURN)) {
+            //if (game.currentPlayer.playerType == PlayerType.LOCAL ||
+            // (myPlayerType == PlayerType.LOCAL && state == ConnectionState.PLAYING_MY_TURN)) {
                 //Disable resolveOverpopulation if already done or not possible
                 if (game.hasReplacedThreeToken || !hasThreeSameWildlifeTokens().first) {
                     resolveOverpopButton.isDisabled = true
@@ -840,7 +853,7 @@ class GameScene(
                         }
                     })
                 }
-            } else if (state == ConnectionState.SWAPPING_WILDLIFE_TOKENS) { //|| state == ConnectionState.OPPONENT_SWAPPING_WILDLIFE_TOKENS)
+            } else if (state == ConnectionState.SWAPPING_WILDLIFE_TOKENS) {
                 didTakeTurn = false
             }
         }
@@ -1047,7 +1060,8 @@ class GameScene(
         }
 
         // Find the first group with at least 3 tokens
-        val matchingGroup = tokenIndexMap.entries.firstOrNull { it.value.size >= 3 }
+        val matchingGroup =
+            tokenIndexMap.entries.firstOrNull { it.value.size >= 3 }
         return if (matchingGroup != null) {
             Pair(true, matchingGroup.value.take(3)) // Return true and the first 3 indices
         } else {
@@ -1102,7 +1116,10 @@ class GameScene(
         ).onEach { it.isDisabled = true }
     }
 
-    // Delay utility for queued actions
+
+    /**
+     * Process each refresh in a sequence
+     */
     private fun processNextRefresh() {
         if (isProcessingQueue) return
 
@@ -1112,7 +1129,7 @@ class GameScene(
 
             // Execute the action after a delay
             Thread {
-                Thread.sleep(1000)
+                Thread.sleep(speed.toLong())
                 runOnGUIThread {
                     nextAction()
                     isProcessingQueue = false
@@ -1122,7 +1139,9 @@ class GameScene(
         }
     }
 
-    // Enqueue a refresh action
+    /**
+     * Enqueue a refresh Action
+     */
     fun enqueueRefresh(action: () -> Unit) {
         refreshQueue.add(action)
         processNextRefresh()
