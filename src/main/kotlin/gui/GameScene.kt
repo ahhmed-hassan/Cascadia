@@ -1,6 +1,7 @@
 package gui
 
 import entity.*
+import service.ConnectionState
 import service.RootService
 import tools.aqua.bgw.animation.DelayAnimation
 import tools.aqua.bgw.components.ComponentView
@@ -11,6 +12,7 @@ import tools.aqua.bgw.components.layoutviews.GridPane
 import tools.aqua.bgw.components.layoutviews.Pane
 import tools.aqua.bgw.components.uicomponents.Button
 import tools.aqua.bgw.components.uicomponents.Label
+import tools.aqua.bgw.components.uicomponents.TextArea
 import tools.aqua.bgw.components.uicomponents.UIComponent
 import tools.aqua.bgw.core.BoardGameApplication.Companion.runOnGUIThread
 import tools.aqua.bgw.core.BoardGameScene
@@ -44,6 +46,8 @@ class GameScene(
     private var currentXCamera = 0
     private var currentYCamera = 0
     private var speed = 0
+    private var state : ConnectionState = ConnectionState.DISCONNECTED
+    private var myPlayerType : PlayerType? = null
     private val refreshQueue: Queue<() -> Unit> = LinkedList()
     private var isProcessingQueue = false
     private var refreshSelectedToken: MutableList<WildlifeToken> = mutableListOf()
@@ -51,6 +55,9 @@ class GameScene(
     private var refreshHabitat : MutableList<MutableMap<Pair<Int, Int>, HabitatTile>> = mutableListOf()
     private var refreshShop : MutableList<MutableList<Pair<HabitatTile?,WildlifeToken?>>> = mutableListOf()
     private var refreshPlayerType : MutableList<PlayerType> = mutableListOf()
+    private var refreshState : MutableList<ConnectionState> = mutableListOf()
+    private var didTakeTurn : Boolean = true
+
 
     private val shopHabitats = GridPane<HexagonView>(
         posX = 1400,
@@ -128,6 +135,21 @@ class GameScene(
         font = Font(24),
         visual = ColorVisual(255, 255, 255)
     )
+
+    private val networkStatusArea = TextArea(
+        width = 200,
+        height = 50,
+        posX = 50,
+        posY = 140,
+        font = Font(24)
+    ).apply {
+        isDisabled = true
+        // only visible when the text is changed to something non-empty
+        isVisible = false
+        textProperty.addListener { _, new ->
+            isVisible = new.isNotEmpty()
+        }
+    }
 
     private val replaceWildlifeButton = Button(
         width = 200,
@@ -261,9 +283,16 @@ class GameScene(
         visual = ColorVisual(200, 150, 255)
     ).apply {
         onMouseClicked = {
+            val game = rootService.currentGame
+            checkNotNull(game)
             //check overpopulation
-            rootService.playerActionService.replaceWildlifeTokens(hasThreeSameWildlifeTokens().second)
-            this.isDisabled = true
+            if ((state == ConnectionState.PLAYING_MY_TURN && myPlayerType == PlayerType.LOCAL) || game.currentPlayer.playerType == PlayerType.LOCAL) {
+                rootService.playerActionService.replaceWildlifeTokens(hasThreeSameWildlifeTokens().second)
+                this.isDisabled = true
+            }
+            else{
+                this.isDisabled = true
+            }
         }
     }
 
@@ -398,7 +427,8 @@ class GameScene(
             //playArea,
             playableTile,
             playableToken,
-            ruleSetOverlay
+            networkStatusArea,
+            ruleSetOverlay,
         )
 
     }
@@ -408,7 +438,20 @@ class GameScene(
         checkNotNull(game)
         println("RefreshStart")
 
-        speed = hotSeatConfigurationMenuScene.getSpeed().toInt() * 1000
+        if (networkJoinMenuScene.myPlayer != null){
+            myPlayerType = networkJoinMenuScene.myPlayer
+        }
+        else if (networkConfigurationMenuScene.myPlayer != null) {
+            myPlayerType = networkConfigurationMenuScene.myPlayer
+        }
+
+        speed = if (networkJoinMenuScene.getSpeed() != 0.0F){
+            networkJoinMenuScene.getSpeed().toInt() * 1000
+        } else if (networkConfigurationMenuScene.getSpeed() != 0.0F){
+            networkConfigurationMenuScene.getSpeed().toInt() * 1000
+        }else {
+            hotSeatConfigurationMenuScene.getSpeed().toInt() * 1000
+        }
 
         //add the playArea to the CameraPane
         targetLayout.add(playArea)
@@ -470,12 +513,14 @@ class GameScene(
         for (i in 0..3) {
             shopTokens[i, 0]?.apply {
                 onMouseClicked = {
-                    rootService.playerActionService.chooseTokenTilePair(i)
+                    if (game.currentPlayer.playerType == PlayerType.LOCAL || state == ConnectionState.PLAYING_MY_TURN)
+                        rootService.playerActionService.chooseTokenTilePair(i)
                 }
             }
             shopHabitats[i, 0]?.apply {
                 onMouseClicked = {
-                    rootService.playerActionService.chooseTokenTilePair(i)
+                    if (game.currentPlayer.playerType == PlayerType.LOCAL || state == ConnectionState.PLAYING_MY_TURN)
+                        rootService.playerActionService.chooseTokenTilePair(i)
                 }
             }
         }
@@ -509,7 +554,7 @@ class GameScene(
         refreshHabitat.add(game.currentPlayer.habitat)
         refreshPlayerType.add(game.currentPlayer.playerType)
 
-        if (game.currentPlayer.playerType == PlayerType.EASY) {
+        if (game.currentPlayer.playerType == PlayerType.EASY || (myPlayerType == PlayerType.EASY && state == ConnectionState.PLAYING_MY_TURN)) {
             disableAll()
             playAnimation(DelayAnimation(speed).apply {
                 onFinished = {
@@ -520,8 +565,9 @@ class GameScene(
     }
 
     override fun refreshAfterHabitatTileAdded() {
-
         enqueueRefresh {
+            val game = rootService.currentGame
+            checkNotNull(game)
             println("RefreshTileAdd")
             refreshHabitat.removeFirst()
 
@@ -538,7 +584,8 @@ class GameScene(
             playableTile[0, 0]?.isDisabled = true
 
             playableToken.isDisabled = false
-            if (refreshPlayerType.first() == PlayerType.LOCAL)
+
+            if (game.currentPlayer.playerType == PlayerType.LOCAL || state == ConnectionState.PLAYING_MY_TURN)
                 discardToken.isDisabled = false
 
             //get the List of all Habitats where selected Token can be placed
@@ -551,9 +598,13 @@ class GameScene(
                 }
             }
 
+
             //enable for each Habitat where Token can be put onMouseClick
             for (habitat in refreshHabitat.first()) {
-                if (habitat.value in tokenHabitate && refreshPlayerType.first() == PlayerType.LOCAL) {
+                if (habitat.value in tokenHabitate
+                    && (refreshPlayerType.first() == PlayerType.LOCAL
+                            || state == ConnectionState.PLAYING_MY_TURN)
+                ) {
                     playArea[habitat.key.second, habitat.key.first] = (habitats[habitat.value] as HexagonView).apply {
                         isDisabled = false
                         onMouseClicked = {
@@ -562,12 +613,13 @@ class GameScene(
                     }
                 }
             }
+
+            println("RefreshTileAdd")
         }
     }
 
     override fun refreshAfterTileRotation() {
         enqueueRefresh {
-
             val rotateTile = refreshSelectedHabitat.first()
 
             // get the list of terrains from Habitat
@@ -638,8 +690,6 @@ class GameScene(
 
     override fun refreshAfterWildlifeTokenAdded(habitatTile: HabitatTile) {
         enqueueRefresh {
-            val game = rootService.currentGame
-            checkNotNull(game)
 
             //update the view of the Habitat where we placed our token
             playableToken[0, 0] = null
@@ -648,6 +698,13 @@ class GameScene(
                 labels = habitatTile.terrains.map { terrain: Terrain -> terrain.name.substring(0, 1) },
                 token = habitatTile.wildlifeToken?.animal.toString().substring(0, 1)
             )
+            playArea.clear()
+
+            for (habitat in refreshHabitat.first()) {
+                playArea[habitat.key.second, habitat.key.first] = (habitats[habitat.value] as HexagonView).apply {
+                    onMouseClicked = null
+                }
+            }
 
             println("RefreshToken")
         }
@@ -655,16 +712,14 @@ class GameScene(
 
     override fun refreshAfterWildlifeTokenReplaced() {
         enqueueRefresh {
-            val game = rootService.currentGame
-            checkNotNull(game)
-
             //add the views to the shop
             for (i in 0..3) {
                 //create HexagonViews for the Token
                 shopTokens[i, 0] = refreshShop.first()[i].second?.animal.let { it?.let { it1 -> createTokens(it1.name) } }
                 shopTokens[i, 0]?.apply {
                     onMouseClicked = {
-                        rootService.playerActionService.chooseTokenTilePair(i)
+                        if (refreshPlayerType.first() == PlayerType.LOCAL)
+                            rootService.playerActionService.chooseTokenTilePair(i)
                     }
                 }
             }
@@ -675,7 +730,6 @@ class GameScene(
     override fun refreshAfterNextTurn() {
         val game = rootService.currentGame
         checkNotNull(game)
-
         refreshHabitat.add(game.currentPlayer.habitat.toMutableMap())
         refreshHabitat.add(game.currentPlayer.habitat)
         refreshShop.add(game.shop)
@@ -713,12 +767,14 @@ class GameScene(
             for (i in 0..3) {
                 shopTokens[i, 0]?.apply {
                     onMouseClicked = {
-                        rootService.playerActionService.chooseTokenTilePair(i)
+                        if (refreshPlayerType.first() == PlayerType.LOCAL || myPlayerType == PlayerType.LOCAL)
+                            rootService.playerActionService.chooseTokenTilePair(i)
                     }
                 }
                 shopHabitats[i, 0]?.apply {
                     onMouseClicked = {
-                        rootService.playerActionService.chooseTokenTilePair(i)
+                        if (refreshPlayerType.first() == PlayerType.LOCAL || myPlayerType == PlayerType.LOCAL)
+                            rootService.playerActionService.chooseTokenTilePair(i)
                     }
                 }
             }
@@ -736,23 +792,24 @@ class GameScene(
             natureTokenLabel.apply { text = "NatureToken: " + game.currentPlayer.natureToken.toString() }
             currentPlayerLabel.apply { text = game.currentPlayer.name }
 
-            //Disable resolveOverpopulation if already done or not possible
-            if (game.hasReplacedThreeToken || !hasThreeSameWildlifeTokens().first) {
-                resolveOverpopButton.isDisabled = true
-            } else
-                resolveOverpopButton.isDisabled = false
+            //if (game.currentPlayer.playerType == PlayerType.LOCAL || (myPlayerType == PlayerType.LOCAL && state == ConnectionState.PLAYING_MY_TURN)) {
+                //Disable resolveOverpopulation if already done or not possible
+                if (game.hasReplacedThreeToken || !hasThreeSameWildlifeTokens().first) {
+                    resolveOverpopButton.isDisabled = true
+                } else
+                    resolveOverpopButton.isDisabled = false
 
-            //Disable Buttons for action with NatureToken if player has none
-            if (game.currentPlayer.natureToken == 0) {
-                chooseCustomPair.isDisabled = true
-                replaceWildlifeButton.isDisabled = true
-                confirmReplacementButton.isDisabled = true
-            } else {
-                chooseCustomPair.isDisabled = false
-                replaceWildlifeButton.isDisabled = false
-                confirmReplacementButton.isDisabled = false
-            }
-
+                //Disable Buttons for action with NatureToken if player has none
+                if (game.currentPlayer.natureToken == 0) {
+                    chooseCustomPair.isDisabled = true
+                    replaceWildlifeButton.isDisabled = true
+                    confirmReplacementButton.isDisabled = true
+                } else {
+                    chooseCustomPair.isDisabled = false
+                    replaceWildlifeButton.isDisabled = false
+                    confirmReplacementButton.isDisabled = false
+                }
+            //}
 
             if (refreshPlayerType.first() == PlayerType.EASY) {
                 disableAll()
@@ -762,8 +819,30 @@ class GameScene(
                     }
                 })
             }
-            println(game.ruleSet)
+
+            didTakeTurn = true
             println("RefreshNext")
+        }
+    }
+
+    override fun refreshConnectionState(newState: ConnectionState) {
+        refreshState.add(newState)
+        enqueueRefresh {
+            networkStatusArea.text = newState.toUIText()
+            state = newState
+            println(networkStatusArea.text)
+            if (state == ConnectionState.PLAYING_MY_TURN && didTakeTurn) {
+                if (myPlayerType == PlayerType.EASY) {
+                    disableAll()
+                    playAnimation(DelayAnimation(speed).apply {
+                        onFinished = {
+                            rootService.easyBotService.takeTurn()
+                        }
+                    })
+                }
+            } else if (state == ConnectionState.SWAPPING_WILDLIFE_TOKENS) { //|| state == ConnectionState.OPPONENT_SWAPPING_WILDLIFE_TOKENS)
+                didTakeTurn = false
+            }
         }
     }
 
@@ -865,8 +944,10 @@ class GameScene(
                     rootService.playerActionService.addTileToHabitat(i)
                 }
             }
-            if (game.currentPlayer.playerType != PlayerType.LOCAL) {
-                playArea[i.second, i.first]?.onMouseClicked = null
+
+            if (game.currentPlayer.playerType != PlayerType.LOCAL){
+                if (state != ConnectionState.PLAYING_MY_TURN)
+                    playArea[i.second, i.first]?.onMouseClicked = null
             }
         }
     }
@@ -1042,8 +1123,9 @@ class GameScene(
     }
 
     // Enqueue a refresh action
-    private fun enqueueRefresh(action: () -> Unit) {
+    fun enqueueRefresh(action: () -> Unit) {
         refreshQueue.add(action)
         processNextRefresh()
     }
+
 }

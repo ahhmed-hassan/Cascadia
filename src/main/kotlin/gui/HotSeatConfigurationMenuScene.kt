@@ -329,11 +329,11 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             val param = mapPlayerToPlayerTypes(playerNames,playerTypes)
             val rules = determineRules()
             if (randomOrderToggle.isSelected) { randomOrder = true }
-            if (randomOrderToggle.isSelected) { randomRule = true }
+            if (randomRuleToggle.isSelected) { randomRule = true }
             simulationSpeed = checkNotNull(simEntry.selectedItem)
             rootService.gameService.startNewGame(
                 playerNames = param,
-                scoreRules = rules,
+                scoreRules = rules.toList(),
                 orderIsRandom = randomOrder,
                 isRandomRules = randomRule
             )

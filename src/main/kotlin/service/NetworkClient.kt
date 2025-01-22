@@ -130,7 +130,7 @@ class NetworkClient (playerName: String, host: String, secret: String, val netwo
     @GameActionReceiver
     fun onResolveOverPopulation(message: ResolveOverpopulationMessage, sender: String) {
         check(networkService.connectionState == ConnectionState.WAITING_FOR_OPPONENTS_TURN ||
-        networkService.connectionState == ConnectionState.OPPONENT_SWAPPING_WILDLIFE_TOKENS)
+                networkService.connectionState == ConnectionState.OPPONENT_SWAPPING_WILDLIFE_TOKENS)
         { "Not Opponent's turn" }
 
         BoardGameApplication.runOnGUIThread {
@@ -156,11 +156,11 @@ class NetworkClient (playerName: String, host: String, secret: String, val netwo
     }
 
     /**
-    * Handles a [ShuffleWildlifeTokensMessage] sent by the server. This message indicates that
-    * the wildlife tokens have been shuffled at the end of the overpopulation phase.
-    *
-    * @throws IllegalStateException when the player is not in the correct state for receiving shuffled tokens.
-    */
+     * Handles a [ShuffleWildlifeTokensMessage] sent by the server. This message indicates that
+     * the wildlife tokens have been shuffled at the end of the overpopulation phase.
+     *
+     * @throws IllegalStateException when the player is not in the correct state for receiving shuffled tokens.
+     */
     @Suppress("UNUSED_PARAMETER", "unused")
     @GameActionReceiver
     fun onShuffledWildlifeTokens(message: ShuffleWildlifeTokensMessage, sender: String) {

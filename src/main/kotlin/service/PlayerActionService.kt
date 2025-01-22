@@ -24,7 +24,6 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         checkNotNull(game)
         println("TilePair")
         val myTurn = rootService.networkService.connectionState == ConnectionState.PLAYING_MY_TURN
-
         // check if chosenPair is not out of bounds
         require(chosenPair in 0..3) { "Index for pair must be between 0 and 3" }
 
@@ -32,7 +31,6 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         val shopToken = game.shop[chosenPair].second
         checkNotNull(shopTile)
         checkNotNull(shopToken)
-
         require(game.selectedTile == null && game.selectedToken == null)
 
         //mark the chosen Token-Tile Pair as selected
@@ -288,9 +286,19 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
 
         val myTurn = rootService.networkService.connectionState == ConnectionState.PLAYING_MY_TURN
 
-        game.wildlifeTokenList.add(selectedToken)
-        game.wildlifeTokenList.shuffle()
+        if(rootService.networkService.connectionState == ConnectionState.WAITING_FOR_OPPONENTS_TURN){
+            game.wildlifeTokenList.add(0,selectedToken)
+        }
+        else if (myTurn){
+            game.wildlifeTokenList.add(selectedToken)
+            game.wildlifeTokenList.shuffle()
+        }
+
         game.selectedToken = null
+
+        if (rootService.networkService.connectionState == ConnectionState.WAITING_FOR_OPPONENTS_TURN) {
+            game.wildlifeTokenList = rootService.networkService.receivedList
+        }
 
         if (myTurn) {
             rootService.networkService.tokenCoordinates = null

@@ -160,7 +160,7 @@ class testNetworkConnection {
         tokenTileList.forEach { pair -> guestGame.shop.add(pair) }
 
         rootServiceHost.gameService.resolveOverpopulation()
-        assertEquals(ConnectionState.SWAPPING_WILDLIFE_TOKENS, rootServiceHost.networkService.connectionState)
+        assertEquals(ConnectionState.PLAYING_MY_TURN, rootServiceHost.networkService.connectionState)
         assert(rootServiceGuest.waitForState(ConnectionState.WAITING_FOR_OPPONENTS_TURN)) {
             error("Nach dem Warten nicht im Zustand angekommen")
         }

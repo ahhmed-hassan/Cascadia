@@ -1,8 +1,10 @@
 package gui
 
+import entity.Animal
+import entity.Terrain
 import service.RootService
 import service.ScoringService
-import tools.aqua.bgw.components.layoutviews.Pane
+import tools.aqua.bgw.components.layoutviews.GridPane
 import tools.aqua.bgw.components.uicomponents.Button
 import tools.aqua.bgw.components.uicomponents.Label
 import tools.aqua.bgw.components.uicomponents.UIComponent
@@ -13,27 +15,129 @@ import tools.aqua.bgw.visual.ColorVisual
 import tools.aqua.bgw.visual.ImageVisual
 import java.awt.Color
 
-class WinningMenuScene(val rootService: RootService) : MenuScene(1920, 1080), Refreshables {
+class WinningMenuScene(
+    val rootService: RootService,
+    private val gameScene: GameScene
+) : MenuScene(1920, 1080), Refreshables {
 
-    private val overlay = Pane<UIComponent>(
-        posX = 610,
-        posY = 90,
-        width = 700,
-        height = 900,
+    private val gridPane = GridPane<UIComponent>(
+        posX = 960,
+        posY = 500,
+        columns = 6,
+        rows = 14,
+        spacing = 10
+    ).apply {
         visual = ColorVisual(Color(0xA6C9A3))
-    )
+    }
 
-    private val titleLabel = Label(
-        width = 400,
+    val exitButton = Button(
+        width = 200,
         height = 50,
-        posX = 150,
-        posY = 50,
-        text = "Score",
-        alignment = Alignment.CENTER,
-        font = Font(32),
+        posX = 860,
+        posY = 980,
+        text = "Exit",
+        visual = ColorVisual(255, 255, 255)
+    ).apply {
+        onMouseClicked = {}
+    }
+
+    private val playerImage = Label(
+        width = 60,
+        height = 60,
+        posX = 200,
+        posY = 150,
+        visual = ImageVisual("person.png")
     )
 
-    private val crownImage = Label(
+    private val bearImage = Label(
+        width = 60,
+        height = 60,
+        posX = 200,
+        posY = 150,
+        visual = ImageVisual("bear.png")
+    )
+
+    private val elkImage = Label(
+        width = 60,
+        height = 60,
+        posX = 200,
+        posY = 150,
+        visual = ImageVisual("elk.png")
+    )
+
+    private val hawkImage = Label(
+        width = 60,
+        height = 60,
+        posX = 200,
+        posY = 150,
+        visual = ImageVisual("hawk.png")
+    )
+
+    private val salmonImage = Label(
+        width = 60,
+        height = 60,
+        posX = 200,
+        posY = 150,
+        visual = ImageVisual("salmon.png")
+    )
+
+    private val foxImage = Label(
+        width = 60,
+        height = 60,
+        posX = 200,
+        posY = 150,
+        visual = ImageVisual("fox.png")
+    )
+
+    private val forestImage = Label(
+        width = 60,
+        height = 60,
+        posX = 200,
+        posY = 150,
+        visual = ImageVisual("forest.png")
+    )
+
+    private val mountainImage = Label(
+        width = 60,
+        height = 60,
+        posX = 200,
+        posY = 150,
+        visual = ImageVisual("mountain.png")
+    )
+
+    private val prairieImage = Label(
+        width = 60,
+        height = 60,
+        posX = 200,
+        posY = 150,
+        visual = ImageVisual("prairies.png")
+    )
+
+    private val wetlandImage = Label(
+        width = 60,
+        height = 60,
+        posX = 200,
+        posY = 150,
+        visual = ImageVisual("wetlands.png")
+    )
+
+    private val riverImage = Label(
+        width = 60,
+        height = 60,
+        posX = 200,
+        posY = 150,
+        visual = ImageVisual("river.png")
+    )
+
+    private val tokenImage = Label(
+        width = 60,
+        height = 60,
+        posX = 200,
+        posY = 150,
+        visual = ImageVisual("naturetoken.png")
+    )
+
+    private val totalImage = Label(
         width = 60,
         height = 60,
         posX = 200,
@@ -41,72 +145,16 @@ class WinningMenuScene(val rootService: RootService) : MenuScene(1920, 1080), Re
         visual = ImageVisual("crown.png")
     )
 
-    private val player1Label = Label(
-        width = 400,
-        height = 50,
-        posX = 150,
-        posY = 150,
-        alignment = Alignment.CENTER,
-        font = Font(20)
-    )
-
-    private val player2Label = Label(
-        width = 400,
-        height = 50,
-        posX = 150,
-        posY = 210,
-        alignment = Alignment.CENTER,
-        font = Font(20)
-    )
-
-    private val player3Label = Label(
-        width = 400,
-        height = 50,
-        posX = 150,
-        posY = 270,
-        alignment = Alignment.CENTER,
-        font = Font(20)
-    )
-
-    private val player4Label = Label(
-        width = 400,
-        height = 50,
-        posX = 150,
-        posY = 330,
-        alignment = Alignment.CENTER,
-        font = Font(20)
-    )
-
-    val exitButton = Button(
-        width = 100,
-        height = 50,
-        posX = 300,
-        posY = 450,
-        text = "Exit",
-        visual = ColorVisual(255, 255, 255)
-    ).apply {
-        onMouseClicked = {
-            // Exit the game or return to the main menu
-        }
-    }
-
     init {
         background = ImageVisual("Cascadia.jpg")
-        overlay.addAll(
-            titleLabel,
-            crownImage,
-            player1Label,
-            player2Label,
-            player3Label,
-            player4Label,
-            exitButton
-        )
-        addComponents(overlay)
+        addComponents(gridPane, exitButton)
         updateScores()
     }
 
     override fun refreshAfterGameEnd(scores: Map<String, ScoringService.Companion.PlayerScore>) {
-        updateScores()
+        gameScene.enqueueRefresh {
+            updateScores()
+        }
     }
 
     private fun updateScores() {
@@ -116,14 +164,46 @@ class WinningMenuScene(val rootService: RootService) : MenuScene(1920, 1080), Re
         val scores = rootService.scoringService.calculateScore()
         val sortedScores = scores.entries.sortedByDescending { it.value.sum() }
 
-        val playerLabels = listOf(player1Label, player2Label, player3Label, player4Label)
+        gridPane[0, 0] = playerImage
+        gridPane[0, 1] = bearImage
+        gridPane[0, 2] = elkImage
+        gridPane[0, 3] = hawkImage
+        gridPane[0, 4] = salmonImage
+        gridPane[0, 5] = foxImage
+        gridPane[0, 6] = forestImage
+        gridPane[0, 7] = mountainImage
+        gridPane[0, 8] = prairieImage
+        gridPane[0, 9] = wetlandImage
+        gridPane[0, 10] = riverImage
+        gridPane[0, 11] = tokenImage
+        gridPane[0, 12] = totalImage
 
-        playerLabels.forEachIndexed { index, label ->
-            label.text = ""
-            sortedScores.getOrNull(index)?.let { (name, score) ->
-                label.text = "${index + 1}. $name : ${score.sum()} (Details: Animals: ${score.animalsScores}, Terrains: ${score.ownLongestTerrainsScores}, Nature Tokens: ${score.natureTokens})"
-                println(label.text)
-            }
+
+        sortedScores.forEachIndexed { index, (playerName, score) ->
+            val totalScore = score.animalsScores.values.sum() + score.ownLongestTerrainsScores.values.sum() + score.natureTokens
+            gridPane[index + 1, 0] = createScoreLabel(playerName)
+            gridPane[index + 1, 1] = createScoreLabel(score.animalsScores[Animal.BEAR].toString())
+            gridPane[index + 1, 2] = createScoreLabel(score.animalsScores[Animal.ELK].toString())
+            gridPane[index + 1, 3] = createScoreLabel(score.animalsScores[Animal.HAWK].toString())
+            gridPane[index + 1, 4] = createScoreLabel(score.animalsScores[Animal.SALMON].toString())
+            gridPane[index + 1, 5] = createScoreLabel(score.animalsScores[Animal.FOX].toString())
+            gridPane[index + 1, 6] = createScoreLabel(score.ownLongestTerrainsScores[Terrain.FOREST].toString())
+            gridPane[index + 1, 7] = createScoreLabel(score.ownLongestTerrainsScores[Terrain.MOUNTAIN].toString())
+            gridPane[index + 1, 8] = createScoreLabel(score.ownLongestTerrainsScores[Terrain.PRAIRIE].toString())
+            gridPane[index + 1, 9] = createScoreLabel(score.ownLongestTerrainsScores[Terrain.WETLAND].toString())
+            gridPane[index + 1, 10] = createScoreLabel(score.ownLongestTerrainsScores[Terrain.RIVER].toString())
+            gridPane[index + 1, 11] = createScoreLabel(score.natureTokens.toString())
+            gridPane[index + 1, 12] = createScoreLabel(totalScore.toString())
         }
+    }
+
+    private fun createScoreLabel(text: String): Label {
+        return Label(
+            width = 150,
+            height = 50,
+            alignment = Alignment.CENTER,
+            text = text,
+            font = Font(size = 20)
+        )
     }
 }
