@@ -35,6 +35,7 @@ class HardBotService(private val rootService: RootService) {
         Thread.sleep(9000)
         timeIsUp.set(true)
         threads.forEach { it.interrupt() }
+        Thread.sleep(50)
         thread.join()
         println("There are " + queue.size + " Jobs left")
         println("All stopped")
