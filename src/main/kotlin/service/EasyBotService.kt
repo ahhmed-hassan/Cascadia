@@ -1,5 +1,6 @@
 package service
 
+import entity.CascadiaGame
 import entity.PlayerType
 
 /**
@@ -26,39 +27,18 @@ class EasyBotService(private val rootService: RootService) {
         var hasChosenCustomPair = false
         var hasReplacedWildlifeTokens = false
 
-        /**
-         * Resolves the overpopulation of 3 if it is possible and if the chance allows it.
-         */
-        fun resolveOverpopulation() {
-            if (game.shop.groupBy { it.second?.animal }.values.any { it.size == 3 }
-                && resolveOverpopulationChance >= (1..100).random()
-                && !game.hasReplacedThreeToken) {
-
-                val animal = game.shop.groupBy { it.second?.animal }.values.first { it.size == 3 }[0].second?.animal
-                val indices = mutableListOf<Int>()
-                game.shop.forEachIndexed { index, it -> if (it.second?.animal == animal) indices.add(index) }
-                playerActionService.replaceWildlifeTokens(indices)
-            }
-        }
-
         assert(player.playerType == PlayerType.EASY) {
             "PlayerType must be easy bot"
         }
 
-        resolveOverpopulation()
+        resolveOverpopulation(game)
 
         //Maybe uses natureToken
         if (player.natureToken >= 1 && useNaturalTokenChance >= (1..100).random()) {
             if ((1..2).random() == 1) {
-                //replace WildelifeTokens
+                //replace WildlifeTokens
 
-                val list = mutableListOf<Int>()
-                for (i in 0..3) {
-                    if (replaceSingleTokenChance >= (1..100).random()) {
-                        list.add(i)
-                    }
-                }
-                playerActionService.replaceWildlifeTokens(list)
+                playerActionService.replaceWildlifeTokens(getRandomReplacements())
                 hasReplacedWildlifeTokens = true
             } else {
                 //choose CustomPair
@@ -76,7 +56,7 @@ class EasyBotService(private val rootService: RootService) {
             }
         }
 
-        if (hasReplacedWildlifeTokens) resolveOverpopulation()
+        if (hasReplacedWildlifeTokens) resolveOverpopulation(game)
 
         //chooses a pair if it has not happened yet
         if (!hasChosenCustomPair) {
@@ -107,5 +87,33 @@ class EasyBotService(private val rootService: RootService) {
         } else {
             playerActionService.discardToken()
         }
+    }
+
+    /**
+     * Resolves the overpopulation of 3 if it is possible and if the chance allows it.
+     */
+    private fun resolveOverpopulation(game: CascadiaGame) {
+        if (game.shop.groupBy { it.second?.animal }.values.any { it.size == 3 }
+            && resolveOverpopulationChance >= (1..100).random()
+            && !game.hasReplacedThreeToken) {
+
+            val animal = game.shop.groupBy { it.second?.animal }.values.first { it.size == 3 }[0].second?.animal
+            val indices = mutableListOf<Int>()
+            game.shop.forEachIndexed { index, it -> if (it.second?.animal == animal) indices.add(index) }
+            playerActionService.replaceWildlifeTokens(indices)
+        }
+    }
+
+    /**
+     * returns a list of Int for replacement
+     */
+    private fun getRandomReplacements(): MutableList<Int> {
+        val list = mutableListOf<Int>()
+        for (i in 0..3) {
+            if (replaceSingleTokenChance >= (1..100).random()) {
+                list.add(i)
+            }
+        }
+        return list
     }
 }
