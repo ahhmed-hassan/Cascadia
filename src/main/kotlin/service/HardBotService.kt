@@ -13,6 +13,9 @@ class HardBotService(private val rootService: RootService) {
 
     val gameService = rootService.gameService
     private val animalPlacingChance = 80
+    private val interruptAll: (MutableList<Thread>) -> Unit = { threads ->
+        threads.forEach { it.interrupt() }
+    }
 
     /**
      * Simulating one turn of the bot
@@ -34,7 +37,7 @@ class HardBotService(private val rootService: RootService) {
         thread.start()
         Thread.sleep(9000)
         timeIsUp.set(true)
-        threads.forEach { it.interrupt() }
+        interruptAll(threads)
         Thread.sleep(50)
         thread.join()
         println("There are " + queue.size + " Jobs left")
