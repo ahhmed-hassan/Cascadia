@@ -66,8 +66,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         val playerList = playerOrder.map { name -> val playerType = requireNotNull(playerNames[name])
             Player(name, mutableMapOf(), playerType) }
 
-        val game = CascadiaGame(
-            startTileList =  startTiles,
+        val game = CascadiaGame(startTileList =  startTiles,
             ruleSet =  ruleSet,
             simulationSpeed = 0.3f,
             natureToken = 25,
@@ -80,9 +79,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
             habitatTileList = totalTilesInGame,
             selectedTile = null,
             selectedToken = null,
-            wildlifeTokenList = wildlifeTokens
-        )
-
+            wildlifeTokenList = wildlifeTokens)
         rootService.currentGame = game
 
         if (checkForSameAnimal()) { resolveOverpopulation() }
