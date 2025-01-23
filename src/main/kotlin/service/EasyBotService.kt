@@ -7,8 +7,8 @@ import entity.PlayerType
  * Service for an easy bot
  */
 class EasyBotService(private val rootService: RootService) {
-    private val playerActionService = PlayerActionService(rootService)
-    private val gameService = GameService(rootService)
+    private val playerActionService = rootService.playerActionService
+    private val gameService = rootService.gameService
 
     //Chances for moves
     private val placeWildlifeChance = 70

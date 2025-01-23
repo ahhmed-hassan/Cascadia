@@ -1,50 +1,83 @@
 package gui
 
+import service.RootService
+import tools.aqua.bgw.components.layoutviews.Pane
 import tools.aqua.bgw.components.uicomponents.Button
+import tools.aqua.bgw.components.uicomponents.UIComponent
+import tools.aqua.bgw.core.Alignment
 import tools.aqua.bgw.core.MenuScene
+import tools.aqua.bgw.util.Font
 import tools.aqua.bgw.visual.ColorVisual
 import tools.aqua.bgw.visual.ImageVisual
+import java.awt.Color
 
 /**
- * Class of the main menue scene of a game of Cascadia from where all other menues can be reached.
+ * The Main Menu Scene of the Game to choose the Mode
+ *
+ * @param rootService The root service to which this scene belongs
  */
-class MainMenuScene : MenuScene(1920, 1080) {
+
+class MainMenuScene (val rootService: RootService): MenuScene(1920, 1080) {
+
+    private val contentPane = Pane<UIComponent>(
+        width = 700,
+        height = 900,
+        posX = 1920 / 2 - 700 / 2,
+        posY = 1080 / 2 - 900 / 2,
+        visual = ColorVisual(Color(0xA6C9A3))
+    )
 
     val startHotSeatGameButton = Button(
-        width = 200, height = 50,
-        posX = 860, posY = 400,
+        width = 400,
+        height = 100,
+        posX = 150,
+        posY = 100,
         text = "Start HotSeat Game",
-        visual = ColorVisual(255, 255, 255)
+        alignment = Alignment.CENTER,
+        font = Font(32),
+        visual = ColorVisual(Color(0xD9D9D9))
     ).apply {
         onMouseClicked = {
         }
     }
 
     val hostNetworkGameButton = Button(
-        width = 200, height = 50,
-        posX = 860, posY = 470,
+        width = 400,
+        height = 100,
+        posX = 150,
+        posY = 300,
         text = "Host Network Game",
-        visual = ColorVisual(255, 255, 255)
+        alignment = Alignment.CENTER,
+        font = Font(32),
+        visual = ColorVisual(Color(0xD9D9D9))
     ).apply {
         onMouseClicked = {
         }
     }
 
     val joinNetworkGameButton = Button(
-        width = 200, height = 50,
-        posX = 860, posY = 540,
+        width = 400,
+        height = 100,
+        posX = 150,
+        posY = 500,
         text = "Join Network Game",
-        visual = ColorVisual(255, 255, 255)
+        alignment = Alignment.CENTER,
+        font = Font(32),
+        visual = ColorVisual(Color(0xD9D9D9))
     ).apply {
         onMouseClicked = {
         }
     }
 
     val exitButton = Button(
-        width = 100, height = 50,
-        posX = 920, posY = 740,
+        width = 400,
+        height = 100,
+        posX = 150,
+        posY = 700,
         text = "Exit",
-        visual = ColorVisual(255, 255, 255)
+        alignment = Alignment.CENTER,
+        font = Font(32),
+        visual = ColorVisual(Color(0xD9D9D9))
     ).apply {
         onMouseClicked = {
         }
@@ -52,12 +85,12 @@ class MainMenuScene : MenuScene(1920, 1080) {
 
     init {
         background = ImageVisual("Cascadia.jpg")
-        addComponents(
+        contentPane.addAll(
             startHotSeatGameButton,
             hostNetworkGameButton,
             joinNetworkGameButton,
             exitButton
         )
-
+        addComponents(contentPane)
     }
 }
