@@ -86,8 +86,7 @@ class HardBotService(private val rootService: RootService) {
         if (shopWithAnimal.isNotEmpty()) {
             chooseUncertainAnimalPair(bestUncertain, shopWithAnimal, game)
         } else {
-            val animals = mutableListOf<WildlifeToken>()
-            game.shop.forEach { if (!animals.contains(it.second)) it.second?.let { it1 -> animals.add(it1) } }
+            val animals = game.shop.mapNotNull { it.second }.toSet()
             val newPossiblePlacements = possibilities.filter {
                 it.tileId == bestUncertain.tileId
                         && it.tilePlacement == bestUncertain.tilePlacement
