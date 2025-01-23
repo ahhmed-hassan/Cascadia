@@ -3,6 +3,7 @@ package gui
 import service.RootService
 import service.ScoringService
 import tools.aqua.bgw.core.BoardGameApplication
+import tools.aqua.bgw.visual.ImageVisual
 
 /**
  * Main class of the Cascadia application
@@ -55,6 +56,7 @@ class CascadiaApplication : BoardGameApplication("Cascadia Game"), Refreshables 
             winningMenuScene,
         )
         this.showMenuScene(mainMenuScene, 0)
+        this.icon = ImageVisual("favicon.png")
     }
 
     override fun refreshAfterGameEnd(scores: Map<String, ScoringService.Companion.PlayerScore>) {
