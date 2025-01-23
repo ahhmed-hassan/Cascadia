@@ -47,6 +47,7 @@ class CascadiaApplication : BoardGameApplication("Cascadia Game"), Refreshables 
     }
 
     init {
+        loadFont("JetBrainsMono-ExtraBold.ttf")
         rootService.addRefreshables(
             this,
             gameScene,

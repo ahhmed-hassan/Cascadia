@@ -1,8 +1,10 @@
 package gui
 
+
 import service.RootService
 import tools.aqua.bgw.components.layoutviews.Pane
 import tools.aqua.bgw.components.uicomponents.Button
+import tools.aqua.bgw.components.uicomponents.Label
 import tools.aqua.bgw.components.uicomponents.UIComponent
 import tools.aqua.bgw.core.Alignment
 import tools.aqua.bgw.core.MenuScene
@@ -24,20 +26,38 @@ class MainMenuScene (val rootService: RootService): MenuScene(1920, 1080) {
         height = 900,
         posX = 1920 / 2 - 700 / 2,
         posY = 1080 / 2 - 900 / 2,
-        visual = ColorVisual(Color(0xA6C9A3))
+        visual = ColorVisual(Color(0xFFFFFF))
+    ).apply {
+        opacity = 0.8
+    }
+
+    val titleLabel = Label(
+        width = 400,
+        height = 100,
+        posX = 150,
+        posY = 25,
+        text = "Cascadia",
+        alignment = Alignment.CENTER,
+        font = Font(81, Color(0x333333), "JetBrains Mono ExtraBold"),
     )
 
     val startHotSeatGameButton = Button(
         width = 400,
         height = 100,
         posX = 150,
-        posY = 100,
+        posY = 200,
         text = "Start HotSeat Game",
         alignment = Alignment.CENTER,
-        font = Font(32),
+        font = Font(32, Color(0x333333), "JetBrains Mono ExtraBold"),
         visual = ColorVisual(Color(0xD9D9D9))
     ).apply {
         onMouseClicked = {
+        }
+        onMouseExited = {
+            visual = ColorVisual(Color(0xD9D9D9))
+        }
+        onMouseEntered = {
+            visual = ColorVisual(Color(0x8f93a1))
         }
     }
 
@@ -45,13 +65,19 @@ class MainMenuScene (val rootService: RootService): MenuScene(1920, 1080) {
         width = 400,
         height = 100,
         posX = 150,
-        posY = 300,
+        posY = 350,
         text = "Host Network Game",
         alignment = Alignment.CENTER,
-        font = Font(32),
+        font = Font(32, Color(0x333333), "JetBrains Mono ExtraBold"),
         visual = ColorVisual(Color(0xD9D9D9))
     ).apply {
         onMouseClicked = {
+        }
+        onMouseExited = {
+            visual = ColorVisual(Color(0xD9D9D9))
+        }
+        onMouseEntered = {
+            visual = ColorVisual(Color(0x8f93a1))
         }
     }
 
@@ -62,10 +88,16 @@ class MainMenuScene (val rootService: RootService): MenuScene(1920, 1080) {
         posY = 500,
         text = "Join Network Game",
         alignment = Alignment.CENTER,
-        font = Font(32),
+        font = Font(32, Color(0x333333), "JetBrains Mono ExtraBold"),
         visual = ColorVisual(Color(0xD9D9D9))
     ).apply {
         onMouseClicked = {
+        }
+        onMouseExited = {
+            visual = ColorVisual(Color(0xD9D9D9))
+        }
+        onMouseEntered = {
+            visual = ColorVisual(Color(0x8f93a1))
         }
     }
 
@@ -73,19 +105,26 @@ class MainMenuScene (val rootService: RootService): MenuScene(1920, 1080) {
         width = 400,
         height = 100,
         posX = 150,
-        posY = 700,
+        posY = 650,
         text = "Exit",
         alignment = Alignment.CENTER,
-        font = Font(32),
+        font = Font(32, Color(0x333333), "JetBrains Mono ExtraBold"),
         visual = ColorVisual(Color(0xD9D9D9))
     ).apply {
         onMouseClicked = {
         }
+        onMouseExited = {
+            visual = ColorVisual(Color(0xD9D9D9))
+        }
+        onMouseEntered = {
+            visual = ColorVisual(Color(0xFF605C))
+        }
     }
 
     init {
-        background = ImageVisual("Cascadia.jpg")
+        background = ImageVisual("Cascadia2.png")
         contentPane.addAll(
+            titleLabel,
             startHotSeatGameButton,
             hostNetworkGameButton,
             joinNetworkGameButton,

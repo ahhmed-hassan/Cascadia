@@ -4,6 +4,7 @@ import entity.PlayerType
 import service.RootService
 import tools.aqua.bgw.components.layoutviews.Pane
 import tools.aqua.bgw.components.uicomponents.*
+import tools.aqua.bgw.core.BoardGameApplication.Companion.loadFont
 import tools.aqua.bgw.core.MenuScene
 import tools.aqua.bgw.util.Font
 import tools.aqua.bgw.visual.ColorVisual
@@ -35,8 +36,10 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         posY = 80,
         width = 1480,
         height = 920,
-        visual = ColorVisual(Color(0xA6C9A3))
-    )
+        visual = ColorVisual(Color(0xFFFFFFF))
+    ).apply {
+        opacity = 0.8
+    }
 
     private val titleHotSeat = Label(
         posX = 0,
@@ -44,7 +47,7 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         width = 1480,
         height = 200,
         text = "HotSeatMode",
-        font = Font(48)
+        font = Font(48, Color(0x333333), "JetBrains Mono ExtraBold"),
     )
 
     private val titleNames = Label(
@@ -53,16 +56,16 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         width = 400,
         height = 300,
         text = "Configure Players",
-        font = Font(32)
+        font = Font(32, Color(0x333333), "JetBrains Mono ExtraBold"),
     )
 
     private val titleRule = Label(
-        posX = 650,
+        posX = 550,
         posY = 100,
         width = 400,
         height = 300,
         text = "Configure Rule",
-        font = Font(32)
+        font = Font(32, Color(0x333333), "JetBrains Mono ExtraBold"),
     )
 
     private val simSpeed = Label(
@@ -71,7 +74,7 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         width = 400,
         height = 300,
         text = "Bot Simulation Speed",
-        font = Font(32)
+        font = Font(32, Color(0x333333), "JetBrains Mono ExtraBold"),
     )
 
     private val simEntry = ComboBox(
@@ -90,8 +93,14 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         posX = 200,
         posY = 480,
         text = "+",
-        visual = ColorVisual(255, 255, 255)
+        visual = ColorVisual(Color(0xc4c4cc))
     ).apply {
+        onMouseExited = {
+            visual = ColorVisual(Color(0xc4c4cc))
+        }
+        onMouseEntered = {
+            visual = ColorVisual(Color(0x60FF5C))
+        }
         onMouseClicked = {
             if (playerNameFields.size < 4) {
                 createNameFields()
@@ -110,8 +119,14 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         posX = 300,
         posY = 680,
         text = "-",
-        visual = ColorVisual(255, 255, 255)
+        visual = ColorVisual(Color(0xc4c4cc))
     ).apply {
+        onMouseExited = {
+            visual = ColorVisual(Color(0xc4c4cc))
+        }
+        onMouseEntered = {
+            visual = ColorVisual(Color(0xFF605C))
+        }
         onMouseClicked = {
             if (playerNameFields.size > 2) {
                 val lastIndex = playerNameFields.size - 1
@@ -134,8 +149,8 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             posX = 200,
             posY = posY,
             text = "",
-            font = Font(32),
-            visual = ColorVisual(255, 255, 255)
+            font = Font(24, Color(0x333333), "JetBrains Mono ExtraBold"),
+            visual = ColorVisual(Color(0xc4c4cc))
         )
     }
 
@@ -196,13 +211,13 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         posX = 100,
         posY = 800,
         text = "RandomOrder",
-        font = Font(24),
+        font = Font(24, Color(0x333333), "JetBrains Mono ExtraBold"),
     )
 
     private val bearImage = Label(
         width = 60,
         height = 60,
-        posX = 800,
+        posX = 700,
         posY = 300,
         visual = ImageVisual("bear.png")
     )
@@ -210,9 +225,10 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     private val bearToggleButton = ToggleButton(
         width = 60,
         height = 60,
-        posX = 860,
+        posX = 760,
         posY = 300,
         text = "A",
+        font = Font(24, Color(0x333333), "JetBrains Mono ExtraBold"),
         visual = ColorVisual(255, 255, 255)
     ).apply {
         onMouseClicked = {
@@ -223,7 +239,7 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     private val elkImage = Label(
         width = 60,
         height = 60,
-        posX = 800,
+        posX = 700,
         posY = 360,
         visual = ImageVisual("elk.png")
     )
@@ -231,9 +247,10 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     private val elkToggleButton = ToggleButton(
         width = 60,
         height = 60,
-        posX = 860,
+        posX = 760,
         posY = 360,
         text = "A",
+        font = Font(24, Color(0x333333), "JetBrains Mono ExtraBold"),
         visual = ColorVisual(255, 255, 255)
     ).apply {
         onMouseClicked = {
@@ -244,7 +261,7 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     private val hawkImage = Label(
         width = 60,
         height = 60,
-        posX = 800,
+        posX = 700,
         posY = 420,
         visual = ImageVisual("hawk.png")
     )
@@ -252,9 +269,10 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     private val hawkToggleButton = ToggleButton(
         width = 60,
         height = 60,
-        posX = 860,
+        posX = 760,
         posY = 420,
         text = "A",
+        font = Font(24, Color(0x333333), "JetBrains Mono ExtraBold"),
         visual = ColorVisual(255, 255, 255)
     ).apply {
         onMouseClicked = {
@@ -265,7 +283,7 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     private val salmonImage = Label(
         width = 60,
         height = 60,
-        posX = 800,
+        posX = 700,
         posY = 480,
         visual = ImageVisual("salmon.png")
     )
@@ -273,9 +291,10 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     private val salmonToggleButton = ToggleButton(
         width = 60,
         height = 60,
-        posX = 860,
+        posX = 760,
         posY = 480,
         text = "A",
+        font = Font(24, Color(0x333333), "JetBrains Mono ExtraBold"),
         visual = ColorVisual(255, 255, 255)
     ).apply {
         onMouseClicked = {
@@ -286,7 +305,7 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     private val foxImage = Label(
         width = 60,
         height = 60,
-        posX = 800,
+        posX = 700,
         posY = 540,
         visual = ImageVisual("fox.png")
     )
@@ -294,9 +313,10 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     private val foxToggleButton = ToggleButton(
         width = 60,
         height = 60,
-        posX = 860,
+        posX = 760,
         posY = 540,
         text = "A",
+        font = Font(24, Color(0x333333), "JetBrains Mono ExtraBold"),
         visual = ColorVisual(255, 255, 255)
     ).apply {
         onMouseClicked = {
@@ -310,7 +330,7 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         posX = 400,
         posY = 800,
         text = "Random Rule",
-        font = Font(24),
+        font = Font(24, Color(0x333333), "JetBrains Mono ExtraBold"),
     )
 
     // StartButton with gameStart
@@ -320,9 +340,15 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         posX = 1000,
         posY = 800,
         text = "Start",
-        font = Font(24),
-        visual = ColorVisual(255, 255, 255)
+        font = Font(24, Color(0x333333), "JetBrains Mono ExtraBold"),
+        visual = ColorVisual(Color(0xc4c4cc))
     ).apply {
+        onMouseExited = {
+            visual = ColorVisual(Color(0xc4c4cc))
+        }
+        onMouseEntered = {
+            visual = ColorVisual(Color(0x60FF5C))
+        }
         onMouseClicked = {
             val playerNames = playerNameFields.filter { it.text.isNotBlank() }.map { it.text }
             val playerTypes = playerButtons.filter { it.text.isNotBlank() }.map { it.text }
@@ -345,7 +371,8 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
      * initialize the Scene
      */
     init {
-        background = ImageVisual("Cascadia.jpg")
+        background = ImageVisual("Cascadia_blur.png")
+        loadFont("JetBrainsMono-ExtraBold.ttf")
 
         overlay.addAll(
             titleNames,
