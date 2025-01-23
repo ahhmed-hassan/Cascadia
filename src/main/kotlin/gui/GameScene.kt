@@ -572,6 +572,15 @@ class GameScene(
                 }
             })
         }
+        if (game.currentPlayer.playerType == PlayerType.NORMAL ||
+            (myPlayerType == PlayerType.NORMAL && state == ConnectionState.PLAYING_MY_TURN)) {
+            disableAll()
+            playAnimation(DelayAnimation(speed).apply {
+                onFinished = {
+                    rootService.hardBotService.takeTurn()
+                }
+            })
+        }
     }
 
     override fun refreshAfterHabitatTileAdded() {
@@ -833,6 +842,15 @@ class GameScene(
                 })
             }
 
+            if (game.currentPlayer.playerType == PlayerType.NORMAL) {
+                disableAll()
+                playAnimation(DelayAnimation(speed).apply {
+                    onFinished = {
+                        rootService.hardBotService.takeTurn()
+                    }
+                })
+            }
+
             didTakeTurn = true
             println("RefreshNext")
         }
@@ -850,6 +868,13 @@ class GameScene(
                     playAnimation(DelayAnimation(speed).apply {
                         onFinished = {
                             rootService.easyBotService.takeTurn()
+                        }
+                    })
+                } else if (myPlayerType == PlayerType.NORMAL) {
+                    disableAll()
+                    playAnimation(DelayAnimation(speed).apply {
+                        onFinished = {
+                            rootService.hardBotService.takeTurn()
                         }
                     })
                 }
