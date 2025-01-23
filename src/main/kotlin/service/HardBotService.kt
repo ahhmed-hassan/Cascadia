@@ -523,7 +523,7 @@ class HardBotService(private val rootService: RootService) {
             isKeystoneTile = habitatTile.isKeystoneTile,
             rotationOffset = habitatTile.rotationOffset,
             wildlifeSymbols = habitatTile.wildlifeSymbols.toList(),
-            wildlifeToken = habitatTile.wildlifeToken?.copy(),
+            wildlifeToken = habitatTile.wildlifeToken?.clone(),
             terrains = habitatTile.terrains.toMutableList()
         )
     }
@@ -544,7 +544,7 @@ class HardBotService(private val rootService: RootService) {
             WildlifeToken?>> {
         val newShop = mutableListOf<Pair<HabitatTile?, WildlifeToken?>>()
         shop.forEach {
-            it.second?.let { it1 -> Pair(it.first?.let { it2 -> deepCopyHabitatTile(it2) }, it1.copy()) }
+            it.second?.let { it1 -> Pair(it.first?.let { it2 -> deepCopyHabitatTile(it2) }, it1.clone()) }
                 ?.let { it2 -> newShop.add(it2) }
         }
         return newShop

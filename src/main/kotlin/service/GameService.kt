@@ -85,7 +85,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         if (checkForSameAnimal()) { resolveOverpopulation() }
 
         // Retrieve the starting tiles assigned to the player based on the tile index.
-        if (startTileOrder != null && startTileOrder.size == playerList.size) {
+        if (startTileOrder != null) {
             for (i in playerList.indices) {
                 val tileIndex = startTileOrder[i]  // e.g., 2 => startTiles[2]
                 val player = playerList[i]         // i-th player

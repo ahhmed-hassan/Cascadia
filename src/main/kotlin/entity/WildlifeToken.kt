@@ -6,6 +6,11 @@ package entity
  *
  * @property animal The animal type represented by this token (e.g., Bear, Elk).
  */
-data class WildlifeToken(
+class WildlifeToken(
     val animal: Animal
 )
+
+fun WildlifeToken.clone() : WildlifeToken {
+    val animal = WildlifeToken(animal)
+    return animal
+}
