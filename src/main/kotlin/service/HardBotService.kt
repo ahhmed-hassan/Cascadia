@@ -60,13 +60,8 @@ class HardBotService(private val rootService: RootService) {
                                 && it.rotation == bestUncertain.rotation
                                 && it.wildlifeToken != bestUncertain.wildlifeToken
                     }
-                alternatives.forEach {
-                    val chance = it.wildLifeChance
-                    if (chance != null && chance < 0.75) {
-                        useCertain = true
-                    }
-                }
-                if (alternatives.isEmpty()) useCertain = true
+                useCertain = alternatives.any { it.wildLifeChance != null && it.wildLifeChance < 0.75 } ||
+                        alternatives.isEmpty()
             }
         }
         if (useCertain) playCertain(game, bestCertain)

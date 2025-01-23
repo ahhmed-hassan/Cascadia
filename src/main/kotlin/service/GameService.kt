@@ -95,8 +95,8 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
                 // Retrieve the starting tiles assigned to the player based on the tile index.
                 val playerStartTile = startTiles[tileIndex-1]
                 player.habitat[0 to 0] = playerStartTile[0]
-                player.habitat[1 to -1] = playerStartTile[1]
-                player.habitat[1 to 0] = playerStartTile[2]
+                player.habitat[1 to -1] = playerStartTile[2]
+                player.habitat[1 to 0] = playerStartTile[1]
             }
         } else {
             for (i in playerList.indices) {
@@ -104,11 +104,13 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
                 val player = playerList.first { it.name == playerName }
                 val playerStartTile = startTiles[i]
                 player.habitat[0 to 0] = playerStartTile[0]
-                player.habitat[1 to -1] = playerStartTile[1]
-                player.habitat[1 to 0] = playerStartTile[2]
+                player.habitat[1 to -1] = playerStartTile[2]
+                player.habitat[1 to 0] = playerStartTile[1]
             }
         }
-        onAllRefreshables { refreshAfterGameStart() }
+        if(rootService.networkService.connectionState == ConnectionState.DISCONNECTED) {
+            onAllRefreshables { refreshAfterGameStart() }
+        }
     }
 
 
@@ -252,7 +254,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
         // refill shop
         val newHabitatTile = game.habitatTileList.removeLast()
         val newWildlifeToken = game.wildlifeTokenList.removeLast()
-        for (i in 0 until game.shop.size) {
+        for (i in game.shop.indices) {
             // refill missing pair
             if (game.shop[i].first == null && game.shop[i].second == null) {
                 game.shop[i] = Pair(newHabitatTile, newWildlifeToken)
