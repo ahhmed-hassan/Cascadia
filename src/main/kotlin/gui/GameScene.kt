@@ -428,7 +428,7 @@ class GameScene(
 
 
     init {
-        background = ColorVisual(Color(0xFAF3E0))
+        background = ImageVisual("map.jpg")
 
         onKeyPressed = {
             //go left with camera
