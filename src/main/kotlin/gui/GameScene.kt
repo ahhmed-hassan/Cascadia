@@ -518,62 +518,13 @@ class GameScene(
             salmonRule
         )
 
-        //create a HexagonView for each tile
-        for (habitat in game.habitatTileList)
-            habitats[habitat] = createLabeledHexagonView(
-                color = habitat.isKeystoneTile,
-                labels = habitat.terrains.map { terrain: Terrain ->
-                    (terrain.name.substring(0, 1))
-                },
-                tokens = habitat.wildlifeSymbols.map { animal: Animal -> animal.name.substring(0, 1) }
-            )
-
-        //create a HexagonView for each shopTile
-        for (habitat in game.shop) {
-            val habitate = checkNotNull(habitat.first)
-            habitats[habitate] = createLabeledHexagonView(
-                color = habitate.isKeystoneTile,
-                labels = habitate.terrains.map { terrain: Terrain ->
-                    (terrain.name.substring(0, 1))
-                },
-                tokens = habitate.wildlifeSymbols.map { animal: Animal -> animal.name.substring(0, 1) }
-            )
-        }
-
-        //create a HexagonView for each starter Tile
-        for (player in game.startTileList) {
-            for (habitate in player) {
-                habitats[habitate] = createLabeledHexagonView(
-                    color = habitate.isKeystoneTile,
-                    labels = habitate.terrains.map { terrain: Terrain ->
-                        (terrain.name.substring(0, 1))
-                    },
-                    tokens = habitate.wildlifeSymbols.map { animal: Animal -> animal.name.substring(0, 1) }
-                )
-            }
-        }
+        createViews()
 
         //add the views to the shop
         for (i in 0..3) {
             shopHabitats[i, 0] = habitats[game.shop[i].first!!] as HexagonView
             //create HexagonViews for the Token
             shopTokens[i, 0] = game.shop[i].second?.animal?.let { createTokens(it.name) }
-        }
-
-        //If player Clicks on any Habitat or Token that vertical pair is chosen
-        for (i in 0..3) {
-            shopTokens[i, 0]?.apply {
-                onMouseClicked = {
-                    if (game.currentPlayer.playerType == PlayerType.LOCAL || state == ConnectionState.PLAYING_MY_TURN)
-                        rootService.playerActionService.chooseTokenTilePair(i)
-                }
-            }
-            shopHabitats[i, 0]?.apply {
-                onMouseClicked = {
-                    if (game.currentPlayer.playerType == PlayerType.LOCAL || state == ConnectionState.PLAYING_MY_TURN)
-                        rootService.playerActionService.chooseTokenTilePair(i)
-                }
-            }
         }
 
         //add all habitats for the starting player to the playField
@@ -605,24 +556,9 @@ class GameScene(
         refreshHabitat.add(game.currentPlayer.habitat)
         refreshPlayerType.add(game.currentPlayer.playerType)
 
-        if (game.currentPlayer.playerType == PlayerType.EASY ||
-            (myPlayerType == PlayerType.EASY && state == ConnectionState.PLAYING_MY_TURN)) {
-            disableAll()
-            playAnimation(DelayAnimation(speed).apply {
-                onFinished = {
-                    rootService.easyBotService.takeTurn()
-                }
-            })
-        }
-        if (game.currentPlayer.playerType == PlayerType.NORMAL ||
-            (myPlayerType == PlayerType.NORMAL && state == ConnectionState.PLAYING_MY_TURN)) {
-            disableAll()
-            playAnimation(DelayAnimation(speed).apply {
-                onFinished = {
-                    rootService.hardBotService.takeTurn()
-                }
-            })
-        }
+        verticalPair()
+
+        playBotTurn()
     }
 
     override fun refreshAfterHabitatTileAdded() {
@@ -826,21 +762,7 @@ class GameScene(
                 shopTokens[i, 0] = refreshShop.first()[i].second?.animal.let { it?.let { it1 -> createTokens(it1.name)}}
             }
 
-            //If player Clicks on any Habitat or Token that vertical pair is chosen
-            for (i in 0..3) {
-                shopTokens[i, 0]?.apply {
-                    onMouseClicked = {
-                        if (refreshPlayerType.first() == PlayerType.LOCAL || myPlayerType == PlayerType.LOCAL)
-                            rootService.playerActionService.chooseTokenTilePair(i)
-                    }
-                }
-                shopHabitats[i, 0]?.apply {
-                    onMouseClicked = {
-                        if (refreshPlayerType.first() == PlayerType.LOCAL || myPlayerType == PlayerType.LOCAL)
-                            rootService.playerActionService.chooseTokenTilePair(i)
-                    }
-                }
-            }
+            verticalPair()
 
             playArea.clear()
 
@@ -875,23 +797,7 @@ class GameScene(
                 }
             //}
 
-            if (refreshPlayerType.first() == PlayerType.EASY) {
-                disableAll()
-                playAnimation(DelayAnimation(speed).apply {
-                    onFinished = {
-                        rootService.easyBotService.takeTurn()
-                    }
-                })
-            }
-
-            if (game.currentPlayer.playerType == PlayerType.NORMAL) {
-                disableAll()
-                playAnimation(DelayAnimation(speed).apply {
-                    onFinished = {
-                        rootService.hardBotService.takeTurn()
-                    }
-                })
-            }
+            playBotTurn()
 
             didTakeTurn = true
             println("RefreshNext")
@@ -966,26 +872,30 @@ class GameScene(
             )
         }
 
-        // if is keystone than it gets color White else Light Gray
-        val color1 = if (color) {
+        // Determine the background color
+        val backgroundColor = if (color) {
             Color.WHITE
         } else {
             Color.LIGHT_GRAY
         }
 
-        //if there is no Token placed on this tile, then we can see the possible Animals
+        // If there is no token placed, show possible animals
         val tokenText = token.ifEmpty {
             tokens.toString()
         }
+
+        // Combine all visuals into a list
+        val visuals = listOf(
+            ColorVisual(backgroundColor)
+        ) + textVisuals + TextVisual(tokenText)
+
+        // Create the HexagonView with the combined visuals
         return HexagonView(
             size = size,
-            visual = CompoundVisual(
-                ColorVisual(color1), // Background color of the hexagon
-                *textVisuals.toTypedArray(), // Spread operator to include all text visuals
-                TextVisual(tokenText)
-            )
+            visual = CompoundVisual(visuals)
         )
     }
+
 
     /**
      * [createTokens] creates a HexagonView based on the AnimalName
@@ -1181,6 +1091,84 @@ class GameScene(
             playableToken,
             ruleSetOverlay
         ).onEach { it.isDisabled = true }
+    }
+
+    private fun createViews() {
+        val game = rootService.currentGame
+        checkNotNull(game)
+
+        //create a HexagonView for each tile
+        for (habitat in game.habitatTileList)
+            habitats[habitat] = createLabeledHexagonView(
+                color = habitat.isKeystoneTile,
+                labels = habitat.terrains.map { terrain: Terrain ->
+                    (terrain.name.substring(0, 1))
+                },
+                tokens = habitat.wildlifeSymbols.map { animal: Animal -> animal.name.substring(0, 1) }
+            )
+
+        //create a HexagonView for each shopTile
+        for (habitat in game.shop) {
+            val habitate = checkNotNull(habitat.first)
+            habitats[habitate] = createLabeledHexagonView(
+                color = habitate.isKeystoneTile,
+                labels = habitate.terrains.map { terrain: Terrain ->
+                    (terrain.name.substring(0, 1))
+                },
+                tokens = habitate.wildlifeSymbols.map { animal: Animal -> animal.name.substring(0, 1) }
+            )
+        }
+
+        //create a HexagonView for each starter Tile
+        for (player in game.startTileList) {
+            for (habitate in player) {
+                habitats[habitate] = createLabeledHexagonView(
+                    color = habitate.isKeystoneTile,
+                    labels = habitate.terrains.map { terrain: Terrain ->
+                        (terrain.name.substring(0, 1))
+                    },
+                    tokens = habitate.wildlifeSymbols.map { animal: Animal -> animal.name.substring(0, 1) }
+                )
+            }
+        }
+    }
+
+    private fun playBotTurn() {
+        if (refreshPlayerType.first() == PlayerType.EASY) {
+            disableAll()
+            playAnimation(DelayAnimation(speed).apply {
+                onFinished = {
+                    rootService.easyBotService.takeTurn()
+                }
+            })
+        }
+
+        if (refreshPlayerType.first() == PlayerType.NORMAL) {
+            disableAll()
+            playAnimation(DelayAnimation(speed).apply {
+                onFinished = {
+                    rootService.hardBotService.takeTurn()
+                }
+            })
+        }
+    }
+
+    private fun verticalPair() {
+        if (refreshPlayerType.first() == PlayerType.LOCAL || state == ConnectionState.PLAYING_MY_TURN) {
+            //If player Clicks on any Habitat or Token that vertical pair is chosen
+            for (i in 0..3) {
+                shopTokens[i, 0]?.apply {
+                    onMouseClicked = {
+                        rootService.playerActionService.chooseTokenTilePair(i)
+                    }
+                }
+                shopHabitats[i, 0]?.apply {
+                    onMouseClicked = {
+                        rootService.playerActionService.chooseTokenTilePair(i)
+                    }
+                }
+            }
+        }
     }
 
 

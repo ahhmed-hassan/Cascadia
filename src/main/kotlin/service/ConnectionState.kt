@@ -57,7 +57,7 @@ enum class ConnectionState {
     WAITING_FOR_OPPONENTS_TURN,
 
     /**
-     *
+     * Represents the State where the game ends
      */
     GAME_ENDED,
 }
