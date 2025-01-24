@@ -10,6 +10,9 @@ class WildlifeToken(
     val animal: Animal
 )
 
+/**
+ * this function clones Wildlife Tokens
+ */
 fun WildlifeToken.clone() : WildlifeToken {
     val animal = WildlifeToken(animal)
     return animal
