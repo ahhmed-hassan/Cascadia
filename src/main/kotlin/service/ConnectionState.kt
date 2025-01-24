@@ -55,4 +55,9 @@ enum class ConnectionState {
      * now waiting for the opponent to submit their turn.
      */
     WAITING_FOR_OPPONENTS_TURN,
+
+    /**
+     *
+     */
+    GAME_ENDED,
 }

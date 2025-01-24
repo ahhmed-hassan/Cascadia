@@ -17,4 +17,5 @@ fun ConnectionState.toUIText() =
         ConnectionState.SWAPPING_WILDLIFE_TOKENS -> "The player has an overpopulation to resolve"
         ConnectionState.OPPONENT_SWAPPING_WILDLIFE_TOKENS -> "Opponent has an overpopulation to resolve"
         ConnectionState.WAITING_FOR_OPPONENTS_TURN -> "Waiting for opponent's turn"
+        ConnectionState.GAME_ENDED -> "Game Ended"
     }
