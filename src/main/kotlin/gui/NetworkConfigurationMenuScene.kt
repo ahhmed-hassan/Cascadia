@@ -110,16 +110,17 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             posX = 450,
             posY = 300,
             text = "H",
+            font = Font(1, Color(0xFFFFFF), "JetBrains Mono ExtraBold"),
             visual = ImageVisual("human.png")
         ).apply {
             onMouseClicked = {
                 when (text){
                     "H" -> {
-                        this.visual = ImageVisual("easy-robot.png")
+                        this.visual = ImageVisual("easyBot.png")
                         text = "E"
                     }
                     "E"-> {
-                        this.visual = ImageVisual("normal-robot.png")
+                        this.visual = ImageVisual("normalBot.png")
                         text = "NL"
                     }
                     "NL" -> {
