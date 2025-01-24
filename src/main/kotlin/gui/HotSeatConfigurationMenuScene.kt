@@ -371,7 +371,7 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
      * initialize the Scene
      */
     init {
-        background = ImageVisual("Cascadia_blur.png")
+        background = ImageVisual("Cascadia2.png")
         loadFont("JetBrainsMono-ExtraBold.ttf")
 
         overlay.addAll(
