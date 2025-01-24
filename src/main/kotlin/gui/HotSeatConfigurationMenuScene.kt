@@ -62,9 +62,9 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     private val titleRule = Label(
         posX = 550,
         posY = 100,
-        width = 400,
+        width = 410,
         height = 300,
-        text = "Configure Rule",
+        text = "Configure Rules",
         font = Font(32, Color(0x333333), "JetBrains Mono ExtraBold"),
     )
 
@@ -206,11 +206,11 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     }
 
     private val randomOrderToggle = ToggleButton(
-        width = 250,
+        width = 260,
         height = 50,
-        posX = 100,
-        posY = 800,
-        text = "RandomOrder",
+        posX = 25,
+        posY = 675,
+        text = "Random Order",
         font = Font(24, Color(0x333333), "JetBrains Mono ExtraBold"),
     )
 
@@ -325,11 +325,11 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     }
 
     private val randomRuleToggle = ToggleButton(
-        width = 250,
+        width = 260,
         height = 50,
-        posX = 400,
-        posY = 800,
-        text = "Random Rule",
+        posX = 675,
+        posY = 600,
+        text = "Random Rules",
         font = Font(24, Color(0x333333), "JetBrains Mono ExtraBold"),
     )
 
@@ -337,7 +337,7 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     private val startButton = Button(
         width = 250,
         height = 50,
-        posX = 1000,
+        posX = 625,
         posY = 800,
         text = "Start",
         font = Font(24, Color(0x333333), "JetBrains Mono ExtraBold"),

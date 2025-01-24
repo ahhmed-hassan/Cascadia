@@ -90,7 +90,8 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         posX = 200,
         posY = 300,
         text = "Enter Name",
-        visual = ColorVisual(Color(0xc4c4cc))
+        visual = ColorVisual(Color(0xc4c4cc)),
+        font = Font(18, Color(0x333333), "JetBrains Mono ExtraBold"),
     )
     private val createId = TextField(
         width = 200,
@@ -98,7 +99,8 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         posX = 1050,
         posY = 400,
         text = "Create Game ID",
-        visual = ColorVisual(Color(0xc4c4cc))
+        visual = ColorVisual(Color(0xc4c4cc)),
+        font = Font(18, Color(0x333333), "JetBrains Mono ExtraBold")
     )
 
     private fun createPlayerButtons(): Button {
@@ -238,17 +240,17 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     }
 
     private val randomRuleToggle = ToggleButton(
-        width = 250,
+        width = 265,
         height = 50,
-        posX = 400,
-        posY = 800,
+        posX = 675,
+        posY = 600,
         text = "Random Rules",
         font = Font(24, Color(0x333333), "JetBrains Mono ExtraBold"),
         visual = ColorVisual(255, 255, 255)
     )
 
     private val randomOrderToggle = ToggleButton(
-        width = 250,
+        width = 260,
         height = 50,
         posX = 100,
         posY = 800,

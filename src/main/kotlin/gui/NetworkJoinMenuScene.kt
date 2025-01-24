@@ -50,7 +50,8 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
         posX = 600,
         posY = 300,
         text = "Enter Name",
-        visual = ColorVisual(Color(0xc4c4cc))
+        visual = ColorVisual(Color(0xc4c4cc)),
+        font = Font(18, Color(0x333333), "JetBrains Mono ExtraBold"),
     )
     private val gameId = TextField(
         width = 200,
@@ -58,7 +59,8 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
         posX = 600,
         posY = 360,
         text = "Enter Game ID",
-        visual = ColorVisual(Color(0xc4c4cc))
+        visual = ColorVisual(Color(0xc4c4cc)),
+        font = Font(18, Color(0x333333), "JetBrains Mono ExtraBold"),
     )
 
     private val simSpeed = Label(
