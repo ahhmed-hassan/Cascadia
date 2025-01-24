@@ -58,8 +58,8 @@ class WinningMenuScene(
     }
 
     private val playerImage = Label(
-        width = 60,
-        height = 60,
+        width = 55,
+        height = 55,
         posX = 200,
         posY = 150,
         visual = ImageVisual("person.png")
