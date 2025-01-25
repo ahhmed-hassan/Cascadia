@@ -25,8 +25,6 @@ class HardBotService(private val rootService: RootService) {
         val game = rootService.currentGame
         checkNotNull(game)
 
-        require(game.currentPlayer.playerType == PlayerType.NORMAL)
-
         val queue = ConcurrentLinkedQueue<HardBotJob>()
         val timeIsUp = AtomicBoolean(false)
         val threads = Collections.synchronizedList(mutableListOf<Thread>())
@@ -299,7 +297,7 @@ class HardBotService(private val rootService: RootService) {
             job.employer.score += points
             job.employer.numberOfScores += 1
             count++
-            if (count % 1000 == 0) {
+            if (count % 5000 == 0) {
                 println(
                     Thread.currentThread().name + " is in round $count of simulating!"
                 )
