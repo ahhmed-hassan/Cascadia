@@ -383,7 +383,9 @@ class HardBotService(private val rootService: RootService) {
                     habitatTile.value.wildlifeToken = shop[index].second
                 }
             }
-            shop[index] = Pair(habitatTiles.removeFirst(), animals.removeFirst())
+            if (habitatTiles.isNotEmpty() && animals.isNotEmpty()) {
+                shop[index] = Pair(habitatTiles.removeFirst(), animals.removeFirst())
+            }
         }
         val job = HardBotJob(
             habitat = habitat,
