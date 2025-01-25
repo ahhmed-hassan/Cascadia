@@ -585,31 +585,7 @@ class GameScene(
             if (game.currentPlayer.playerType == PlayerType.LOCAL || state == ConnectionState.PLAYING_MY_TURN)
                 discardToken.isDisabled = false
 
-            //get the List of all Habitats where selected Token can be placed
-            val tokenHabitate = refreshSelectedToken.first().let {
-                refreshHabitat.first().let { it1 ->
-                    rootService.gameService.getAllPossibleTilesForWildlife(
-                        it.animal,
-                        habitat = it1
-                    )
-                }
-            }
-
-
-            //enable for each Habitat where Token can be put onMouseClick
-            for (habitat in refreshHabitat.first()) {
-                if (habitat.value in tokenHabitate
-                    && (refreshPlayerType.first() == PlayerType.LOCAL
-                            || state == ConnectionState.PLAYING_MY_TURN)
-                ) {
-                    playArea[habitat.key.second, habitat.key.first] = (habitats[habitat.value] as HexagonView).apply {
-                        isDisabled = false
-                        onMouseClicked = {
-                            rootService.playerActionService.addToken(habitat.value)
-                        }
-                    }
-                }
-            }
+            playToken()
 
             println("RefreshTileAdd")
         }
@@ -683,6 +659,8 @@ class GameScene(
                 isDisabled = false
             }
 
+            playToken()
+
             println("RefreshChosen")
         }
     }
@@ -697,7 +675,7 @@ class GameScene(
                 labels = habitatTile.terrains.map { terrain: Terrain -> terrain.name.substring(0, 1) },
                 token = habitatTile.wildlifeToken?.animal.toString().substring(0, 1)
             )
-            playArea.clear()
+            //playArea.clear()
 
             for (habitat in refreshHabitat.first()) {
                 playArea[habitat.key.second, habitat.key.first] = (habitats[habitat.value] as HexagonView).apply {
@@ -943,6 +921,36 @@ class GameScene(
     }
 
     /**
+     * [playToken] enable all positions to play the token in the playArea
+     */
+    private fun playToken() {
+        //get the List of all Habitats where selected Token can be placed
+        val tokenHabitate = refreshSelectedToken.first().let {
+            refreshHabitat.first().let { it1 ->
+                rootService.gameService.getAllPossibleTilesForWildlife(
+                    it.animal,
+                    habitat = it1
+                )
+            }
+        }
+
+        //enable for each Habitat where Token can be put onMouseClick
+        for (habitat in refreshHabitat.first()) {
+            if (habitat.value in tokenHabitate
+                && (refreshPlayerType.first() == PlayerType.LOCAL
+                        || state == ConnectionState.PLAYING_MY_TURN)
+            ) {
+                playArea[habitat.key.second, habitat.key.first] = (habitats[habitat.value] as HexagonView).apply {
+                    isDisabled = false
+                    onMouseClicked = {
+                        rootService.playerActionService.addToken(habitat.value)
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * [getRuleSets] loads the correct images for ruleSets of the current game
      */
     private fun getRuleSets() {
@@ -1093,6 +1101,9 @@ class GameScene(
         ).onEach { it.isDisabled = true }
     }
 
+    /**
+     * [createViews] initialize the Views
+     */
     private fun createViews() {
         val game = rootService.currentGame
         checkNotNull(game)
@@ -1133,6 +1144,9 @@ class GameScene(
         }
     }
 
+    /**
+     * [playBotTurn] takes botAction if it is hotseat game
+     */
     private fun playBotTurn() {
         if (refreshPlayerType.first() == PlayerType.EASY) {
             disableAll()
@@ -1153,8 +1167,13 @@ class GameScene(
         }
     }
 
+    /**
+     * [verticalPair] enable to choose a pair from shop
+     */
     private fun verticalPair() {
-        if (refreshPlayerType.first() == PlayerType.LOCAL || state == ConnectionState.PLAYING_MY_TURN) {
+        if (refreshPlayerType.first() == PlayerType.LOCAL
+            || (state == ConnectionState.PLAYING_MY_TURN && myPlayerType == PlayerType.LOCAL)
+        ){
             //If player Clicks on any Habitat or Token that vertical pair is chosen
             for (i in 0..3) {
                 shopTokens[i, 0]?.apply {
