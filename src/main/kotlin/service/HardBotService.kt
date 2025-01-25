@@ -72,8 +72,8 @@ class HardBotService(private val rootService: RootService) {
         }
 
         if (useCertain && bestCertain.replacedWildlife) {
-            playUncertain(game, bestCertain, possibilities)
             println("hereee")
+            playUncertain(game, bestCertain, possibilities)
         } else {
             if (useCertain) playCertain(game, bestCertain)
             else bestUncertain?.let { playUncertain(game, it, possibilities) }
@@ -225,7 +225,7 @@ class HardBotService(private val rootService: RootService) {
             }.start()
         }
 
-        val maxNumberOfThreads = (Runtime.getRuntime().availableProcessors() - 2).coerceAtLeast(1)
+        val maxNumberOfThreads = (Runtime.getRuntime().availableProcessors() - 1).coerceAtLeast(1)
         println("Available Threads: $maxNumberOfThreads")
         for (i in 1..maxNumberOfThreads) {
             threads.add(
