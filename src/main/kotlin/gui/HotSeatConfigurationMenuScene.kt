@@ -164,7 +164,6 @@ class HotSeatConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             font = Font(1, Color(0xFFFFFF), "JetBrains Mono ExtraBold"),
             visual = ImageVisual("human.png")
         ).apply {
-
             onMouseClicked = {
                 when (text){
                     "H" -> {
