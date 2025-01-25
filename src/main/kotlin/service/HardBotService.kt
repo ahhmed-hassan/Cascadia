@@ -13,6 +13,7 @@ class HardBotService(private val rootService: RootService) {
 
     val gameService = rootService.gameService
     private val animalPlacingChance = 80
+    private val acceptableUncertaintyThreshold = 75.0
     private val interruptAll: (MutableList<Thread>) -> Unit = { threads ->
         threads.forEach { it.interrupt() }
     }
@@ -53,7 +54,7 @@ class HardBotService(private val rootService: RootService) {
         if (bestUncertain != null) {
             val bestUncertainWildlifeChance = bestUncertain.wildLifeChance
             useCertain = bestCertain.getScore() > bestUncertain.getScore() ||
-                    bestUncertainWildlifeChance == null || bestUncertainWildlifeChance < 0.75
+                    bestUncertainWildlifeChance == null || bestUncertainWildlifeChance < acceptableUncertaintyThreshold
 
             if (!useCertain) {
                 val alternatives =
@@ -63,13 +64,20 @@ class HardBotService(private val rootService: RootService) {
                                 && it.rotation == bestUncertain.rotation
                                 && it.wildlifeToken != bestUncertain.wildlifeToken
                     }
-                useCertain = alternatives.any { it.wildLifeChance != null && it.wildLifeChance < 0.75 } ||
-                        alternatives.isEmpty()
+                useCertain = alternatives.any {
+                    it.wildLifeChance != null
+                            && it.wildLifeChance < acceptableUncertaintyThreshold
+                } || alternatives.isEmpty()
             }
         }
-        if (useCertain) playCertain(game, bestCertain)
-        else bestUncertain?.let { playUncertain(game, it, possibilities) }
 
+        if (useCertain && bestCertain.replacedWildlife) {
+            playUncertain(game, bestCertain, possibilities)
+            println("hereee")
+        } else {
+            if (useCertain) playCertain(game, bestCertain)
+            else bestUncertain?.let { playUncertain(game, it, possibilities) }
+        }
     }
 
     /**
@@ -212,14 +220,7 @@ class HardBotService(private val rootService: RootService) {
         } else {
             Thread {
                 while (!timeIsUp.get()) {
-                    possibilities.forEach { possibility ->
-                        createJob(
-                            employer = possibility,
-                            game = game,
-                            queue = queue,
-                            round = currentRound
-                        )
-                    }
+                    jobHelper(possibilities, game, queue, currentRound)
                 }
             }.start()
         }
@@ -234,6 +235,34 @@ class HardBotService(private val rootService: RootService) {
             )
         }
         threads.forEach { it.start() }
+    }
+
+    /**
+     * helper method for job creation to satisfy detekt
+     */
+    private fun jobHelper(
+        possibilities: MutableList<HardBotPossiblePlacements>,
+        game: CascadiaGame, queue: ConcurrentLinkedQueue<HardBotJob>, currentRound: Int
+    ) {
+        possibilities.forEach { possibility ->
+            if (possibility.wildLifeChance != null) {
+                if (possibility.wildLifeChance >= acceptableUncertaintyThreshold) {
+                    createJob(
+                        employer = possibility,
+                        game = game,
+                        queue = queue,
+                        round = currentRound
+                    )
+                }
+            } else {
+                createJob(
+                    employer = possibility,
+                    game = game,
+                    queue = queue,
+                    round = currentRound
+                )
+            }
+        }
     }
 
     /**
