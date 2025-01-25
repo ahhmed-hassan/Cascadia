@@ -59,8 +59,10 @@ class HardBotService(private val rootService: RootService) {
                     possibilities.filter {
                         it.tileId == bestUncertain.tileId
                                 && it.tilePlacement == bestUncertain.tilePlacement
-                                && it.rotation == bestUncertain.rotation
-                                && it.wildlifeToken != bestUncertain.wildlifeToken
+                                && twoBooleansAnd(
+                            it.rotation == bestUncertain.rotation,
+                            it.wildlifeToken != bestUncertain.wildlifeToken
+                        )
                     }
                 useCertain = alternatives.any {
                     it.wildLifeChance != null
@@ -69,7 +71,7 @@ class HardBotService(private val rootService: RootService) {
             }
         }
 
-        if (useCertain && bestCertain.replacedWildlife) {
+        if (twoBooleansAnd(useCertain, bestCertain.replacedWildlife)) {
             println("hereee")
             playUncertain(game, bestCertain, possibilities)
         } else {
@@ -381,7 +383,7 @@ class HardBotService(private val rootService: RootService) {
                     habitatTile.value.wildlifeToken = shop[index].second
                 }
             }
-            if (habitatTiles.isNotEmpty() && animals.isNotEmpty()) {
+            if (twoBooleansAnd(habitatTiles.isNotEmpty(), animals.isNotEmpty())) {
                 shop[index] = Pair(habitatTiles.removeFirst(), animals.removeFirst())
             }
         }
@@ -541,6 +543,13 @@ class HardBotService(private val rootService: RootService) {
             tile.terrains.lastIndex,
             first
         )
+    }
+
+    /**
+     * takes two booleans and checks if they are both true
+     */
+    private fun twoBooleansAnd(one: Boolean, two: Boolean): Boolean {
+        return one && two
     }
 
     /**
