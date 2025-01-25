@@ -73,7 +73,7 @@ class GameScene(
         rows = 1,
         columns = 4,
         spacing = 50,
-        visual = ColorVisual(Color.GRAY)
+        visual = ColorVisual(Color(0x5C3A2E))
     )
 
     private val shopTokens = GridPane<HexagonView>(
@@ -82,7 +82,7 @@ class GameScene(
         rows = 1,
         columns = 4,
         spacing = 100,
-        visual = ColorVisual(Color.GRAY)
+        visual = ColorVisual(Color(0x5C3A2E))
     )
 
     private val playArea = HexagonGrid<HexagonView>(
@@ -119,7 +119,7 @@ class GameScene(
         posX = 180,
         width = 1500,
         height = 800,
-        visual = ColorVisual(Color(0xD47155))
+        visual = ColorVisual(Color(0x704C3C))
     ).apply {
         isVisible = false
     }
@@ -130,8 +130,8 @@ class GameScene(
         posX = 50,
         posY = 20,
         text = "Current Player",
-        font = Font(24, Color(0x333333), "JetBrains Mono ExtraBold"),
-        visual = ColorVisual(255, 255, 255)
+        font = Font(24, Color(0xF5DEB3), "JetBrains Mono ExtraBold"),
+        visual = ColorVisual(Color(0x5C3A2E))
     )
 
     private val natureTokenLabel = Label(
@@ -140,8 +140,8 @@ class GameScene(
         posX = 50,
         posY = 80,
         text = "NatureToken : 3",
-        font = Font(18, Color(0x333333), "JetBrains Mono ExtraBold"),
-        visual = ColorVisual(255, 255, 255)
+        font = Font(18, Color(0xF5F0E6), "JetBrains Mono ExtraBold"),
+        visual = ColorVisual(Color(0x2B5D34))
     )
 
     private val networkStatusArea = TextArea(
@@ -165,14 +165,14 @@ class GameScene(
         posX = 50,
         posY = 200,
         text = "Replace Wildlife",
-        font = Font(18, Color(0x333333), "JetBrains Mono ExtraBold"),
-        visual = ColorVisual(Color(0xc4c4cc))
+        font = Font(18, Color(0xF5DEB3), "JetBrains Mono ExtraBold"),
+        visual = ColorVisual(Color(0x5C3A2E))
     ).apply {
         onMouseExited = {
-            visual = ColorVisual(Color(0xc4c4cc))
+            visual = ColorVisual(Color(0x5C3A2E))
         }
         onMouseEntered = {
-            visual = ColorVisual(Color(0x8f93a1))
+            visual = ColorVisual(Color(0x8B5A42))
         }
         onMouseClicked = {
             updateButtonStates("replaceWildlife")
@@ -206,14 +206,14 @@ class GameScene(
         posX = 50,
         posY = 270,
         text = "Confirm",
-        font = Font(24, Color(0x333333), "JetBrains Mono ExtraBold"),
-        visual = ColorVisual(Color(0xc4c4cc))
+        font = Font(24, Color(0xF5DEB3), "JetBrains Mono ExtraBold"),
+        visual = ColorVisual(Color(0x5C3A2E))
     ).apply {
         onMouseExited = {
-            visual = ColorVisual(Color(0xc4c4cc))
+            visual = ColorVisual(Color(0x5C3A2E))
         }
         onMouseEntered = {
-            visual = ColorVisual(Color(0x8f93a1))
+            visual = ColorVisual(Color(0x8B5A42))
         }
         onMouseClicked = {
             val game = rootService.currentGame
@@ -238,14 +238,14 @@ class GameScene(
         posX = 50,
         posY = 340,
         text = "CustomPair",
-        font = Font(24, Color(0x333333), "JetBrains Mono ExtraBold"),
-        visual = ColorVisual(Color(0xc4c4cc))
+        font = Font(24, Color(0xF5DEB3), "JetBrains Mono ExtraBold"),
+        visual = ColorVisual(Color(0x5C3A2E))
     ).apply {
         onMouseExited = {
-            visual = ColorVisual(Color(0xc4c4cc))
+            visual = ColorVisual(Color(0x5C3A2E))
         }
         onMouseEntered = {
-            visual = ColorVisual(Color(0x8f93a1))
+            visual = ColorVisual(Color(0x8B5A42))
         }
         onMouseClicked = {
             updateButtonStates("chooseCustomPair")
@@ -305,14 +305,14 @@ class GameScene(
         posX = 1670,
         posY = 860,
         text = "Resolve Overpop",
-        font = Font(18, Color(0x333333), "JetBrains Mono ExtraBold"),
-        visual = ColorVisual(Color(0xc4c4cc))
+        font = Font(18, Color(0xF5DEB3), "JetBrains Mono ExtraBold"),
+        visual = ColorVisual(Color(0x5C3A2E))
     ).apply {
         onMouseExited = {
-            visual = ColorVisual(Color(0xc4c4cc))
+            visual = ColorVisual(Color(0x5C3A2E))
         }
         onMouseEntered = {
-            visual = ColorVisual(Color(0x8f93a1))
+            visual = ColorVisual(Color(0x8B5A42))
         }
         onMouseClicked = {
             val game = rootService.currentGame
@@ -335,14 +335,14 @@ class GameScene(
         posX = 1670,
         posY = 1000,
         text = "Discard Token",
-        font = Font(18, Color(0x333333), "JetBrains Mono ExtraBold"),
-        visual = ColorVisual(Color(0xc4c4cc))
+        font = Font(18, Color(0xF5DEB3), "JetBrains Mono ExtraBold"),
+        visual = ColorVisual(Color(0x5C3A2E))
     ).apply {
         onMouseExited = {
-            visual = ColorVisual(Color(0xc4c4cc))
+            visual = ColorVisual(Color(0x5C3A2E))
         }
         onMouseEntered = {
-            visual = ColorVisual(Color(0x8f93a1))
+            visual = ColorVisual(Color(0x8B5A42))
         }
         onMouseClicked = {
             rootService.playerActionService.discardToken()
@@ -355,14 +355,14 @@ class GameScene(
         posX = 1670,
         posY = 930,
         text = "Show RuleSet",
-        font = Font(18, Color(0x333333), "JetBrains Mono ExtraBold"),
-        visual = ColorVisual(Color(0xc4c4cc))
+        font = Font(18, Color(0xF5DEB3), "JetBrains Mono ExtraBold"),
+        visual = ColorVisual(Color(0x5C3A2E))
     ).apply {
         onMouseExited = {
-            visual = ColorVisual(Color(0xc4c4cc))
+            visual = ColorVisual(Color(0x5C3A2E))
         }
         onMouseEntered = {
-            visual = ColorVisual(Color(0x8f93a1))
+            visual = ColorVisual(Color(0x8B5A42))
         }
         onMouseClicked = {
             ruleSetOverlay.isDisabled = false
@@ -376,14 +376,14 @@ class GameScene(
         posX = 1200,
         posY = 700,
         text = "Close RuleSet",
-        font = Font(18, Color(0x333333), "JetBrains Mono ExtraBold"),
-        visual = ColorVisual(Color(0xc4c4cc))
+        font = Font(18, Color(0xF5DEB3), "JetBrains Mono ExtraBold"),
+        visual = ColorVisual(Color(0x5C3A2E))
     ).apply {
         onMouseExited = {
-            visual = ColorVisual(Color(0xc4c4cc))
+            visual = ColorVisual(Color(0x5C3A2E))
         }
         onMouseEntered = {
-            visual = ColorVisual(Color(0x8f93a1))
+            visual = ColorVisual(Color(0x8B5A42))
         }
         onMouseClicked = {
             ruleSetOverlay.isDisabled = true
@@ -925,7 +925,7 @@ class GameScene(
         for (i in position) {
             val hex = HexagonView(
                 size = 75,
-                visual = ColorVisual(Color.GRAY)
+                visual = ImageVisual("tileOutline.png")
             )
             playArea[i.second, i.first] = hex.apply {
                 onMouseClicked = {
