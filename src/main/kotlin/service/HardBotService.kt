@@ -206,7 +206,7 @@ class HardBotService(private val rootService: RootService) {
         println("There are " + possibilities.size + " possible Placements!")
 
 
-        if (currentRound == 1) {
+        if (currentRound <= 1) {
             Thread {
                 possibilities.forEach { placement ->
                     createJob(
@@ -225,7 +225,7 @@ class HardBotService(private val rootService: RootService) {
             }.start()
         }
 
-        val maxNumberOfThreads = (Runtime.getRuntime().availableProcessors() - 1).coerceAtLeast(1)
+        val maxNumberOfThreads = (Runtime.getRuntime().availableProcessors() - 2).coerceAtLeast(1)
         println("Available Threads: $maxNumberOfThreads")
         for (i in 1..maxNumberOfThreads) {
             threads.add(
