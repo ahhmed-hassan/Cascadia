@@ -28,8 +28,10 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
         posY = 80,
         width = 1480,
         height = 920,
-        visual = ColorVisual(Color(0xA6C9A3))
-    )
+        visual = ColorVisual(Color(0xFFFFFFF))
+    ).apply {
+        opacity = 0.8
+    }
 
 
     private val titleLabel = Label(
@@ -38,7 +40,7 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
         width = 1480,
         height = 200,
         text = "Join Network Game",
-        font = Font(48)
+        font = Font(48, Color(0x333333), "JetBrains Mono ExtraBold"),
     )
 
 
@@ -48,7 +50,8 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
         posX = 600,
         posY = 300,
         text = "Enter Name",
-        visual = ColorVisual(255, 255, 255)
+        visual = ColorVisual(Color(0xc4c4cc)),
+        font = Font(18, Color(0x333333), "JetBrains Mono ExtraBold"),
     )
     private val gameId = TextField(
         width = 200,
@@ -56,7 +59,8 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
         posX = 600,
         posY = 360,
         text = "Enter Game ID",
-        visual = ColorVisual(255, 255, 255)
+        visual = ColorVisual(Color(0xc4c4cc)),
+        font = Font(18, Color(0x333333), "JetBrains Mono ExtraBold"),
     )
 
     private val simSpeed = Label(
@@ -65,7 +69,7 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
         width = 400,
         height = 300,
         text = "Bot Simulation Speed",
-        font = Font(32)
+        font = Font(32, Color(0x333333), "JetBrains Mono ExtraBold"),
     )
 
     private val simEntry = ComboBox(
@@ -85,16 +89,17 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
             posX = 850,
             posY = 300,
             text = "H",
+            font = Font(1, Color(0xFFFFFF), "JetBrains Mono ExtraBold"),
             visual = ImageVisual("human.png")
         ).apply {
             onMouseClicked = {
                 when (text){
                     "H" -> {
-                        this.visual = ImageVisual("easy-robot.png")
+                        this.visual = ImageVisual("easyBot.png")
                         text = "E"
                     }
                     "E"-> {
-                        this.visual = ImageVisual("normal-robot.png")
+                        this.visual = ImageVisual("normalBot.png")
                         text = "NL"
                     }
                     "NL" -> {
@@ -115,9 +120,15 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
         posX = 600,
         posY = 800,
         text = "Start",
-        font = Font(24),
-        visual = ColorVisual(255, 255, 255)
+        font = Font(24, Color(0x333333), "JetBrains Mono ExtraBold"),
+        visual = ColorVisual(Color(0xc4c4cc))
     ).apply {
+        onMouseExited = {
+            visual = ColorVisual(Color(0xc4c4cc))
+        }
+        onMouseEntered = {
+            visual = ColorVisual(Color(0x60FF5C))
+        }
         onMouseClicked = {
             val playerNames = playerNameFields.filter { it.text.isNotBlank() }.map { it.text }
             val playerTypes = playerButtons.filter { it.text.isNotBlank() }.map { it.text }
@@ -151,9 +162,10 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
         height = 35,
         posX = 1050,
         posY = 550,
-        text = "Cancel"
+        text = "Cancel",
+        font = Font(18, Color(0x333333), "JetBrains Mono ExtraBold"),
+        visual = ColorVisual(Color(0xFF605C))
     ).apply {
-        visual = ColorVisual(221, 136, 136)
         isVisible = false
         onMouseClicked = {
             rootService.networkService.disconnect()
@@ -161,7 +173,7 @@ class NetworkJoinMenuScene (val rootService: RootService) : MenuScene(1920, 1080
     }
 
     init {
-        background = ImageVisual("Cascadia.jpg")
+        background = ImageVisual("Cascadia2.png")
         overlay.addAll(
             titleLabel,
             playersField,

@@ -1,5 +1,6 @@
 import gui.CascadiaApplication
 
+
 /**
  * main function of the application. Used to start the game.
  */

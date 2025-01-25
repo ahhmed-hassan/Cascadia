@@ -33,7 +33,8 @@ class WinningMenuScene(
         rows = 14,
         spacing = 10
     ).apply {
-        visual = ColorVisual(Color(0xA6C9A3))
+        opacity = 0.8
+        visual = ColorVisual(Color(0xFFFFFF))
     }
 
     val exitButton = Button(
@@ -42,14 +43,23 @@ class WinningMenuScene(
         posX = 860,
         posY = 980,
         text = "Exit",
-        visual = ColorVisual(255, 255, 255)
+        font = Font(20, Color(0x333333), "JetBrains Mono ExtraBold"),
+        visual = ColorVisual(Color(0xc4c4cc))
     ).apply {
+        opacity = 0.8
+
+        onMouseExited = {
+            visual = ColorVisual(Color(0xc4c4cc))
+        }
+        onMouseEntered = {
+            visual = ColorVisual(Color(0xFF605C))
+        }
         onMouseClicked = {}
     }
 
     private val playerImage = Label(
-        width = 60,
-        height = 60,
+        width = 55,
+        height = 55,
         posX = 200,
         posY = 150,
         visual = ImageVisual("person.png")
@@ -152,7 +162,7 @@ class WinningMenuScene(
     )
 
     init {
-        background = ImageVisual("Cascadia.jpg")
+        background = ImageVisual("Cascadia2.png")
         addComponents(gridPane, exitButton)
         updateScores()
     }
@@ -210,7 +220,7 @@ class WinningMenuScene(
             height = 50,
             alignment = Alignment.CENTER,
             text = text,
-            font = Font(size = 20)
+            font = Font(20, Color(0x333333), "JetBrains Mono ExtraBold"),
         )
     }
 }

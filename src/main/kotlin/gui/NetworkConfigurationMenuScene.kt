@@ -5,6 +5,7 @@ import service.ConnectionState
 import service.RootService
 import tools.aqua.bgw.components.layoutviews.Pane
 import tools.aqua.bgw.components.uicomponents.*
+import tools.aqua.bgw.core.BoardGameApplication.Companion.loadFont
 import tools.aqua.bgw.core.MenuScene
 import tools.aqua.bgw.util.Font
 import tools.aqua.bgw.visual.ColorVisual
@@ -32,8 +33,10 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         posY = 80,
         width = 1480,
         height = 920,
-        visual = ColorVisual(Color(0xA6C9A3))
-    )
+        visual = ColorVisual(Color(0xFFFFFF))
+    ).apply {
+        opacity = 0.8
+    }
 
     private val titleHotSeat = Label(
         posX = 0,
@@ -41,34 +44,34 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         width = 1480,
         height = 200,
         text = "Hosting Network Game",
-        font = Font(48)
+        font = Font(48, Color(0x333333), "JetBrains Mono ExtraBold"),
     )
 
     private val titleNames = Label(
-        posX = 0,
+        posX = 75,
         posY = 100,
         width = 400,
         height = 300,
         text = "Configure Players",
-        font = Font(32)
+        font = Font(32, Color(0x333333), "JetBrains Mono ExtraBold"),
     )
 
     private val titleRule = Label(
-        posX = 650,
+        posX = 550,
         posY = 100,
         width = 400,
         height = 300,
         text = "Configure Rule",
-        font = Font(32)
+        font = Font(32, Color(0x333333), "JetBrains Mono ExtraBold"),
     )
 
     private val simSpeed = Label(
-        posX = 1000,
+        posX = 950,
         posY = 100,
         width = 400,
         height = 300,
-        text = "Enter Simulation Speed",
-        font = Font(32)
+        text = "Simulation Speed",
+        font = Font(32, Color(0x333333), "JetBrains Mono ExtraBold"),
     )
 
     private val simEntry = ComboBox(
@@ -87,7 +90,8 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         posX = 200,
         posY = 300,
         text = "Enter Name",
-        visual = ColorVisual(255, 255, 255)
+        visual = ColorVisual(Color(0xc4c4cc)),
+        font = Font(18, Color(0x333333), "JetBrains Mono ExtraBold"),
     )
     private val createId = TextField(
         width = 200,
@@ -95,7 +99,8 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         posX = 1050,
         posY = 400,
         text = "Create Game ID",
-        visual = ColorVisual(255, 255, 255)
+        visual = ColorVisual(Color(0xc4c4cc)),
+        font = Font(18, Color(0x333333), "JetBrains Mono ExtraBold")
     )
 
     private fun createPlayerButtons(): Button {
@@ -105,16 +110,17 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
             posX = 450,
             posY = 300,
             text = "H",
+            font = Font(1, Color(0xFFFFFF), "JetBrains Mono ExtraBold"),
             visual = ImageVisual("human.png")
         ).apply {
             onMouseClicked = {
                 when (text){
                     "H" -> {
-                        this.visual = ImageVisual("easy-robot.png")
+                        this.visual = ImageVisual("easyBot.png")
                         text = "E"
                     }
                     "E"-> {
-                        this.visual = ImageVisual("normal-robot.png")
+                        this.visual = ImageVisual("normalBot.png")
                         text = "NL"
                     }
                     "NL" -> {
@@ -132,7 +138,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     private val bearImage = Label(
         width = 60,
         height = 60,
-        posX = 800,
+        posX = 700,
         posY = 300,
         visual = ImageVisual("bear.png")
     )
@@ -140,7 +146,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     private val bearToggleButton = ToggleButton(
         width = 60,
         height = 60,
-        posX = 860,
+        posX = 760,
         posY = 300,
         text = "A",
         visual = ColorVisual(255, 255, 255)
@@ -153,7 +159,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     private val elkImage = Label(
         width = 60,
         height = 60,
-        posX = 800,
+        posX = 700,
         posY = 360,
         visual = ImageVisual("elk.png")
     )
@@ -161,7 +167,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     private val elkToggleButton = ToggleButton(
         width = 60,
         height = 60,
-        posX = 860,
+        posX = 760,
         posY = 360,
         text = "A",
         visual = ColorVisual(255, 255, 255)
@@ -174,7 +180,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     private val hawkImage = Label(
         width = 60,
         height = 60,
-        posX = 800,
+        posX = 700,
         posY = 420,
         visual = ImageVisual("hawk.png")
     )
@@ -182,7 +188,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     private val hawkToggleButton = ToggleButton(
         width = 60,
         height = 60,
-        posX = 860,
+        posX = 760,
         posY = 420,
         text = "A",
         visual = ColorVisual(255, 255, 255)
@@ -195,7 +201,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     private val salmonImage = Label(
         width = 60,
         height = 60,
-        posX = 800,
+        posX = 700,
         posY = 480,
         visual = ImageVisual("salmon.png")
     )
@@ -203,7 +209,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     private val salmonToggleButton = ToggleButton(
         width = 60,
         height = 60,
-        posX = 860,
+        posX = 760,
         posY = 480,
         text = "A",
         visual = ColorVisual(255, 255, 255)
@@ -216,7 +222,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     private val foxImage = Label(
         width = 60,
         height = 60,
-        posX = 800,
+        posX = 700,
         posY = 540,
         visual = ImageVisual("fox.png")
     )
@@ -224,7 +230,7 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     private val foxToggleButton = ToggleButton(
         width = 60,
         height = 60,
-        posX = 860,
+        posX = 760,
         posY = 540,
         text = "A",
         visual = ColorVisual(255, 255, 255)
@@ -235,22 +241,22 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
     }
 
     private val randomRuleToggle = ToggleButton(
-        width = 250,
+        width = 265,
         height = 50,
-        posX = 400,
-        posY = 800,
-        text = "Random Rule",
-        font = Font(24),
+        posX = 675,
+        posY = 600,
+        text = "Random Rules",
+        font = Font(24, Color(0x333333), "JetBrains Mono ExtraBold"),
         visual = ColorVisual(255, 255, 255)
     )
 
     private val randomOrderToggle = ToggleButton(
-        width = 250,
+        width = 260,
         height = 50,
         posX = 100,
         posY = 800,
         text = "Random Order",
-        font = Font(24),
+        font = Font(24, Color(0x333333), "JetBrains Mono ExtraBold"),
         visual = ColorVisual(255, 255, 255)
     )
 
@@ -260,9 +266,15 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         posX = 1100,
         posY = 800,
         text = "Start",
-        font = Font(24),
-        visual = ColorVisual(255, 255, 255)
+        font = Font(24, Color(0x333333), "JetBrains Mono ExtraBold"),
+        visual = ColorVisual(Color(0xc4c4cc))
     ).apply {
+        onMouseExited = {
+            visual = ColorVisual(Color(0xc4c4cc))
+        }
+        onMouseEntered = {
+            visual = ColorVisual(Color(0x60FF5C))
+        }
         onMouseClicked = {
             if (randomOrderToggle.isSelected) { randomOrder = true }
             if (randomRuleToggle.isSelected) { randomRule = true}
@@ -282,9 +294,15 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         posX = 800,
         posY = 800,
         text = "Host Game",
-        font = Font(24),
-        visual = ColorVisual(255, 255, 255)
+        font = Font(24, Color(0x333333), "JetBrains Mono ExtraBold"),
+        visual = ColorVisual(Color(0xc4c4cc))
     ).apply {
+        onMouseExited = {
+            visual = ColorVisual(Color(0xc4c4cc))
+        }
+        onMouseEntered = {
+            visual = ColorVisual(Color(0x60FF5C))
+        }
         onMouseClicked = {
             val playerNames = playerNameFields.filter { it.text.isNotBlank() }.map { it.text }
             val playerTypes = playerButtons.filter { it.text.isNotBlank() }.map { it.text }
@@ -319,9 +337,10 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         height = 35,
         posX = 1050,
         posY = 600,
-        text = "Cancel"
+        text = "Cancel",
+        font = Font(18, Color(0x333333), "JetBrains Mono ExtraBold"),
+        visual = ColorVisual(Color(0xFF605C))
     ).apply {
-        visual = ColorVisual(221, 136, 136)
         isVisible = false
         onMouseClicked = {
             rootService.networkService.disconnect()
@@ -330,7 +349,8 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
 
 
     init {
-        background = ImageVisual("Cascadia.jpg")
+        background = ImageVisual("Cascadia2.png")
+        loadFont("JetBrainsMono-ExtraBold.ttf")
         overlay.addAll(
             titleNames,
             titleHotSeat,
