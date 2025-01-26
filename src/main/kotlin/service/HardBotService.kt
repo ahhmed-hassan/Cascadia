@@ -113,7 +113,7 @@ class HardBotService(private val rootService: RootService) {
             }
         }
 
-        for (i in 0..actualPlacement.rotation) {
+        for (i in 0 until actualPlacement.rotation) {
             rootService.playerActionService.rotateTile()
         }
 
@@ -164,7 +164,7 @@ class HardBotService(private val rootService: RootService) {
             rootService.playerActionService.chooseTokenTilePair(index)
         }
 
-        for (i in 0..bestCertain.rotation) {
+        for (i in 0 until bestCertain.rotation) {
             rootService.playerActionService.rotateTile()
         }
 
@@ -364,7 +364,7 @@ class HardBotService(private val rootService: RootService) {
         val customPair = employer.customPair
         if (customPair != null) {
             val curTile = checkNotNull(shop[customPair.first].first)
-            for (i in 0..employer.rotation) rotateTile(curTile)
+            for (i in 0 until employer.rotation) rotateTile(curTile)
             habitat[employer.tilePlacement] = curTile
             habitat.forEach { habitatTile ->
                 if (habitatTile.value.id == employer.wildlifePlacementId) {
@@ -376,7 +376,7 @@ class HardBotService(private val rootService: RootService) {
         } else {
             val index = shop.indexOfFirst { it.first == tile }
             val curTile = checkNotNull(shop[index].first)
-            for (i in 0..employer.rotation) rotateTile(curTile)
+            for (i in 0 until employer.rotation) rotateTile(curTile)
             habitat[employer.tilePlacement] = curTile
             habitat.forEach { habitatTile ->
                 if (habitatTile.value.id == employer.wildlifePlacementId) {
