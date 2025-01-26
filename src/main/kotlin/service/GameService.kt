@@ -148,7 +148,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
      */
     fun getHabitatTiles(): List<HabitatTile> {
         val habitatTiles = mutableListOf<HabitatTile>()
-        File("build/resources/main/tiles.csv").bufferedReader().useLines { lines ->
+        File("src/main/resources/tiles.csv").bufferedReader().useLines { lines ->
             lines.drop(1) //skip the first line (header)
                 .filter { it.isNotBlank() } //exclude empty lines
                 .filterNot { it.contains("--", ignoreCase = true) } //exclude lines containing "--" (-- seite)
@@ -186,7 +186,7 @@ class GameService(private val rootService: RootService) : AbstractRefreshingServ
     private fun getStartTiles(): List<List<HabitatTile>> {
         val startTiles = mutableListOf<List<HabitatTile>>() //is List<List<HabitatTile>> in CascadiaGame
         val startTileList = mutableListOf<HabitatTile>() // temp List for startTiles
-        File("build/resources/main/start_tiles.csv").bufferedReader().useLines { lines ->
+        File("src/main/resources/start_tiles.csv").bufferedReader().useLines { lines ->
             lines.drop(1) //skip the first line (header)
                 .forEach { line ->
                     val part = line.split(";")  //Parse data from the CSV line
