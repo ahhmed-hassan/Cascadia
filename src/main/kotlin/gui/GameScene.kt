@@ -54,21 +54,21 @@ class GameScene(
     private var currentXCamera = 0
     private var currentYCamera = 0
     private var speed = 0
-    private var state : ConnectionState = ConnectionState.DISCONNECTED
-    private var myPlayerType : PlayerType? = null
+    private var state: ConnectionState = ConnectionState.DISCONNECTED
+    private var myPlayerType: PlayerType? = null
     private val refreshQueue: Queue<() -> Unit> = LinkedList()
     private var isProcessingQueue = false
     private var refreshSelectedToken: MutableList<WildlifeToken> = mutableListOf()
     private var refreshSelectedHabitat: MutableList<HabitatTile> = mutableListOf()
-    private var refreshHabitat : MutableList<MutableMap<Pair<Int, Int>, HabitatTile>> = mutableListOf()
-    private var refreshShop : MutableList<MutableList<Pair<HabitatTile?,WildlifeToken?>>> = mutableListOf()
-    private var refreshPlayerType : MutableList<PlayerType> = mutableListOf()
-    private var refreshState : MutableList<ConnectionState> = mutableListOf()
-    private var didTakeTurn : Boolean = true
-    private var refreshTokenAdded : MutableList<HabitatTile> = mutableListOf()
-    private var refreshName : MutableList<String> = mutableListOf()
-    private var refreshNatureToken : MutableList<Int> = mutableListOf()
-    private var botRotateTileCount : Int = 0
+    private var refreshHabitat: MutableList<MutableMap<Pair<Int, Int>, HabitatTile>> = mutableListOf()
+    private var refreshShop: MutableList<MutableList<Pair<HabitatTile?, WildlifeToken?>>> = mutableListOf()
+    private var refreshPlayerType: MutableList<PlayerType> = mutableListOf()
+    private var refreshState: MutableList<ConnectionState> = mutableListOf()
+    private var didTakeTurn: Boolean = true
+    private var refreshTokenAdded: MutableList<HabitatTile> = mutableListOf()
+    private var refreshName: MutableList<String> = mutableListOf()
+    private var refreshNatureToken: MutableList<Int> = mutableListOf()
+    private var botRotateTileCount: Int = 0
 
 
     private val shopHabitats = GridPane<HexagonView>(
@@ -187,7 +187,7 @@ class GameScene(
                             shopTokens[i, 0]?.apply {
                                 posY -= 25
                             }
-                            selectedShopToken.add(i)
+                            if (!selectedShopToken.contains(i)) selectedShopToken.add(i)
                         }
 
                         MouseButtonType.RIGHT_BUTTON -> {
@@ -323,11 +323,11 @@ class GameScene(
             checkNotNull(game)
             //check overpopulation
             if ((state == ConnectionState.PLAYING_MY_TURN && myPlayerType == PlayerType.LOCAL)
-                || game.currentPlayer.playerType == PlayerType.LOCAL) {
+                || game.currentPlayer.playerType == PlayerType.LOCAL
+            ) {
                 rootService.playerActionService.replaceWildlifeTokens(hasThreeSameWildlifeTokens().second)
                 this.isDisabled = true
-            }
-            else{
+            } else {
                 this.isDisabled = true
             }
         }
@@ -493,18 +493,17 @@ class GameScene(
         checkNotNull(game)
         println("RefreshStart")
 
-        if (networkJoinMenuScene.myPlayer != null){
+        if (networkJoinMenuScene.myPlayer != null) {
             myPlayerType = networkJoinMenuScene.myPlayer
-        }
-        else if (networkConfigurationMenuScene.myPlayer != null) {
+        } else if (networkConfigurationMenuScene.myPlayer != null) {
             myPlayerType = networkConfigurationMenuScene.myPlayer
         }
 
-        speed = if (networkJoinMenuScene.getSpeed() != 0.0F){
+        speed = if (networkJoinMenuScene.getSpeed() != 0.0F) {
             networkJoinMenuScene.getSpeed().toInt() * 1000
-        } else if (networkConfigurationMenuScene.getSpeed() != 0.0F){
+        } else if (networkConfigurationMenuScene.getSpeed() != 0.0F) {
             networkConfigurationMenuScene.getSpeed().toInt() * 1000
-        }else {
+        } else {
             hotSeatConfigurationMenuScene.getSpeed().toInt() * 1000
         }
 
@@ -596,10 +595,11 @@ class GameScene(
 
     override fun refreshAfterTileRotation() {
         val currentPlayer = refreshPlayerType.first()
-        var isBotPlayer = currentPlayer in listOf(PlayerType.EASY, PlayerType.NORMAL,PlayerType.NETWORK)
+        var isBotPlayer = currentPlayer in listOf(PlayerType.EASY, PlayerType.NORMAL, PlayerType.NETWORK)
         if (refreshPlayerType.first() == PlayerType.NETWORK
             && myPlayerType == PlayerType.LOCAL
-            && state == ConnectionState.PLAYING_MY_TURN){
+            && state == ConnectionState.PLAYING_MY_TURN
+        ) {
             isBotPlayer = false
         }
 
@@ -718,7 +718,8 @@ class GameScene(
             //add the views to the shop
             for (i in 0..3) {
                 //create HexagonViews for the Token
-                shopTokens[i, 0] = refreshShop.first()[i].second?.animal.let { it?.let { it1 -> createTokens(it1.name)}}
+                shopTokens[i, 0] =
+                    refreshShop.first()[i].second?.animal.let { it?.let { it1 -> createTokens(it1.name) } }
                 shopTokens[i, 0]?.apply {
                     onMouseClicked = {
                         if (refreshPlayerType.first() == PlayerType.LOCAL)
@@ -768,7 +769,8 @@ class GameScene(
             for (i in 0..3) {
                 shopHabitats[i, 0] = habitats[refreshShop.first()[i].first!!] as HexagonView
                 //create HexagonViews for the Token
-                shopTokens[i, 0] = refreshShop.first()[i].second?.animal.let { it?.let { it1 -> createTokens(it1.name)}}
+                shopTokens[i, 0] =
+                    refreshShop.first()[i].second?.animal.let { it?.let { it1 -> createTokens(it1.name) } }
             }
 
             verticalPair()
@@ -788,22 +790,22 @@ class GameScene(
 
             //if (game.currentPlayer.playerType == PlayerType.LOCAL ||
             // (myPlayerType == PlayerType.LOCAL && state == ConnectionState.PLAYING_MY_TURN)) {
-                //Disable resolveOverpopulation if already done or not possible
-                if (game.hasReplacedThreeToken || !hasThreeSameWildlifeTokens().first) {
-                    resolveOverpopButton.isDisabled = true
-                } else
-                    resolveOverpopButton.isDisabled = false
+            //Disable resolveOverpopulation if already done or not possible
+            if (game.hasReplacedThreeToken || !hasThreeSameWildlifeTokens().first) {
+                resolveOverpopButton.isDisabled = true
+            } else
+                resolveOverpopButton.isDisabled = false
 
-                //Disable Buttons for action with NatureToken if player has none
-                if (game.currentPlayer.natureToken == 0) {
-                    chooseCustomPair.isDisabled = true
-                    replaceWildlifeButton.isDisabled = true
-                    confirmReplacementButton.isDisabled = true
-                } else {
-                    chooseCustomPair.isDisabled = false
-                    replaceWildlifeButton.isDisabled = false
-                    confirmReplacementButton.isDisabled = false
-                }
+            //Disable Buttons for action with NatureToken if player has none
+            if (game.currentPlayer.natureToken == 0) {
+                chooseCustomPair.isDisabled = true
+                replaceWildlifeButton.isDisabled = true
+                confirmReplacementButton.isDisabled = true
+            } else {
+                chooseCustomPair.isDisabled = false
+                replaceWildlifeButton.isDisabled = false
+                confirmReplacementButton.isDisabled = false
+            }
             //}
 
             playBotTurn()
@@ -944,7 +946,7 @@ class GameScene(
                 }
             }
 
-            if (game.currentPlayer.playerType != PlayerType.LOCAL){
+            if (game.currentPlayer.playerType != PlayerType.LOCAL) {
                 if (state != ConnectionState.PLAYING_MY_TURN)
                     playArea[i.second, i.first]?.onMouseClicked = null
             }
@@ -1202,8 +1204,7 @@ class GameScene(
      * [verticalPair] enable to choose a pair from shop
      */
     private fun verticalPair() {
-        if (refreshPlayerType.first() == PlayerType.LOCAL ||  myPlayerType == PlayerType.LOCAL)
-        {
+        if (refreshPlayerType.first() == PlayerType.LOCAL || myPlayerType == PlayerType.LOCAL) {
             //If player Clicks on any Habitat or Token that vertical pair is chosen
             for (i in 0..3) {
                 shopTokens[i, 0]?.apply {

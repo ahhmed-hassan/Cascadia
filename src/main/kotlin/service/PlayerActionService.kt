@@ -238,7 +238,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         }
         if (myTurn) {
             rootService.networkService.tokenCoordinates =
-                game.currentPlayer.habitat.entries.firstOrNull{ it.value == tile }?.key
+                game.currentPlayer.habitat.entries.firstOrNull { it.value == tile }?.key
 
             rootService.networkService.sendPlacedMessage()
         }
@@ -274,7 +274,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
             selectedTile.terrains.removeFirst()
         )
         if (myTurn) {
-            rootService.networkService.tileRotation++
+            rootService.networkService.tileRotation = (rootService.networkService.tileRotation + 1) % 6
         }
 
         println("rotateTile")
@@ -295,10 +295,9 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
 
         val myTurn = rootService.networkService.connectionState == ConnectionState.PLAYING_MY_TURN
 
-        if(rootService.networkService.connectionState == ConnectionState.WAITING_FOR_OPPONENTS_TURN){
-            game.wildlifeTokenList.add(0,selectedToken)
-        }
-        else if (myTurn){
+        if (rootService.networkService.connectionState == ConnectionState.WAITING_FOR_OPPONENTS_TURN) {
+            game.wildlifeTokenList.add(0, selectedToken)
+        } else if (myTurn) {
             game.wildlifeTokenList.add(selectedToken)
             game.wildlifeTokenList.shuffle()
         }

@@ -81,7 +81,7 @@ class HardBotService(private val rootService: RootService) {
     }
 
     /**
-     * playes uncertain tiles
+     * plays uncertain tiles
      */
     private fun playUncertain(
         game: CascadiaGame,
