@@ -80,7 +80,7 @@ class TwoEnviornmentsSetup {
                 (-1 to -1) to dummyHabitat(Animal.SALMON),
                 (-1 to 0) to dummyHabitat(Animal.HAWK),
                 (-1 to 1) to dummyHabitat(Animal.ELK),
-                (-1 to 0) to dummyHabitat(Animal.BEAR),
+                (-1 to 2) to dummyHabitat(Animal.BEAR),
                 //Sixth
                 (0 to -2) to dummyHabitat(Animal.SALMON),
                 (0 to -1) to nullHabitat(),
@@ -134,5 +134,15 @@ class TwoEnviornmentsSetup {
         game.currentPlayer.habitat.putAll(leoHabitat())
         val salmonScore = rootService.scoringService.calculateSalmonScore(game.currentPlayer.habitat)
         assertEquals(17, salmonScore)
+    }
+
+    @Test
+    fun foxForLeo() {
+        val game = checkNotNull(rootService.currentGame)
+        assertTrue(checkNotNull(game.ruleSet[Animal.FOX.ordinal]))
+        game.currentPlayer.habitat.clear()
+        game.currentPlayer.habitat.putAll(leoHabitat())
+        val foxScore = rootService.scoringService.calculateFoxScore(game.currentPlayer.habitat)
+        assertEquals(8, foxScore)
     }
 }
