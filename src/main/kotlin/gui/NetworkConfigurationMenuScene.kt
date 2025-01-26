@@ -79,9 +79,9 @@ class NetworkConfigurationMenuScene (val rootService: RootService) : MenuScene(1
         posY = 300,
         width = 200,
         height = 50,
-        items = listOf(0.5f, 1.0f, 1.5f, 2.0f, 2.5f, 3.0f),
+        items = listOf(1.0f, 1.5f, 2.0f, 2.5f, 3.0f),
     ).apply {
-        selectedItem = 0.5f
+        selectedItem = 1.0f
     }
 
     private val playersField = TextField(
