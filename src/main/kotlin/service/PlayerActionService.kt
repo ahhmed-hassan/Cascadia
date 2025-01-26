@@ -277,6 +277,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
             rootService.networkService.tileRotation++
         }
 
+        println("rotateTile")
         onAllRefreshables { refreshAfterTileRotation() }
     }
 

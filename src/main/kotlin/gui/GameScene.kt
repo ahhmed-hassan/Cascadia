@@ -65,6 +65,10 @@ class GameScene(
     private var refreshPlayerType : MutableList<PlayerType> = mutableListOf()
     private var refreshState : MutableList<ConnectionState> = mutableListOf()
     private var didTakeTurn : Boolean = true
+    private var refreshTokenAdded : MutableList<HabitatTile> = mutableListOf()
+    private var refreshName : MutableList<String> = mutableListOf()
+    private var refreshNatureToken : MutableList<Int> = mutableListOf()
+    private var botRotateTileCount : Int = 0
 
 
     private val shopHabitats = GridPane<HexagonView>(
@@ -555,6 +559,8 @@ class GameScene(
         refreshHabitat.add(game.currentPlayer.habitat.toMutableMap())
         refreshHabitat.add(game.currentPlayer.habitat)
         refreshPlayerType.add(game.currentPlayer.playerType)
+        refreshNatureToken.add(game.currentPlayer.natureToken)
+        refreshName.add(game.currentPlayer.name)
 
         verticalPair()
 
@@ -563,9 +569,6 @@ class GameScene(
 
     override fun refreshAfterHabitatTileAdded() {
         enqueueRefresh {
-            val game = rootService.currentGame
-            checkNotNull(game)
-            println("RefreshTileAdd")
             refreshHabitat.removeFirst()
 
             playableTile[0, 0] = null
@@ -582,7 +585,7 @@ class GameScene(
 
             playableToken.isDisabled = false
 
-            if (game.currentPlayer.playerType == PlayerType.LOCAL || state == ConnectionState.PLAYING_MY_TURN)
+            if (refreshPlayerType.first() == PlayerType.LOCAL || state == ConnectionState.PLAYING_MY_TURN)
                 discardToken.isDisabled = false
 
             playToken()
@@ -592,29 +595,51 @@ class GameScene(
     }
 
     override fun refreshAfterTileRotation() {
-        enqueueRefresh {
-            val rotateTile = refreshSelectedHabitat.first()
+        val currentPlayer = refreshPlayerType.first()
+        var isBotPlayer = currentPlayer in listOf(PlayerType.EASY, PlayerType.NORMAL,PlayerType.NETWORK)
+        if (refreshPlayerType.first() == PlayerType.NETWORK
+            && myPlayerType == PlayerType.LOCAL
+            && state == ConnectionState.PLAYING_MY_TURN){
+            isBotPlayer = false
+        }
 
-            // get the list of terrains from Habitat
-            val sideLabels = rotateTile.terrains.map { terrain: Terrain -> terrain.name.substring(0, 1) }
+        if (isBotPlayer) {
+            botRotateTileCount++
 
-            // create new Hexagon for the rotated Tile
-            val newHexagon = createLabeledHexagonView(
-                labels = sideLabels,
-                color = rotateTile.isKeystoneTile,
-                tokens = rotateTile.wildlifeSymbols.map { animal: Animal -> animal.name.substring(0, 1) }
-            ).apply {
-                onMouseClicked = {
-                    rootService.playerActionService.rotateTile()
+            if (botRotateTileCount == 1) {
+                enqueueRefresh {
+                    val selectedTile = refreshSelectedHabitat.first()
+
+                    val newHexagon = createLabeledHexagonView(
+                        labels = selectedTile.terrains.map { it.name.substring(0, 1) },
+                        color = selectedTile.isKeystoneTile,
+                        tokens = selectedTile.wildlifeSymbols.map { it.name.substring(0, 1) }
+                    )
+
+                    habitats[selectedTile] = newHexagon
+                    playableTile[0, 0] = habitats[selectedTile] as HexagonView
+
+                    println("RefreshAfterTileRotation for Bot Player")
                 }
             }
+        } else {
+            enqueueRefresh {
+                val selectedTile = refreshSelectedHabitat.first()
 
-            habitats[rotateTile] = newHexagon
+                val newHexagon = createLabeledHexagonView(
+                    labels = selectedTile.terrains.map { it.name.substring(0, 1) },
+                    color = selectedTile.isKeystoneTile,
+                    tokens = selectedTile.wildlifeSymbols.map { it.name.substring(0, 1) }
+                ).apply {
+                    isDisabled = false
+                    onMouseClicked = { rootService.playerActionService.rotateTile() }
+                }
 
-            playableTile[0, 0] = null
-            playableTile[0, 0] = habitats[rotateTile] as HexagonView
+                habitats[selectedTile] = newHexagon
+                playableTile[0, 0] = habitats[selectedTile] as HexagonView
 
-            println("RefreshAfterTileRotation")
+                println("RefreshAfterTileRotation for Local Player")
+            }
         }
     }
 
@@ -666,14 +691,15 @@ class GameScene(
     }
 
     override fun refreshAfterWildlifeTokenAdded(habitatTile: HabitatTile) {
+        refreshTokenAdded.add(habitatTile)
         enqueueRefresh {
-
+            val habitatTile2 = refreshTokenAdded.first()
             //update the view of the Habitat where we placed our token
             playableToken[0, 0] = null
-            habitats[habitatTile] = createLabeledHexagonView(
-                color = habitatTile.isKeystoneTile,
-                labels = habitatTile.terrains.map { terrain: Terrain -> terrain.name.substring(0, 1) },
-                token = habitatTile.wildlifeToken?.animal.toString().substring(0, 1)
+            habitats[habitatTile2] = createLabeledHexagonView(
+                color = habitatTile2.isKeystoneTile,
+                labels = habitatTile2.terrains.map { terrain: Terrain -> terrain.name.substring(0, 1) },
+                token = habitatTile2.wildlifeToken?.animal.toString().substring(0, 1)
             )
             //playArea.clear()
 
@@ -682,7 +708,7 @@ class GameScene(
                     onMouseClicked = null
                 }
             }
-
+            refreshTokenAdded.removeFirst()
             println("RefreshToken")
         }
     }
@@ -711,6 +737,8 @@ class GameScene(
         refreshHabitat.add(game.currentPlayer.habitat)
         refreshShop.add(game.shop)
         refreshPlayerType.add(game.currentPlayer.playerType)
+        refreshNatureToken.add(game.currentPlayer.natureToken)
+        refreshName.add(game.currentPlayer.name)
         enqueueRefresh {
 
             refreshShop.removeFirst()
@@ -718,6 +746,9 @@ class GameScene(
             refreshPlayerType.removeFirst()
             refreshSelectedToken.removeFirst()
             refreshSelectedHabitat.removeFirst()
+            refreshNatureToken.removeFirst()
+            refreshName.removeFirst()
+            botRotateTileCount = 0
 
             //reset the camera to original position
             cameraPane.reposition(0, 0)
@@ -752,8 +783,8 @@ class GameScene(
             discardToken.isDisabled = true
 
             //Update Labels for name and NatureToken
-            natureTokenLabel.apply { text = "NatureToken: " + game.currentPlayer.natureToken.toString() }
-            currentPlayerLabel.apply { text = game.currentPlayer.name }
+            natureTokenLabel.apply { text = "NatureToken: " + refreshNatureToken.first().toString() }
+            currentPlayerLabel.apply { text = refreshName.first() }
 
             //if (game.currentPlayer.playerType == PlayerType.LOCAL ||
             // (myPlayerType == PlayerType.LOCAL && state == ConnectionState.PLAYING_MY_TURN)) {
@@ -1171,9 +1202,8 @@ class GameScene(
      * [verticalPair] enable to choose a pair from shop
      */
     private fun verticalPair() {
-        if (refreshPlayerType.first() == PlayerType.LOCAL
-            || (state == ConnectionState.PLAYING_MY_TURN && myPlayerType == PlayerType.LOCAL)
-        ){
+        if (refreshPlayerType.first() == PlayerType.LOCAL ||  myPlayerType == PlayerType.LOCAL)
+        {
             //If player Clicks on any Habitat or Token that vertical pair is chosen
             for (i in 0..3) {
                 shopTokens[i, 0]?.apply {
